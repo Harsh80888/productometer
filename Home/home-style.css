@@ -1,0 +1,202 @@
+/* ==========================================================================
+   🎮 PRODUCTOMETER PORTAL - ISOLATED HOME VIEW DASHBOARD STYLES
+   ========================================================================== */
+
+/* --- 📊 REAL-TIME CORE SUMMARY HUD CARD MATRIX --- */
+.home-analytics-hud {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.hud-metric-card {
+    background: #09090c;
+    border: 1.5px solid rgba(255, 255, 255, 0.04);
+    border-radius: 18px;
+    padding: 16px 20px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.hud-label {
+    font-size: 0.65rem;
+    font-weight: 800;
+    color: #555566;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+}
+
+.hud-metric-card h2 {
+    margin: 0;
+    font-size: 1.6rem;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    color: #ffffff;
+}
+
+/* Specific Summary Cards Glowing Highlights */
+.score-matrix-glow { border-color: rgba(0, 229, 255, 0.1) !important; box-shadow: 0 4px 15px rgba(0, 229, 255, 0.03); }
+.score-matrix-glow h2 { color: #00e5ff; text-shadow: 0 0 10px rgba(0, 229, 255, 0.2); }
+
+.hours-matrix-glow { border-color: rgba(213, 0, 249, 0.1) !important; box-shadow: 0 4px 15px rgba(213, 0, 249, 0.03); }
+.hours-matrix-glow h2 { color: #d500f9; text-shadow: 0 0 10px rgba(213, 0, 249, 0.2); }
+
+/* --- 📋 REFLECTED SYNCHRONIZED CHRONO TASKS DISPLAY CONTAINER --- */
+.home-tasks-display-section {
+    background: linear-gradient(180deg, #101015 0%, #050508 100%);
+    border: 1.5px solid rgba(255, 255, 255, 0.04);
+    border-radius: 26px;
+    padding: 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    box-shadow: 0 12px 35px rgba(0,0,0,0.6);
+    margin-top: 5px;
+}
+
+.tasks-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding-bottom: 8px;
+    border-bottom: 1.5px solid rgba(255, 255, 255, 0.02);
+}
+
+.tasks-section-title {
+    font-size: 0.9rem;
+    font-weight: 800;
+    color: #ffffff;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+}
+
+/* 🎯 CORNER EDIT LINK BADGE ACCENT BUTTON STYLE */
+.corner-edit-btn {
+    text-decoration: none;
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: #00e5ff;
+    background: rgba(0, 229, 255, 0.06);
+    padding: 5px 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(0, 229, 255, 0.2);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.corner-edit-btn:hover {
+    background: rgba(0, 229, 255, 0.12);
+    border-color: #00e5ff;
+    box-shadow: 0 0 10px rgba(0, 229, 255, 0.2);
+    color: #ffffff;
+}
+
+/* --- 📦 COMPONENT CONTAINER TILES WRAPPERS FOR HOMEPAGE CHRONO CARDS --- */
+.home-tasks-bucket {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.home-empty-tasks-placeholder {
+    font-size: 0.82rem;
+    color: #4e4e5e;
+    font-style: italic;
+    text-align: center;
+    padding: 20px 0;
+}
+
+.home-chrono-row-card {
+    background: #000000;
+    border: 1.5px solid rgba(255, 255, 255, 0.03);
+    border-radius: 16px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    transition: all 0.25s ease;
+}
+
+/* Custom Checkbox Interceptors Wrapper Component */
+.home-task-checkbox-wrapper {
+    position: relative;
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    display: block;
+}
+
+.home-task-checkbox-wrapper input {
+    position: absolute;
+    opacity: 0; width: 0; height: 0;
+}
+
+.home-checkbox-indicator {
+    position: absolute;
+    top: 0; left: 0; width: 20px; height: 20px;
+    background: #0b0b0f;
+    border: 1.5px solid #22222b;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.home-task-checkbox-wrapper input:checked ~ .home-checkbox-indicator {
+    background: #00e676;
+    border-color: #00e676;
+    box-shadow: 0 0 8px rgba(0, 230, 118, 0.4);
+}
+
+.home-checkbox-indicator::after {
+    content: '';
+    position: absolute;
+    display: none;
+    left: 6px; top: 2px;
+    width: 5px; height: 10px;
+    border: solid #000000;
+    border-width: 0 2.5px 2.5px 0;
+    transform: rotate(45deg);
+}
+
+.home-task-checkbox-wrapper input:checked ~ .home-checkbox-indicator::after {
+    display: block;
+}
+
+.home-task-card-info-stack {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.home-task-main-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.home-task-time-badge {
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    width: max-content;
+}
+
+/* Checked strikeout transformation states overrides style sets */
+.home-chrono-row-card.task-completed-state {
+    opacity: 0.5;
+}
+.home-chrono-row-card.task-completed-state .home-task-main-title {
+    text-decoration: line-through;
+    color: #4e4e5e;
+}

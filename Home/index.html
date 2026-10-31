@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Productometer Portal - Home</title>
+    <!-- Google Fonts Framework Links -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons Framework Asset -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="../style.css">  <!-- Pulls global root body canvas variables -->
+    <link rel="stylesheet" href="./home-style.css"> <!-- Pulls home-specific card layout designs -->
+</head>
+<body class="cyberpunk-portal-body">
+
+    <!-- Top Fixed Status Ribbon HUD Header -->
+    <header class="portal-top-hud">
+        <div class="nav-branding-title">Productometer</div>
+        <div class="nav-diamond-hud" style="display: none;">💎 <span id="globalDiamondWallet">0</span></div>
+    </header>
+
+    <!-- Main Content Workspace Analytics HUD Area -->
+    <main class="portal-main-content">
+        
+        <!-- A. Live Real-Time Overview Snapshot Cards Deck -->
+        <section class="home-analytics-hud">
+            <div class="hud-metric-card score-matrix-glow">
+                <span class="hud-label">Net Performance Score</span>
+                <h2 id="hudNetScore">+0</h2>
+            </div>
+            <div class="hud-metric-card hours-matrix-glow">
+                <span class="hud-label">Logged Tracked Hours</span>
+                <h2 id="hudTrackedHours">0.0h</h2>
+            </div>
+        </section>
+
+        <!-- B. 📋 SYNCHRONIZED REFLECTED CHRONO TASK LIST SECTION -->
+        <section class="home-tasks-display-section">
+            <div class="tasks-section-header">
+                <div class="tasks-section-title">Today's Schedule</div>
+                <!-- 🎯 EDIT SHORTCUT AT CORNER: Connects exactly to your local browser path -->
+                <a href="../Features/Day Planner/planner-index.html" class="corner-edit-btn">
+                    <i class="fa-solid fa-pen-to-square"></i> Edit
+                </a>
+            </div>
+            
+            <!-- Dynamic Reflected Task Row Container Bucket -->
+            <div class="home-tasks-bucket" id="homeTasksBucket">
+                <!-- Javascript populates items here dynamically from your Day Planner cache -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- 🛸 THE EXODOCK: Angular Asymmetric Cyberpunk Floating Bottom Bar Navigation -->
+    <nav class="portal-bottom-nav">
+        <a href="./index.html" class="bottom-nav-btn active">
+            <i class="fa-solid fa-house"></i>
+            <span>Home</span>
+        </a>
+        <a href="../Features/index.html" class="bottom-nav-btn">
+            <i class="fa-solid fa-cubes"></i>
+            <span>Features</span>
+        </a>
+        <a href="../Me/index.html" class="bottom-nav-btn">
+            <i class="fa-solid fa-user-astronaut"></i>
+            <span>Me</span>
+        </a>
+    </nav>
+
+    <script src="./scripts.js"></script>
+</body>
+</html>
