@@ -65,20 +65,20 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create v1.0.1 dist/Productometer.apk \
-            --title "Productometer v1.0.1 - Android Release APK" \
-            --notes "### 📱 Productometer Android Release v1.0.1
+          gh release create v1.0.2 dist/Productometer.apk \
+            --title "Productometer v1.0.2 - Android Release APK" \
+            --notes "### 📱 Productometer Android Release v1.0.2
 
-          Universal Android Release APK with full offline support and native launcher icon.
+          Major update featuring Day Planner task rendering fixes, Hardware Pedometer & GPS integration, Clean Screen Management app names, Compact mobile framing, and Home Screen Light & Dark mode toggle.
 
-          #### 🚀 Enhancements & Compatibility:
-          - **Universal Package Support:** Added high-res app launcher icons (\`ic_launcher\`) in all mipmap sizes (\`mdpi\` to \`xxxhdpi\`), resolving package parsing errors on OEM launchers (Xiaomi, Samsung, Realme, OnePlus, Vivo).
-          - **Full V1 & V2 Dual-Signing:** Signed with RSA 2048-bit release certificate with JAR and APK Signing Block schemes enabled.
-          - **Broad Compatibility:** Minimum Android SDK lowered to Android 5.0 (API 21+), supporting 99.9% of devices.
-          - **Crimson Red Screen Time Manager:** Screen time usage, device opens, and Academics vs. Others ratio bar.
-          - **Me Tab Distraction Blocker:** Behind 'Distraction blocker' button with 2-way protection modes and Schedule Guardian.
-          - **100% Offline Capability:** Operates without any internet connection.
+          #### 🚀 Enhancements & Bug Fixes:
+          - **Day Planner Task Rendering Fix:** Resolved JavaScript ReferenceError on native bridge alarm dispatch; tasks now reliably save into local storage and render onto the chronological timeline and Home screen schedule.
+          - **Hardware Pedometer & GPS Fix:** Activated native Android \`Sensor.TYPE_STEP_COUNTER\` / \`TYPE_STEP_DETECTOR\` bridge, motion sensor fallbacks, and \`WebChromeClient.onGeolocationPermissionsShowPrompt\` callback for outdoor GPS tracking.
+          - **Clean Screen Management App Names:** Added Android \`QUERY_ALL_PACKAGES\` visibility and native package label resolver, replacing raw package identifiers (\`com.facebook.katana\`, \`com.google.android.youtube\`) with clean human labels (\"Facebook\", \"YouTube\", \"WhatsApp\").
+          - **Compact Mobile Frame & Sizing:** Fixed excessive vertical length and screen zooming by disabling wide-viewport desktop emulation in Android WebView, compacting HUD (52px), bottom dock (54px), and optimizing card padding.
+          - **Light & Dark Mode Switcher:** Added a one-tap theme toggle button directly on the Home screen top HUD with full CSS token adaptation and persistent storage across app launches.
+          - **100% Offline Capability:** All assets and application logic remain fully offline and local.
 
           #### 📦 Direct Download:
           - Click **\`Productometer.apk\`** under Assets below to download and install." || \
-          gh release upload v1.0.1 dist/Productometer.apk --clobber
+          gh release upload v1.0.2 dist/Productometer.apk --clobber

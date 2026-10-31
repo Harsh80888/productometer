@@ -22,6 +22,24 @@ const NativeBridge = {
         } catch (e) {}
     },
 
+    // --- 🏃 HARDWARE PEDOMETER & STEP COUNTER ---
+    getStepCount: () => {
+        try {
+            if (typeof window.AndroidBridge !== 'undefined' && window.AndroidBridge.getStepCount) {
+                return window.AndroidBridge.getStepCount();
+            }
+        } catch (e) {}
+        return 0;
+    },
+
+    resetStepCount: () => {
+        try {
+            if (typeof window.AndroidBridge !== 'undefined' && window.AndroidBridge.resetStepCount) {
+                window.AndroidBridge.resetStepCount();
+            }
+        } catch (e) {}
+    },
+
     // --- 📊 ANDROID USAGE STATS & DIGITAL WELLBEING BRIDGE ---
     hasUsageStatsPermission: () => {
         try {

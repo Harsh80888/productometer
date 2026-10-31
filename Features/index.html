@@ -19,7 +19,11 @@
     <!-- Top Fixed Status Ribbon HUD Header Banner -->
     <header class="portal-top-hud">
         <div class="nav-branding-title">Productometer</div>
-        <div class="nav-diamond-hud" style="display: none;">💎 <span id="globalDiamondWallet">0</span></div>
+        <button id="themeToggleBtn" class="theme-toggle-btn" aria-label="Toggle Light/Dark Mode" title="Toggle Light/Dark Theme">
+            <i class="fa-solid fa-sun" id="themeToggleIcon"></i>
+            <span id="themeToggleLabel">Light</span>
+        </button>
+        <div class="nav-diamond-hud" style="display: none !important;">💎 <span id="globalDiamondWallet">0</span></div>
     </header>
 
     <!-- Main Content Workspace Grid Area -->
@@ -125,7 +129,8 @@
         </a>
     </nav>
 
-    <!-- Connects straight to your scripts.js file visible in your file explorer -->
+    <script src="../native-bridge.js"></script>
+    <script src="../main-portal.js"></script>
     <script src="./scripts.js"></script>
 </body>
 </html>

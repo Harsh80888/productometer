@@ -69,6 +69,22 @@ public class WebAppInterface {
     }
 
     /**
+     * Reads hardware step count measured by device step sensor.
+     */
+    @JavascriptInterface
+    public int getStepCount() {
+        return MainActivity.liveStepCount;
+    }
+
+    /**
+     * Resets hardware step counter for a new workout/running session.
+     */
+    @JavascriptInterface
+    public void resetStepCount() {
+        MainActivity.liveStepCount = 0;
+    }
+
+    /**
      * Checks if the user has granted PACKAGE_USAGE_STATS permission for Digital Wellbeing stats.
      */
     @JavascriptInterface
@@ -98,8 +114,60 @@ public class WebAppInterface {
     }
 
     /**
+     * Resolves human-readable clean application labels rather than raw package IDs.
+     */
+    private String getFriendlyAppName(PackageManager pm, String pkgName) {
+        if (pkgName == null) return "Unknown";
+        switch (pkgName) {
+            case "com.google.android.youtube": return "YouTube";
+            case "com.whatsapp": return "WhatsApp";
+            case "com.instagram.android": return "Instagram";
+            case "com.facebook.katana": return "Facebook";
+            case "com.facebook.orca": return "Messenger";
+            case "com.android.chrome": return "Google Chrome";
+            case "com.google.android.apps.messaging": return "Messages";
+            case "com.google.android.gm": return "Gmail";
+            case "com.google.android.apps.maps": return "Google Maps";
+            case "com.spotify.music": return "Spotify";
+            case "com.snapchat.android": return "Snapchat";
+            case "com.twitter.android": return "X (Twitter)";
+            case "org.telegram.messenger": return "Telegram";
+            case "com.netflix.mediaclient": return "Netflix";
+            case "com.reddit.frontpage": return "Reddit";
+            case "com.google.android.apps.photos": return "Google Photos";
+            case "com.google.android.apps.docs": return "Google Drive";
+            case "com.google.android.calendar": return "Google Calendar";
+            case "com.google.android.deskclock": return "Clock";
+            case "com.google.android.calculator": return "Calculator";
+        }
+
+        try {
+            ApplicationInfo appInfo = pm.getApplicationInfo(pkgName, 0);
+            String label = pm.getApplicationLabel(appInfo).toString();
+            if (label != null && !label.trim().isEmpty() && !label.equals(pkgName)) {
+                return label;
+            }
+        } catch (Exception ignored) {}
+
+        try {
+            String[] segments = pkgName.split("\\.");
+            if (segments.length > 0) {
+                String segment = segments[segments.length - 1];
+                if (segment.equalsIgnoreCase("android") && segments.length > 1) {
+                    segment = segments[segments.length - 2];
+                }
+                if (segment.length() > 0) {
+                    return Character.toUpperCase(segment.charAt(0)) + segment.substring(1).replace("_", " ");
+                }
+            }
+        } catch (Exception ignored) {}
+
+        return pkgName;
+    }
+
+    /**
      * Queries actual daily app screen time from Android UsageStatsManager (from 00:00 midnight to now).
-     * Returns a JSON array of real apps with package name, label, and foreground seconds.
+     * Returns a JSON array of real apps with clean label, package name, and foreground seconds.
      */
     @JavascriptInterface
     public String getRealAppUsageStats() {
@@ -131,12 +199,7 @@ public class WebAppInterface {
                 if (totalForegroundMs < 60000) continue; // Skip apps with less than 1 minute usage
 
                 String pkgName = entry.getKey();
-                String appLabel = pkgName;
-                try {
-                    ApplicationInfo appInfo = pm.getApplicationInfo(pkgName, 0);
-                    // Skip system apps without launcher
-                    appLabel = pm.getApplicationLabel(appInfo).toString();
-                } catch (Exception ignored) {}
+                String appLabel = getFriendlyAppName(pm, pkgName);
 
                 JSONObject obj = new JSONObject();
                 obj.put("packageName", pkgName);
@@ -148,7 +211,8 @@ public class WebAppInterface {
                 String lower = (pkgName + " " + appLabel).toLowerCase();
                 boolean isProd = lower.contains("study") || lower.contains("learn") || lower.contains("doc") || 
                                  lower.contains("pdf") || lower.contains("book") || lower.contains("productivity") ||
-                                 lower.contains("school") || lower.contains("calculator") || lower.contains("notes");
+                                 lower.contains("school") || lower.contains("calculator") || lower.contains("notes") ||
+                                 lower.contains("productometer");
                 obj.put("category", isProd ? "productivity" : "others");
 
                 jsonArray.put(obj);
@@ -162,7 +226,7 @@ public class WebAppInterface {
     }
 
     /**
-     * Returns all user-launchable apps installed on the device so user can pick which apps run during sessions.
+     * Returns all user-launchable apps installed on the device with clean names.
      */
     @JavascriptInterface
     public String getInstalledApps() {
@@ -176,9 +240,13 @@ public class WebAppInterface {
 
             for (ResolveInfo ri : activities) {
                 String pkg = ri.activityInfo.packageName;
-                if (pkg.equals(context.getPackageName())) continue; // Exclude self
+                if (pkg.equals(context.getPackageName())) continue;
 
                 String label = ri.loadLabel(pm).toString();
+                if (label == null || label.isEmpty() || label.equals(pkg)) {
+                    label = getFriendlyAppName(pm, pkg);
+                }
+
                 JSONObject obj = new JSONObject();
                 obj.put("packageName", pkg);
                 obj.put("appName", label);
@@ -225,7 +293,7 @@ public class WebAppInterface {
     }
 
     /**
-     * Cancels a previously scheduled task alarm.
+     * Cancels an existing hardware alarm when a user deletes or completes a task.
      */
     @JavascriptInterface
     public void cancelTaskAlarm(String taskId) {
@@ -250,7 +318,7 @@ public class WebAppInterface {
     }
 
     /**
-     * Starts the Android Foreground Focus Service with a persistent countdown in status bar.
+     * Launches the foreground FocusService ticker.
      */
     @JavascriptInterface
     public void startFocusSession(String title, long durationSeconds) {
@@ -258,7 +326,6 @@ public class WebAppInterface {
             Intent serviceIntent = new Intent(context, FocusService.class);
             serviceIntent.putExtra("task_title", title);
             serviceIntent.putExtra("duration_seconds", durationSeconds);
-
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 context.startForegroundService(serviceIntent);
             } else {
@@ -270,7 +337,7 @@ public class WebAppInterface {
     }
 
     /**
-     * Stops the Android Foreground Focus Service when study block ends or is dismissed.
+     * Terminates the foreground countdown service.
      */
     @JavascriptInterface
     public void stopFocusSession() {

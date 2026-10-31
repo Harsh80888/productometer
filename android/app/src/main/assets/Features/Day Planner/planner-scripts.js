@@ -573,13 +573,23 @@ if (addToPlannerBtn) {
             };
             plannerListData.push(newPlannerItem);
         }
-        if (window.NativeBridge && window.NativeBridge.isAvailable()) {
-            const now = new Date();
-            const schedDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), taskStartH, taskStartM, 0);
-            if (schedDate.getTime() > Date.now()) {
-                window.NativeBridge.scheduleAlarm(newPlannerItem.id, newPlannerItem.title, newPlannerItem.timeDisplayStr, schedDate.getTime());
+        // Safe Native Alarm Integration
+        try {
+            if (window.NativeBridge && window.NativeBridge.isAvailable()) {
+                const activeItemForAlarm = plannerListData[plannerListData.length - 1];
+                if (activeItemForAlarm) {
+                    const now = new Date();
+                    const startH = parseInt(activeStartHour, 10) || 0;
+                    const startM = parseInt(activeStartMinute, 10) || 0;
+                    const schedDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), startH, startM, 0);
+                    if (schedDate.getTime() > Date.now()) {
+                        window.NativeBridge.scheduleAlarm(activeItemForAlarm.id, activeItemForAlarm.title, activeItemForAlarm.timeDisplayStr, schedDate.getTime());
+                    }
+                    window.NativeBridge.vibrate(40);
+                }
             }
-            window.NativeBridge.vibrate(40);
+        } catch (alarmErr) {
+            console.warn("[DayPlanner] Alarm notice:", alarmErr);
         }
 
         plannerListData.sort((a, b) => a.startMin - b.startMin);

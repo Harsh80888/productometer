@@ -6,13 +6,13 @@
 /* --- ROOT CONTAINER --- */
 .me-screen-container {
     width: 100%;
-    max-width: 520px;
+    max-width: 440px;
     margin: 0 auto;
-    padding: 12px 16px 36px 16px;
+    padding: 8px 12px 24px 12px;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    gap: 18px;
+    gap: 12px;
 }
 
 /* --- COMMON GLASS PANEL CARD --- */
@@ -793,6 +793,61 @@ input:checked + .switch-slider::before {
     background: transparent;
     border: 1px solid rgba(255, 255, 255, 0.15);
     color: #94a3b8; font-size: 0.74rem; padding: 8px; border-radius: 8px; cursor: pointer;
+}
+
+/* --- ☀️ LIGHT MODE OVERRIDES FOR ME TAB --- */
+body.theme-light .me-card {
+    background: #ffffff !important;
+    border-color: rgba(0, 0, 0, 0.08) !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06) !important;
+}
+body.theme-light .me-title,
+body.theme-light .user-name,
+body.theme-light .stat-card-num,
+body.theme-light .guardian-title-text,
+body.theme-light .mode-card-title,
+body.theme-light .app-rule-name,
+body.theme-light .interception-title {
+    color: #0f172a !important;
+}
+body.theme-light .user-rank {
+    color: #0284c7 !important;
+}
+body.theme-light .btn-open-blocker {
+    background: #ffffff !important;
+    border-color: rgba(0, 200, 100, 0.35) !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05) !important;
+}
+body.theme-light .blocker-text-col h3 {
+    color: #0f172a !important;
+}
+body.theme-light .stat-card {
+    background: #f8fafc !important;
+    border-color: rgba(0, 0, 0, 0.06) !important;
+}
+body.theme-light .stat-card-label {
+    color: #64748b !important;
+}
+body.theme-light .mode-option-card {
+    background: #f8fafc !important;
+    border-color: rgba(0, 0, 0, 0.08) !important;
+}
+body.theme-light .app-rule-item {
+    background: #f8fafc !important;
+    border-color: rgba(0, 0, 0, 0.06) !important;
+}
+body.theme-light .guardian-schedule-summary {
+    background: #f8fafc !important;
+    border-color: rgba(0, 0, 0, 0.06) !important;
+}
+body.theme-light .interception-card {
+    background: #ffffff !important;
+    border-color: rgba(0, 0, 0, 0.1) !important;
+}
+body.theme-light .interception-reason-box {
+    background: #f8fafc !important;
+    border-color: rgba(0, 0, 0, 0.08) !important;
+    color: #334155 !important;
 }
 
 /* GLOBAL NO DIAMONDS */

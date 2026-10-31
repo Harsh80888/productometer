@@ -1,11 +1,12 @@
 /* ==========================================================================
    🎮 PRODUCTOMETER PORTAL - FEATURES WORKSPACE STYLESHEET
+   Responsive Compact Mobile Frame · Cyberpunk Dark & Crisp Light Themes
    ========================================================================== */
 
 /* --- 🪐 RESPONSIVE CORE CONTENT SECTION FRAMEWORK --- */
 .portal-main-content {
-    width: 94%;
-    max-width: 520px;
+    width: 92%;
+    max-width: 440px;
     margin: 0 auto;
     box-sizing: border-box;
 }
@@ -13,33 +14,37 @@
 .features-grid-container {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 12px;                        /* Compact spacing between cards */
     width: 100%;
     box-sizing: border-box;
-    margin-top: 15px;
+    margin-top: 10px;
 }
 
-/* --- 📦 RECTANGULAR TILES WITH ALL-AROUND BLURRY LIGHTING AURA --- */
+/* --- 📦 COMPACT RECTANGULAR TILES WITH ALL-AROUND LIGHTING AURA --- */
 .feature-launcher-card {
     position: relative;
     width: 100%;
-    background: rgba(10, 10, 15, 0.5) !important; 
-    border-radius: 22px;
-    padding: 24px;
+    background: rgba(10, 10, 15, 0.6) !important; 
+    border-radius: 16px;              /* Compact radius */
+    padding: 14px 16px;               /* Compact padding (was 24px) */
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 10px;                        /* Compact inner gap */
     overflow: hidden;
     z-index: 1;
     cursor: pointer;
-    
-    border: 2px solid transparent !important;
-    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    border: 1.5px solid transparent !important;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+body.theme-light .feature-launcher-card {
+    background: rgba(255, 255, 255, 0.9) !important;
+    box-shadow: var(--card-shadow);
 }
 
 .feature-launcher-card:hover {
-    transform: translateY(-3px) scale(1.01);
+    transform: translateY(-2px) scale(1.008);
 }
 
 /* --- 📺 BACKGROUND LAYER COORDS SCALER --- */
@@ -51,16 +56,19 @@
     height: 100%;
     object-fit: cover;
     z-index: -2; 
-    
-    /* 💎 FIXED BLENDING: Overrides alpha channels to display solid JPEGs/AVIFs clearly */
-    opacity: 0.28 !important; 
+    opacity: 0.24 !important; 
     mix-blend-mode: normal !important;
-    filter: brightness(0.8) contrast(110%);
-    transition: all 0.4s ease;
+    filter: brightness(0.85) contrast(110%);
+    transition: all 0.35s ease;
+}
+
+body.theme-light .tile-card-bg-layer {
+    opacity: 0.12 !important;
+    filter: brightness(1.05) contrast(100%);
 }
 
 .feature-launcher-card:hover .tile-card-bg-layer {
-    opacity: 0.40 !important;
+    opacity: 0.35 !important;
     transform: scale(1.02);
 }
 
@@ -69,59 +77,59 @@
 /* 1. Day Planner (Theme: School Magenta) */
 .day-planner-theme {
     border-color: rgba(255, 0, 234, 0.35) !important;
-    box-shadow: 0 0 25px rgba(255, 0, 234, 0.15), inset 0 0 15px rgba(255, 0, 234, 0.1);
+    box-shadow: 0 0 16px rgba(255, 0, 234, 0.12), inset 0 0 10px rgba(255, 0, 234, 0.08);
 }
 .day-planner-theme:hover {
     border-color: #ff00ea !important;
-    box-shadow: 0 0 35px rgba(255, 0, 234, 0.35), inset 0 0 20px rgba(255, 0, 234, 0.2);
+    box-shadow: 0 0 24px rgba(255, 0, 234, 0.25), inset 0 0 14px rgba(255, 0, 234, 0.15);
 }
 
 /* 2. Academics Monitoring (Theme: Academics Cyan) */
 .academics-theme {
     border-color: rgba(0, 229, 255, 0.35) !important;
-    box-shadow: 0 0 25px rgba(0, 229, 255, 0.15), inset 0 0 15px rgba(0, 229, 255, 0.1);
+    box-shadow: 0 0 16px rgba(0, 229, 255, 0.12), inset 0 0 10px rgba(0, 229, 255, 0.08);
 }
 .academics-theme:hover {
     border-color: #00e5ff !important;
-    box-shadow: 0 0 35px rgba(0, 229, 255, 0.35), inset 0 0 20px rgba(0, 229, 255, 0.2);
+    box-shadow: 0 0 24px rgba(0, 229, 255, 0.25), inset 0 0 14px rgba(0, 229, 255, 0.15);
 }
 
 /* 3. Screen Management (Theme: Screen Red) */
 .screen-theme {
     border-color: rgba(255, 23, 68, 0.35) !important;
-    box-shadow: 0 0 25px rgba(255, 23, 68, 0.15), inset 0 0 15px rgba(255, 23, 68, 0.1);
+    box-shadow: 0 0 16px rgba(255, 23, 68, 0.12), inset 0 0 10px rgba(255, 23, 68, 0.08);
 }
 .screen-theme:hover {
     border-color: #ff1744 !important;
-    box-shadow: 0 0 35px rgba(255, 23, 68, 0.35), inset 0 0 20px rgba(255, 23, 68, 0.2);
+    box-shadow: 0 0 24px rgba(255, 23, 68, 0.25), inset 0 0 14px rgba(255, 23, 68, 0.15);
 }
 
 /* 4. Health Tracker (Theme: Health Green) */
 .health-theme {
     border-color: rgba(0, 230, 118, 0.35) !important;
-    box-shadow: 0 0 25px rgba(0, 230, 118, 0.15), inset 0 0 15px rgba(0, 230, 118, 0.1);
+    box-shadow: 0 0 16px rgba(0, 230, 118, 0.12), inset 0 0 10px rgba(0, 230, 118, 0.08);
 }
 .health-theme:hover {
     border-color: #00e676 !important;
-    box-shadow: 0 0 35px rgba(0, 230, 118, 0.35), inset 0 0 20px rgba(0, 230, 118, 0.2);
+    box-shadow: 0 0 24px rgba(0, 230, 118, 0.25), inset 0 0 14px rgba(0, 230, 118, 0.15);
 }
 
 /* 5. Skill Manager (Theme: Skills Amber) */
 .skills-theme {
     border-color: rgba(255, 179, 0, 0.35) !important;
-    box-shadow: 0 0 25px rgba(255, 179, 0, 0.15), inset 0 0 15px rgba(255, 179, 0, 0.1);
+    box-shadow: 0 0 16px rgba(255, 179, 0, 0.12), inset 0 0 10px rgba(255, 179, 0, 0.08);
 }
 .skills-theme:hover {
     border-color: #ffb300 !important;
-    box-shadow: 0 0 35px rgba(255, 179, 0, 0.4), inset 0 0 20px rgba(255, 179, 0, 0.2);
+    box-shadow: 0 0 24px rgba(255, 179, 0, 0.25), inset 0 0 14px rgba(255, 179, 0, 0.15);
 }
 
 /* --- 🎯 BOXED HEADING CONTAINER STYLE --- */
 .card-heading-box {
-    background: rgba(0, 0, 0, 0.7);
-    border: 1.5px solid rgba(255, 255, 255, 0.06);
-    border-radius: 14px;
-    padding: 14px 20px;
+    background: rgba(0, 0, 0, 0.65);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 10px;
+    padding: 10px 14px;
     width: 100%;
     box-sizing: border-box;
     display: flex;
@@ -129,22 +137,27 @@
     align-items: center;
 }
 
+body.theme-light .card-heading-box {
+    background: rgba(241, 245, 249, 0.85);
+    border-color: rgba(0, 0, 0, 0.06);
+}
+
 .card-heading-box h3 {
     margin: 0;
-    font-size: 1.3rem;
+    font-size: 1.1rem;                /* Compact heading */
     font-weight: 800;
     letter-spacing: -0.3px;
-    color: #ffffff;
+    color: var(--text-primary);
     text-align: center;
 }
 
 /* --- 📝 COMMENT & DESCRIPTION TEXT STYLE (BOTTOM OF TILE) --- */
 .card-comment-desc {
-    margin: 4px 0 0 0;
-    font-size: 0.8rem; 
-    color: #78788a;
+    margin: 2px 0 0 0;
+    font-size: 0.76rem;               /* Compact description */
+    color: var(--text-secondary);
     font-weight: 500;
-    line-height: 1.5;
+    line-height: 1.4;
     text-align: center;
 }
 
@@ -157,12 +170,28 @@
 }
 
 .tier-badge {
-    font-size: 0.65rem;
+    font-size: 0.6rem;
     font-weight: 800;
-    padding: 4px 10px;
-    border-radius: 8px;
-    letter-spacing: 0.5px;
+    padding: 3px 8px;
+    border-radius: 6px;
+    letter-spacing: 0.4px;
 }
-.tier-badge.free { background: rgba(255, 255, 255, 0.04); color: #8a8a9e; border: 1px solid rgba(255, 255, 255, 0.08); }
-.live-metric-indicator { font-size: 0.72rem; font-weight: 700; color: #5e5e6e; }
-.live-metric-indicator.text-warn { color: #ff1744; }
+.tier-badge.free {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-muted);
+    border: 1px solid var(--border-subtle);
+}
+body.theme-light .tier-badge.free {
+    background: rgba(0, 0, 0, 0.04);
+    color: var(--text-muted);
+    border-color: rgba(0, 0, 0, 0.08);
+}
+
+.live-metric-indicator {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--text-muted);
+}
+.live-metric-indicator.text-warn {
+    color: #ff1744;
+}

@@ -1,87 +1,184 @@
-/* --- 🪐 GLOBAL SOLID BLACK PORTAL MAINFRAME CONFIGS --- */
+/* ==========================================================================
+   🪐 PRODUCTOMETER - CORE GLOBAL PORTAL STYLESHEET
+   Responsive Compact Mobile Frame · Cyberpunk Dark & Crisp Light Themes
+   ========================================================================== */
+
+:root {
+    --bg-base: #000000;
+    --bg-card: #0c0d13;
+    --bg-card-secondary: #13141d;
+    --bg-surface: #101015;
+    --bg-surface-glass: rgba(14, 16, 26, 0.90);
+    --text-primary: #ffffff;
+    --text-secondary: #9da3af;
+    --text-muted: #626274;
+    --border-subtle: rgba(255, 255, 255, 0.06);
+    --border-accent: rgba(0, 229, 255, 0.25);
+    --hud-bg: rgba(4, 4, 6, 0.92);
+    --nav-bg: linear-gradient(180deg, rgba(16, 16, 24, 0.85) 0%, rgba(6, 6, 9, 0.95) 100%);
+    --nav-border: rgba(255, 255, 255, 0.08);
+    --nav-inactive: #525266;
+    --card-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+    --theme-toggle-bg: rgba(255, 255, 255, 0.08);
+    --theme-toggle-color: #ffd166;
+    --theme-toggle-border: rgba(255, 209, 102, 0.35);
+}
+
+/* ☀️ CRISP MODERN LIGHT MODE THEME */
+body.theme-light, html.theme-light {
+    --bg-base: #f3f5f9;
+    --bg-card: #ffffff;
+    --bg-card-secondary: #eef2f8;
+    --bg-surface: #ffffff;
+    --bg-surface-glass: rgba(255, 255, 255, 0.94);
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #64748b;
+    --border-subtle: rgba(0, 0, 0, 0.08);
+    --border-accent: rgba(0, 160, 220, 0.4);
+    --hud-bg: rgba(255, 255, 255, 0.94);
+    --nav-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(240, 244, 250, 0.98) 100%);
+    --nav-border: rgba(0, 0, 0, 0.09);
+    --nav-inactive: #64748b;
+    --card-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+    --theme-toggle-bg: rgba(99, 102, 241, 0.1);
+    --theme-toggle-color: #4f46e5;
+    --theme-toggle-border: rgba(79, 70, 229, 0.35);
+}
+
 body, html {
     margin: 0;
     padding: 0;
-    background-color: #000000 !important; /* Solid pitch black mobile viewport backdrop canvas */
-    color: #ffffff;
-    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-base) !important;
+    color: var(--text-primary);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     min-height: 100vh;
     box-sizing: border-box;
     overflow-x: hidden;
     -webkit-tap-highlight-color: transparent;
+    transition: background-color 0.25s ease, color 0.25s ease;
 }
 
+/* --- 📱 COMPACT CYBERPUNK PORTAL BODY --- */
 .cyberpunk-portal-body {
     display: flex;
     flex-direction: column;
-    padding-top: 75px;    /* Fixed safety offset padding buffer layout clearances for top HUD */
-    padding-bottom: 95px;  /* Fixed safety offset padding buffer layout clearances for bottom menu */
+    padding-top: 60px !important;    /* Sleek compact top offset */
+    padding-bottom: 76px !important;  /* Sleek compact bottom clearance */
+    min-height: 100vh;
+    box-sizing: border-box;
 }
 
-/* --- 👑 FIX BAR TOP HEAD-UP DISPLAY --- */
+/* --- 👑 TOP FIXED HUD HEADER BAR --- */
 .portal-top-hud {
     position: fixed;
-    top: 0; left: 0; width: 100%; height: 65px;
-    background: rgba(4, 4, 6, 0.85);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border-bottom: 1.5px solid rgba(255, 255, 255, 0.04);
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 0 20px; box-sizing: border-box; z-index: 9999;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 52px;                     /* Compact 52px header */
+    background: var(--hud-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border-subtle);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 16px;
+    box-sizing: border-box;
+    z-index: 9999;
+    transition: background-color 0.25s ease, border-color 0.25s ease;
 }
 
 .nav-branding-title {
-    font-family: 'Caveat', cursive; font-style: italic; font-size: 2.1rem; font-weight: 700;
-    background: linear-gradient(135deg, #00e5ff, #d500f9); -webkit-background-clip: text;
-    background-clip: text; -webkit-text-fill-color: transparent;
+    font-family: 'Caveat', cursive;
+    font-style: italic;
+    font-size: 1.65rem;               /* Compact branded script */
+    font-weight: 700;
+    background: linear-gradient(135deg, #00e5ff, #d500f9);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    line-height: 1;
+    user-select: none;
 }
 
-.nav-diamond-hud {
-    display: none !important; /* Diamonds hidden */
-    background: #0f0f15; border: 1.5px solid rgba(0, 229, 255, 0.25);
-    padding: 6px 14px; font-weight: 800; font-size: 0.9rem; border-radius: 14px;
-    box-shadow: 0 0 10px rgba(0, 229, 255, 0.08); letter-spacing: 0.5px;
+/* --- 🌓 LIGHT/DARK MODE TOGGLE BUTTON --- */
+.theme-toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--theme-toggle-bg);
+    border: 1px solid var(--theme-toggle-border);
+    color: var(--theme-toggle-color);
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    outline: none;
+    user-select: none;
 }
-/* --- 🛸 THE EXODOCK: ANGULAR CYBERPUNK NAV UTILITY --- */
+
+.theme-toggle-btn i {
+    font-size: 0.85rem;
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.theme-toggle-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 12px var(--theme-toggle-border);
+}
+
+.theme-toggle-btn:active {
+    transform: scale(0.94);
+}
+
+/* 💎 STRICTLY OMITTED DIAMOND WALLET */
+.nav-diamond-hud {
+    display: none !important;
+}
+
+/* --- 🛸 COMPACT EXODOCK BOTTOM NAVIGATION UTILITY --- */
 .portal-bottom-nav {
     position: fixed;
-    bottom: 24px;
+    bottom: 10px;
     left: 50%;
     transform: translateX(-50%);
-    width: 92%;
-    max-width: 420px;
-    height: 72px;
+    width: 90%;
+    max-width: 380px;                 /* Perfectly framed on mobile screens */
+    height: 54px;                     /* Compact 54px dock */
     
-    /* Premium Space-Grade Translucent Dark Crystal Backdrop */
-    background: linear-gradient(180deg, rgba(16, 16, 24, 0.75) 0%, rgba(6, 6, 9, 0.9) 100%) !important;
+    background: var(--nav-bg) !important;
     backdrop-filter: blur(20px) saturate(200%);
     -webkit-backdrop-filter: blur(20px) saturate(200%);
     
-    /* Angular Exo-Skeleton Border Cutouts Shape Frame */
-    border: 1px solid rgba(255, 255, 255, 0.05) !important;
-    border-radius: 20px 4px 20px 4px; /* Asymmetric high-aesthetic polygon corners */
+    border: 1px solid var(--nav-border) !important;
+    border-radius: 16px 4px 16px 4px; /* Asymmetric high-aesthetic corners */
     
     display: flex;
     justify-content: space-around;
     align-items: center;
-    padding: 0 12px;
+    padding: 0 8px;
     box-sizing: border-box;
     z-index: 999999 !important;
-    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.8),
-                0 0 30px rgba(0, 0, 0, 0.5),
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45),
                 inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    transition: background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
 }
 
-/* ⚡ THE LASER CORE: Continuous horizontal glowing rail line splitting the navbar top edge */
+/* ⚡ LASER CORE ACCENT STRIP */
 .portal-bottom-nav::before {
     content: '';
     position: absolute;
     top: -1px;
-    left: 15%;
-    width: 70%;
+    left: 18%;
+    width: 64%;
     height: 2px;
     background: linear-gradient(90deg, transparent, #d500f9, #00e5ff, transparent);
-    box-shadow: 0 0 12px #00e5ff, 0 0 4px #d500f9;
+    box-shadow: 0 0 10px #00e5ff, 0 0 3px #d500f9;
 }
 
 .bottom-nav-btn {
@@ -90,155 +187,107 @@ body, html {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 6px;
+    gap: 3px;
     text-decoration: none;
-    color: #444454; /* Clean dark-stealth base icon shade */
-    width: 85px;
-    height: 80%;
-    border-radius: 12px;
-    transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+    color: var(--nav-inactive);
+    width: 72px;
+    min-width: 60px;
+    height: 82%;
+    border-radius: 10px;
+    transition: all 0.25s cubic-bezier(0.25, 1, 0.5, 1);
     z-index: 2;
 }
 
 .bottom-nav-btn i {
-    font-size: 1.25rem;
-    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    font-size: 1.15rem;
+    transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .bottom-nav-btn span {
-    font-size: 0.65rem;
+    font-size: 0.62rem;
     font-weight: 800;
     text-transform: uppercase;
-    letter-spacing: 1.2px; /* Wide font tracking layout accentuation */
-    transition: all 0.3s ease;
+    letter-spacing: 0.8px;
+    transition: color 0.25s ease;
 }
 
-/* --- 🌟 THE LIQUID NEON CAPSULE SYSTEM (ACTIVE LINK STATES) --- */
+/* Active Tab Highlight */
 .bottom-nav-btn.active {
-    color: #ffffff !important;
+    color: var(--text-primary) !important;
 }
 
-/* Draws a glowing pill container background structure natively behind the active tab link */
 .bottom-nav-btn.active::after {
     content: '';
     position: absolute;
-    top: 50%; left: 50%;
+    top: 50%;
+    left: 50%;
     transform: translate(-50%, -50%);
     width: 100%;
     height: 100%;
-    background: linear-gradient(135deg, rgba(0, 229, 255, 0.06) 0%, rgba(213, 0, 249, 0.04) 100%);
-    border: 1px solid rgba(0, 229, 255, 0.2);
-    border-radius: 12px 2px 12px 2px; /* Matches asymmetric theme angles */
+    background: linear-gradient(135deg, rgba(0, 229, 255, 0.08) 0%, rgba(213, 0, 249, 0.06) 100%);
+    border: 1px solid rgba(0, 229, 255, 0.25);
+    border-radius: 10px 2px 10px 2px;
     z-index: -1;
-    box-shadow: 0 0 15px rgba(0, 229, 255, 0.08);
+    box-shadow: 0 0 12px rgba(0, 229, 255, 0.12);
     animation: capsulePulse 2s infinite ease-in-out;
 }
 
 .bottom-nav-btn.active i {
-    color: #00e5ff !important; /* Forces icon to bright neon cyan */
-    transform: translateY(-4px) scale(1.18);
-    filter: drop-shadow(0 0 8px rgba(0, 229, 255, 0.7));
+    color: #00e5ff !important;
+    transform: translateY(-2px) scale(1.12);
+    filter: drop-shadow(0 0 6px rgba(0, 229, 255, 0.6));
 }
 
 .bottom-nav-btn.active span {
-    color: #ffffff !important;
-    text-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
+    color: var(--text-primary) !important;
     font-weight: 800;
 }
 
-/* Subtle icon bounce hover feedback for unselected tab options */
 .bottom-nav-btn:not(.active):hover {
     color: #88889c;
 }
+
 .bottom-nav-btn:not(.active):hover i {
-    transform: translateY(-2px);
-    color: rgba(213, 0, 249, 0.7);
+    transform: translateY(-1px);
+    color: rgba(213, 0, 249, 0.8);
 }
 
 @keyframes capsulePulse {
-    0%, 100% { border-color: rgba(0, 229, 255, 0.2); box-shadow: 0 0 15px rgba(0, 229, 255, 0.08); }
-    50% { border-color: rgba(213, 0, 249, 0.4); box-shadow: 0 0 20px rgba(213, 0, 249, 0.15); }
+    0%, 100% { border-color: rgba(0, 229, 255, 0.25); box-shadow: 0 0 10px rgba(0, 229, 255, 0.08); }
+    50% { border-color: rgba(213, 0, 249, 0.4); box-shadow: 0 0 16px rgba(213, 0, 249, 0.15); }
 }
 
-/* Responsive spacing layout cushion */
-.cyberpunk-portal-body {
-    padding-bottom: 120px !important;
+/* --- 📦 MAIN WORKSPACE CONTAINER (COMPACT MOBILE FRAME) --- */
+.portal-main-content {
+    width: 92%;
+    max-width: 440px;                 /* Restricts width nicely on phones */
+    margin: 0 auto;
+    box-sizing: border-box;
 }
-
-
-.bottom-nav-btn {
-    display: flex; 
-    flex-direction: column; 
-    align-items: center; 
-    justify-content: center;
-    gap: 4px; 
-    text-decoration: none; 
-    color: #525266;        /* Muted inactive button gray scale */
-    min-width: 75px; 
-    height: 85%;
-    border-radius: 14px;
-    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.bottom-nav-btn i { 
-    font-size: 1.2rem; 
-    transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
-}
-
-.bottom-nav-btn span { 
-    font-size: 0.68rem; 
-    font-weight: 800; 
-    text-transform: uppercase; 
-    letter-spacing: 0.8px; 
-}
-
-/* 🌟 ACTIVE TARGET TRANSITION ANIMATIONS: Neon Highlight Indicator Glows */
-.bottom-nav-btn.active { 
-    color: #ffffff !important; 
-    background: rgba(0, 229, 255, 0.06); /* Adds a subtle glowing background behind the active link */
-    border: 1px solid rgba(0, 229, 255, 0.15);
-}
-
-.bottom-nav-btn.active i { 
-    transform: translateY(-3px) scale(1.15); 
-    color: #00e5ff !important;            /* Swaps icon to brilliant electric cyan */
-    filter: drop-shadow(0 0 8px rgba(0, 229, 255, 0.6)); 
-}
-
-.bottom-nav-btn:hover {
-    color: #a3a3c2;
-}
-.bottom-nav-btn.active:hover {
-    color: #ffffff;
-}
-
-/* Safety offset pad adjustment to prevent the new floating bar from covering text layers */
-.cyberpunk-portal-body {
-    padding-bottom: 110px !important;
-}
-
-.bottom-nav-btn {
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 5px; text-decoration: none; color: #4e4e5e; min-width: 70px; height: 100%;
-    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.bottom-nav-btn i { font-size: 1.35rem; transition: transform 0.2s ease; }
-.bottom-nav-btn span { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
-
-/* Active target selected link glows and styles matrix animations */
-.bottom-nav-btn.active { color: #d500f9; text-shadow: 0 0 10px rgba(213, 0, 249, 0.3); }
-.bottom-nav-btn.active i { transform: translateY(-2px) scale(1.1); color: #00e5ff; filter: drop-shadow(0 0 5px rgba(0, 229, 255, 0.4)); }
-
-/* --- 📦 MAIN CARD WORKSPACE BLOCKS CONTAINER --- */
-.portal-main-content { width: 92%; max-width: 500px; margin: 0 auto; box-sizing: border-box; }
 
 .view-hero-card {
-    background: linear-gradient(180deg, #101015 0%, #050508 100%);
-    border: 1.5px solid rgba(255, 255, 255, 0.05); border-radius: 24px;
-    padding: 25px; box-sizing: border-box; margin-top: 15px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 18px;
+    padding: 18px;
+    box-sizing: border-box;
+    margin-top: 10px;
+    box-shadow: var(--card-shadow);
+    transition: background-color 0.25s ease, border-color 0.25s ease;
 }
 
-.view-hero-card h2 { margin: 0 0 10px 0; font-size: 1.4rem; font-weight: 800; letter-spacing: -0.5px; }
-.view-hero-card p { margin: 0; font-size: 0.88rem; color: #8a8a9e; font-weight: 500; line-height: 1.6; }
+.view-hero-card h2 {
+    margin: 0 0 8px 0;
+    font-size: 1.25rem;
+    font-weight: 800;
+    letter-spacing: -0.4px;
+    color: var(--text-primary);
+}
+
+.view-hero-card p {
+    margin: 0;
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+    line-height: 1.5;
+}
