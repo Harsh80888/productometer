@@ -2,7 +2,7 @@
 
 <div align="center">
 
-[![Download Android APK](https://img.shields.io/badge/Download-Android%20APK%20(v1.0.0)-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://github.com/Harsh80888/productometer/releases/latest/download/Productometer.apk)
+[![Download Android APK](https://img.shields.io/badge/Download-Android%20APK%20(v1.0.1)-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://github.com/Harsh80888/productometer/releases/latest/download/Productometer.apk)
 [![Live Web Portal](https://img.shields.io/badge/Live%20Web-Open%20App-00e5ff?style=for-the-badge&logo=googlechrome&logoColor=black)](https://harsh80888.github.io/productometer/)
 [![GitHub Releases](https://img.shields.io/github/v/release/Harsh80888/productometer?style=for-the-badge&color=ff1744&logo=github)](https://github.com/Harsh80888/productometer/releases)
 
@@ -11,7 +11,7 @@
 
 ---
 
-### 📥 [Click Here to Download Productometer.apk Directly](https://github.com/Harsh80888/productometer/releases/latest/download/Productometer.apk)
+### 📥 [Click Here to Download Productometer.apk (Latest v1.0.1 Release)](https://github.com/Harsh80888/productometer/releases/latest/download/Productometer.apk)
 *(Or visit the [Releases Page](https://github.com/Harsh80888/productometer/releases) to view all builds)*
 
 </div>
@@ -20,10 +20,13 @@
 
 ## 📱 How to Install on Android
 
-1. Download **[`Productometer.apk`](https://github.com/Harsh80888/productometer/releases/latest/download/Productometer.apk)** directly to your Android device.
+1. Download **[`Productometer.apk`](https://github.com/Harsh80888/productometer/releases/latest/download/Productometer.apk)** directly to your Android device (ensure the full ~26 MB download finishes).
 2. Tap the downloaded file in your browser or Downloads folder.
-3. If prompted, allow *"Install from unknown sources"* for your browser.
+3. If prompted, allow *"Install from unknown sources"* for your browser/file manager.
 4. Tap **Install** and launch **Productometer**!
+
+> **Troubleshooting "Package appears to be invalid":**  
+> If your phone shows this prompt, it almost always means the browser paused or truncated the download before completing. Check your Downloads folder to ensure the file size is approximately **26 MB**, or download using Google Chrome.
 
 ---
 

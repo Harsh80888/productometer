@@ -2,6 +2,7 @@
 Thumbs.db
 node_modules/
 *.log
+*.apk
 
 # Android build outputs and caches
 .gradle/
@@ -11,4 +12,5 @@ android/*/build/
 android/local.properties
 android/*.iml
 android/*/*.iml
+android/app/*.keystore
 dist/

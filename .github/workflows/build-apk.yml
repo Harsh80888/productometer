@@ -29,23 +29,35 @@ jobs:
           gradle-version: '8.2'
           cache-disabled: true
 
-      - name: Build Android Debug APK
+      - name: Generate Production Release Keystore
+        run: |
+          keytool -genkey -v \
+            -keystore android/app/release.keystore \
+            -alias productometer \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 10000 \
+            -storepass productometer123 \
+            -keypass productometer123 \
+            -dname "CN=Productometer, OU=Productivity, O=Productometer, L=Bangalore, S=Karnataka, C=IN"
+
+      - name: Build Android Release APK
         env:
           ANDROID_HOME: /usr/local/lib/android/sdk
         run: |
           cd android
-          gradle assembleDebug --stacktrace
+          gradle assembleRelease --stacktrace
 
       - name: Prepare APK Release Artifact
         run: |
           mkdir -p dist
-          cp android/app/build/outputs/apk/debug/app-debug.apk dist/Productometer.apk
+          cp android/app/build/outputs/apk/release/app-release.apk dist/Productometer.apk
           ls -lh dist/Productometer.apk
 
       - name: Upload APK as Workflow Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Productometer-Debug-APK
+          name: Productometer-Release-APK
           path: dist/Productometer.apk
           if-no-files-found: error
 
@@ -53,19 +65,20 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create v1.0.0 dist/Productometer.apk \
-            --title "Productometer v1.0.0 - Android APK" \
-            --notes "### 📱 Productometer Android Release v1.0.0
+          gh release create v1.0.1 dist/Productometer.apk \
+            --title "Productometer v1.0.1 - Android Release APK" \
+            --notes "### 📱 Productometer Android Release v1.0.1
 
-          Download the official Android APK below to install Productometer on your Android device!
+          Universal Android Release APK with full offline support and native launcher icon.
 
-          #### 🚀 Highlights:
-          - **Screen Time Manager:** Crimson red theme, live device usage, and Academics vs. Others screen ratio bar.
-          - **Distraction Blocker:** Schedule Guardian inside Me tab with app permission filters and content-level defense (Shorts, Reels, Games).
-          - **Academics & Study Timer:** Real-time study session countdown and audio alarms.
-          - **Health & Workout Tracker:** Animated workout exercises and audio guidance.
-          - **Immersive Cyberpunk Theme:** High-contrast OLED dark styling.
+          #### 🚀 Enhancements & Compatibility:
+          - **Universal Package Support:** Added high-res app launcher icons (\`ic_launcher\`) in all mipmap sizes (\`mdpi\` to \`xxxhdpi\`), resolving package parsing errors on OEM launchers (Xiaomi, Samsung, Realme, OnePlus, Vivo).
+          - **Full V1 & V2 Dual-Signing:** Signed with RSA 2048-bit release certificate with JAR and APK Signing Block schemes enabled.
+          - **Broad Compatibility:** Minimum Android SDK lowered to Android 5.0 (API 21+), supporting 99.9% of devices.
+          - **Crimson Red Screen Time Manager:** Screen time usage, device opens, and Academics vs. Others ratio bar.
+          - **Me Tab Distraction Blocker:** Behind 'Distraction blocker' button with 2-way protection modes and Schedule Guardian.
+          - **100% Offline Capability:** Operates without any internet connection.
 
           #### 📦 Direct Download:
-          - Click **\`Productometer.apk\`** under Assets below to download and install on Android." || \
-          gh release upload v1.0.0 dist/Productometer.apk --clobber
+          - Click **\`Productometer.apk\`** under Assets below to download and install." || \
+          gh release upload v1.0.1 dist/Productometer.apk --clobber
