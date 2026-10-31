@@ -27,6 +27,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v3
         with:
           gradle-version: '8.2'
+          cache-disabled: true
 
       - name: Build Android Debug APK
         env:
@@ -66,5 +67,5 @@ jobs:
           - **Immersive Cyberpunk Theme:** High-contrast OLED dark styling.
 
           #### 📦 Direct Download:
-          - Click **\`Productometer.apk\`** under Assets below to download and install on Android." \
-            --clobber
+          - Click **\`Productometer.apk\`** under Assets below to download and install on Android." || \
+          gh release upload v1.0.0 dist/Productometer.apk --clobber
