@@ -37,8 +37,6 @@ android {
         }
         debug {
             signingConfig signingConfigs.release
-            v1SigningEnabled true
-            v2SigningEnabled true
         }
     }
     compileOptions {
