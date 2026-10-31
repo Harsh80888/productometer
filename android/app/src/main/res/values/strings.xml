@@ -1,0 +1,6 @@
+<resources>
+    <string name="app_name">Productivity Meter</string>
+    <string name="notification_channel_id">productivity_meter_channel</string>
+    <string name="notification_channel_name">Focus &amp; Alarms</string>
+    <string name="notification_channel_desc">Focus sessions, study countdowns, and scheduled task alarms</string>
+</resources>

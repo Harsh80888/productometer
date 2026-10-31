@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Productometer - Me</title>
+    <!-- Google Fonts Framework Links -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons Framework Asset -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="./me-style.css">
+</head>
+<body class="cyberpunk-portal-body">
+
+    <!-- Top Fixed Status Ribbon HUD Header (No Diamonds) -->
+    <header class="portal-top-hud">
+        <div class="nav-branding-title">Productometer</div>
+        <div style="font-size: 0.75rem; font-weight: 800; color: #00e5ff; letter-spacing: 1px; text-transform: uppercase;">
+            <i class="fa-solid fa-user-astronaut"></i> Me Profile
+        </div>
+    </header>
+
+    <!-- Main Content Workspace Area Frame -->
+    <main class="portal-main-content">
+        <div class="me-screen-container">
+
+            <!-- ========================================================
+                 VIEW 1: ME HUB & CONTROLS LANDING (DEFAULT VIEW)
+                 ======================================================== -->
+            <div id="meHubView" style="display: flex; flex-direction: column; gap: 18px;">
+                
+                <!-- Agent Profile Card -->
+                <section class="me-card me-user-card">
+                    <div class="me-user-info">
+                        <div class="user-avatar-hex">
+                            <i class="fa-solid fa-user-astronaut"></i>
+                        </div>
+                        <div class="user-text-meta">
+                            <span class="user-name">Discipline Operative</span>
+                            <span class="user-rank"><i class="fa-solid fa-bolt"></i> Focus &amp; Defense Hub</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- DEDICATED LAUNCHER: DISTRACTION BLOCKER BUTTON -->
+                <div class="me-action-cards-grid">
+                    <button class="btn-open-blocker" id="btnOpenBlocker">
+                        <div class="action-card-content">
+                            <div class="action-card-icon">
+                                <i class="fa-solid fa-shield-virus"></i>
+                            </div>
+                            <div class="action-card-text">
+                                <div class="action-card-title">Distraction blocker</div>
+                                <div class="action-card-desc">Configure which apps &amp; content run during sessions</div>
+                                <span class="action-card-badge badge-active-shield" id="hubGuardianBadge">
+                                    <i class="fa-solid fa-shield-halved"></i> Schedule Aware
+                                </span>
+                            </div>
+                        </div>
+                        <i class="fa-solid fa-chevron-right action-card-arrow"></i>
+                    </button>
+
+                    <!-- SCREEN TIME SHORTCUT -->
+                    <a href="../Features/Screen_Management/index.html" class="btn-open-screentime">
+                        <div class="action-card-content">
+                            <div class="action-card-icon icon-screentime">
+                                <i class="fa-solid fa-chart-pie"></i>
+                            </div>
+                            <div class="action-card-text">
+                                <div class="action-card-title">Screen Time Manager</div>
+                                <div class="action-card-desc">Digital Wellbeing, app usage &amp; productivity ratio</div>
+                            </div>
+                        </div>
+                        <i class="fa-solid fa-arrow-up-right-from-square action-card-arrow" style="color: #ff1744;"></i>
+                    </a>
+                </div>
+
+                <!-- FOCUS & DISCIPLINE STATS SUMMARY -->
+                <section class="me-card">
+                    <div class="me-card-header">
+                        <div class="me-title">
+                            <i class="fa-solid fa-chart-simple"></i> Daily Defense Overview
+                        </div>
+                    </div>
+                    <div class="stats-summary-grid">
+                        <div class="stat-box">
+                            <span class="stat-box-label"><i class="fa-solid fa-shield-halved" style="color: #ff3366;"></i> Interceptions</span>
+                            <span class="stat-box-val" id="hubInterceptionsCount" style="color: #ff3366;">14</span>
+                        </div>
+                        <div class="stat-box">
+                            <span class="stat-box-label"><i class="fa-solid fa-fire" style="color: #ffb300;"></i> Study Streak</span>
+                            <span class="stat-box-val" style="color: #ffb300;">Active</span>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- ========================================================
+                 VIEW 2: DISTRACTION BLOCKER (REVEALED BEHIND BUTTON)
+                 ======================================================== -->
+            <div id="distractionBlockerView">
+
+                <!-- Top Return Bar -->
+                <div class="blocker-top-bar">
+                    <button class="btn-back-to-me" id="btnBackToMe">
+                        <i class="fa-solid fa-arrow-left"></i> Me Profile
+                    </button>
+                    <span class="blocker-header-chip">
+                        <i class="fa-solid fa-shield-virus"></i> Distraction Blocker
+                    </span>
+                </div>
+
+                <!-- Live Schedule Guardian Banner (Real-time Day Planner Link) -->
+                <div class="schedule-guardian-banner">
+                    <div class="guardian-status-pill status-standby" id="guardianStatusPill">
+                        <i class="fa-solid fa-bolt"></i> STANDBY · SCHEDULE AWARE
+                    </div>
+                    <div class="guardian-task-detail" id="guardianTaskDetail">
+                        <i class="fa-regular fa-clock"></i> Checking today's Day Planner schedule...
+                    </div>
+                </div>
+
+                <!-- 2-Way Protection Switcher (Strictly Academics and Health - NO Free Time Tab) -->
+                <div class="protection-mode-switcher">
+                    <button class="mode-tab-btn active mode-academics" id="modeTabAcademics">
+                        <i class="fa-solid fa-graduation-cap"></i> Academics Session
+                    </button>
+                    <button class="mode-tab-btn mode-health" id="modeTabHealth">
+                        <i class="fa-solid fa-heart-pulse"></i> Health &amp; Workout
+                    </button>
+                </div>
+
+                <!-- SECTION: WHICH APPS WILL RUN DURING SESSIONS -->
+                <section class="me-card session-app-rules-card">
+                    <div class="me-card-header">
+                        <div class="me-title">
+                            <i class="fa-solid fa-mobile-screen-button"></i> Apps Running in Session
+                        </div>
+                    </div>
+
+                    <!-- Enforcement Mode: Whitelist vs Blacklist -->
+                    <div class="enforcement-type-selector">
+                        <div class="enforcement-label-group">
+                            <span class="enforcement-title">Session Enforcement Strategy</span>
+                            <span class="enforcement-sub" id="enforcementSub">Only allowed apps can run during session. All others are blocked.</span>
+                        </div>
+                        <button class="rule-type-toggle-btn" id="btnToggleRuleType">Strict Whitelist</button>
+                    </div>
+
+                    <!-- App Search & Custom Add Row -->
+                    <div class="app-search-and-presets">
+                        <input type="text" class="app-search-input" id="appSearchInput" placeholder="Filter apps (e.g. YouTube, Chrome)...">
+                        <button class="btn-add-rule-app" id="btnAddRuleApp">
+                            <i class="fa-solid fa-plus"></i> Add App
+                        </button>
+                    </div>
+
+                    <!-- Session Apps List with Run/Block Toggles -->
+                    <div class="session-apps-list" id="sessionAppsList">
+                        <!-- Populated dynamically by scripts.js -->
+                    </div>
+                </section>
+
+                <!-- SECTION: CONTENT-LEVEL DEFENSES -->
+                <section class="me-card content-defenses-card">
+                    <div class="me-card-header">
+                        <div class="me-title">
+                            <i class="fa-solid fa-filter-circle-xmark"></i> Content Restrictions
+                        </div>
+                    </div>
+
+                    <!-- Switch 1: YouTube Shorts Only -->
+                    <div class="content-toggle-row">
+                        <div class="content-info">
+                            <div class="content-icon icon-shorts">
+                                <i class="fa-brands fa-youtube"></i>
+                            </div>
+                            <div class="content-text">
+                                <span class="content-title">Block YouTube Shorts Only</span>
+                                <span class="content-desc">Leaves long-form lectures &amp; study tutorials accessible; terminates vertical short doomscrolling.</span>
+                            </div>
+                        </div>
+                        <label class="cyber-switch">
+                            <input type="checkbox" id="toggleShorts" checked>
+                            <span class="switch-slider"></span>
+                        </label>
+                    </div>
+
+                    <!-- Switch 2: Instagram Reels -->
+                    <div class="content-toggle-row">
+                        <div class="content-info">
+                            <div class="content-icon icon-reels">
+                                <i class="fa-brands fa-instagram"></i>
+                            </div>
+                            <div class="content-text">
+                                <span class="content-title">Block Instagram Reels &amp; Explore</span>
+                                <span class="content-desc">Restricts algorithmic video feeds while leaving essential direct messaging intact.</span>
+                            </div>
+                        </div>
+                        <label class="cyber-switch">
+                            <input type="checkbox" id="toggleReels" checked>
+                            <span class="switch-slider"></span>
+                        </label>
+                    </div>
+
+                    <!-- Switch 3: Mobile Games -->
+                    <div class="content-toggle-row">
+                        <div class="content-info">
+                            <div class="content-icon icon-games">
+                                <i class="fa-solid fa-gamepad"></i>
+                            </div>
+                            <div class="content-text">
+                                <span class="content-title">Block Mobile Games &amp; Arcades</span>
+                                <span class="content-desc">Locks mobile gaming packages during active discipline hours.</span>
+                            </div>
+                        </div>
+                        <label class="cyber-switch">
+                            <input type="checkbox" id="toggleGames" checked>
+                            <span class="switch-slider"></span>
+                        </label>
+                    </div>
+
+                    <!-- Switch 4: Browser Web Shield -->
+                    <div class="content-toggle-row">
+                        <div class="content-info">
+                            <div class="content-icon icon-web">
+                                <i class="fa-solid fa-globe"></i>
+                            </div>
+                            <div class="content-text">
+                                <span class="content-title">Browser Web Distraction Shield</span>
+                                <span class="content-desc">Warns or intercepts entertainment websites during active sessions.</span>
+                            </div>
+                        </div>
+                        <label class="cyber-switch">
+                            <input type="checkbox" id="toggleWeb" checked>
+                            <span class="switch-slider"></span>
+                        </label>
+                    </div>
+
+                    <!-- Footer Stats & Test Shield Trigger -->
+                    <div class="guardian-footer-row">
+                        <div class="interceptions-badge">
+                            <i class="fa-solid fa-shield-halved"></i> Blocked Today: <span class="interceptions-count" id="interceptionsCount">14</span>
+                        </div>
+                        <button class="btn-test-shield" id="btnTestShield">
+                            <i class="fa-solid fa-play"></i> Test Distraction Shield
+                        </button>
+                    </div>
+                </section>
+
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Bottom Navigation Bar (No Diamonds) -->
+    <nav class="portal-bottom-nav">
+        <a href="../index.html" class="bottom-nav-btn">
+            <i class="fa-solid fa-house"></i>
+            <span>Home</span>
+        </a>
+        <a href="../Features/index.html" class="bottom-nav-btn">
+            <i class="fa-solid fa-cubes"></i>
+            <span>Features</span>
+        </a>
+        <a href="./index.html" class="bottom-nav-btn active">
+            <i class="fa-solid fa-user-astronaut"></i>
+            <span>Me</span>
+        </a>
+    </nav>
+
+    <!-- MODAL: ADD CUSTOM APP / WEBSITE TO SESSION RULES -->
+    <div class="interception-modal-backdrop" id="modalAddRuleApp">
+        <div class="interception-card" style="border-color: #00e5ff; box-shadow: 0 0 35px rgba(0, 229, 255, 0.25);">
+            <div class="interception-title" style="color: #00e5ff; font-size: 1.1rem;">
+                <i class="fa-solid fa-plus"></i> Configure Session App
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
+                <input type="text" class="app-search-input" id="newRuleAppName" placeholder="App Name (e.g. Duolingo, Netflix)...">
+                <input type="text" class="app-search-input" id="newRuleAppPkg" placeholder="Package or Domain (e.g. com.duolingo, netflix.com)...">
+                <select class="app-search-input" id="newRuleAppDefault">
+                    <option value="blocked" selected>Blocked during session</option>
+                    <option value="allowed">Allowed to run during session</option>
+                </select>
+            </div>
+            <div class="interception-action-btns">
+                <button class="btn-interception-primary" id="btnSaveRuleApp">Save App</button>
+                <button class="btn-interception-override" id="btnCancelRuleApp">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- DISTRACTION INTERCEPTION TEST MODAL -->
+    <div class="interception-modal-backdrop" id="interceptionModal">
+        <div class="interception-card">
+            <div class="interception-shield-icon">
+                <i class="fa-solid fa-ban"></i>
+            </div>
+            <div class="interception-title">Access Intercepted</div>
+            <div class="interception-reason-box">
+                This app is restricted by Productometer Guardian during your active session. Keep focused!
+            </div>
+            <div class="interception-action-btns">
+                <button class="btn-interception-primary" id="btnCloseInterception">
+                    <i class="fa-solid fa-arrow-left"></i> Return to Focus
+                </button>
+                <button class="btn-interception-override" id="btnOverrideInterception">
+                    Emergency Pass (30 Seconds)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../native-bridge.js"></script>
+    <script src="../main-portal.js"></script>
+    <script src="./scripts.js"></script>
+</body>
+</html>

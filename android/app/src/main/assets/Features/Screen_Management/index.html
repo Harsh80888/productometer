@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Productometer - Screen Time Manager</title>
+    <!-- Google Fonts Framework Links -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons Framework Asset -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="../../style.css">
+    <link rel="stylesheet" href="./screen-style.css">
+</head>
+<body class="cyberpunk-portal-body">
+
+    <!-- Top Fixed Status Ribbon HUD Header (No Diamonds) -->
+    <header class="portal-top-hud">
+        <div class="nav-branding-title">Productometer</div>
+        <div class="module-title-chip">
+            <i class="fa-solid fa-chart-line"></i> Screen Time
+        </div>
+    </header>
+
+    <!-- Main Content Workspace Area Frame -->
+    <main class="portal-main-content">
+        <div class="screen-management-container">
+
+            <!-- Top Back Navigation Bar -->
+            <div class="module-top-bar">
+                <a href="../index.html" class="back-to-features-btn">
+                    <i class="fa-solid fa-arrow-left"></i> Features
+                </a>
+                <span style="font-size: 0.78rem; font-weight: 700; color: #94a3b8;">Screen Time Manager</span>
+            </div>
+
+            <!-- SECTION 1: HERO SCREEN TIME & DIGITAL WELLBEING TRI-METRICS -->
+            <section class="sm-card hero-screen-time-card">
+                <div class="hero-subtitle">Total Screen Time Today</div>
+                <div class="hero-timer-display">
+                    <span class="hero-num" id="heroHours">0</span>
+                    <span class="hero-unit">h</span>
+                    <span class="hero-num" id="heroMinutes">0</span>
+                    <span class="hero-unit">m</span>
+                </div>
+
+                <!-- Digital Wellbeing Tri-Metrics (Unlocks, Goal, Bedtime) -->
+                <div class="wellbeing-metrics-grid">
+                    <div class="wb-metric-box">
+                        <span class="wb-metric-label"><i class="fa-solid fa-lock-open"></i> Sessions / Opens</span>
+                        <span class="wb-metric-value" id="metricUnlocks">1</span>
+                    </div>
+                    <div class="wb-metric-box">
+                        <span class="wb-metric-label"><i class="fa-solid fa-bullseye"></i> Daily Goal</span>
+                        <span class="wb-metric-value" id="metricGoalAchieved">0% (0/4.0h)</span>
+                    </div>
+                    <div class="wb-metric-box">
+                        <span class="wb-metric-label"><i class="fa-solid fa-moon"></i> Bedtime Mode</span>
+                        <span class="wb-metric-value" id="metricBedtimeStatus">Off (10:30 PM)</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 2: DEDICATED PRODUCTIVITY VS OTHERS RATIO BAR (CRIMSON RED) -->
+            <section class="sm-card productivity-bar-card">
+                <div class="ratio-meta-row">
+                    <div>
+                        <div class="sm-title">
+                            <i class="fa-solid fa-chart-pie"></i> Productivity Ratio
+                        </div>
+                        <span class="ratio-subtext">Academics vs. Other Applications</span>
+                    </div>
+                    <div class="ratio-percentage-display" id="ratioPercentageBadge">0%</div>
+                </div>
+
+                <!-- The Dual-Segment Dedicated Progress Track -->
+                <div class="dedicated-bar-container">
+                    <div class="dedicated-progress-track">
+                        <div class="seg-productive" id="segProductive" style="width: 50%;"></div>
+                        <div class="seg-others" id="segOthers" style="width: 50%;"></div>
+                    </div>
+                </div>
+
+                <!-- Legend Row -->
+                <div class="ratio-legend">
+                    <div class="legend-badge">
+                        <span class="dot-prod"></span>
+                        <span>Productivity (Academics) <span id="legendProductiveText" style="color: #ff1744;">· 0h 0m</span></span>
+                    </div>
+                    <div class="legend-badge">
+                        <span class="dot-oth"></span>
+                        <span>Others <span id="legendOthersText" style="color: #94a3b8;">· 0h 0m</span></span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 3: DIGITAL WELLBEING CONTROLS (GOAL & BEDTIME CONFIG) -->
+            <section class="sm-card wellbeing-tools-card">
+                <div class="sm-card-header">
+                    <div class="sm-title">
+                        <i class="fa-solid fa-sliders"></i> Wellbeing Limits
+                    </div>
+                </div>
+
+                <!-- Daily Limit Setting -->
+                <div class="wb-tool-row">
+                    <div class="wb-tool-info">
+                        <div class="wb-tool-icon">
+                            <i class="fa-solid fa-stopwatch"></i>
+                        </div>
+                        <div class="wb-tool-text">
+                            <span class="wb-tool-title">Daily Screen Time Target</span>
+                            <span class="wb-tool-sub">Alerts trigger when device screen time exceeds target.</span>
+                        </div>
+                    </div>
+                    <div class="wb-tool-action">
+                        <input type="number" step="0.5" min="1" max="16" class="goal-input-box" id="dailyGoalInput" value="4.0">
+                        <span style="font-size: 0.75rem; font-weight: 700; color: #94a3b8;">hours</span>
+                    </div>
+                </div>
+
+                <!-- Bedtime Wind Down Setting -->
+                <div class="wb-tool-row">
+                    <div class="wb-tool-info">
+                        <div class="wb-tool-icon" style="background: rgba(255, 179, 0, 0.12); color: #ffb300; border-color: rgba(255, 179, 0, 0.3);">
+                            <i class="fa-solid fa-bed"></i>
+                        </div>
+                        <div class="wb-tool-text">
+                            <span class="wb-tool-title">Bedtime Mode &amp; Wind Down</span>
+                            <span class="wb-tool-sub">Active 10:30 PM – 06:30 AM to safeguard night sleep.</span>
+                        </div>
+                    </div>
+                    <div class="wb-tool-action">
+                        <span style="font-size: 0.75rem; font-weight: 800; color: #00e676;">Scheduled</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 4: REAL WORKING APP BREAKDOWN & CLASSIFICATION -->
+            <section class="sm-card app-section-card">
+                <div class="sm-card-header">
+                    <div class="sm-title">
+                        <i class="fa-solid fa-mobile-screen-button"></i> App Screen Time
+                    </div>
+                    <button class="btn-add-custom-app" id="btnAddCustomApp">
+                        <i class="fa-solid fa-plus"></i> Add App
+                    </button>
+                </div>
+
+                <!-- Android UsageStats Permission Banner (Visible on Android if needed) -->
+                <div class="android-permission-banner" id="androidPermissionBanner">
+                    <div class="perm-text">
+                        <i class="fa-solid fa-circle-exclamation"></i> Enable Android Usage Access to load real system screen time.
+                    </div>
+                    <button class="btn-grant-perm" id="btnGrantUsageAccess">Enable Access</button>
+                </div>
+
+                <!-- Category Filters -->
+                <div class="app-filters-row">
+                    <div class="filter-pills">
+                        <button class="filter-btn active" data-filter="all">All</button>
+                        <button class="filter-btn" data-filter="productivity">Productivity</button>
+                        <button class="filter-btn" data-filter="others">Others</button>
+                    </div>
+                    <span style="font-size: 0.72rem; color: #64748b;">Click badge to reclassify</span>
+                </div>
+
+                <!-- Real App List -->
+                <div class="app-breakdown-list" id="appBreakdownList">
+                    <!-- Populated dynamically by screen-scripts.js -->
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- Bottom Navigation Bar (No Diamonds) -->
+    <nav class="portal-bottom-nav">
+        <a href="../../index.html" class="bottom-nav-btn">
+            <i class="fa-solid fa-house"></i>
+            <span>Home</span>
+        </a>
+        <a href="../index.html" class="bottom-nav-btn active">
+            <i class="fa-solid fa-cubes"></i>
+            <span>Features</span>
+        </a>
+        <a href="../../Me/index.html" class="bottom-nav-btn">
+            <i class="fa-solid fa-user-astronaut"></i>
+            <span>Me</span>
+        </a>
+    </nav>
+
+    <!-- MODAL: ADD CUSTOM MONITORED APP -->
+    <div class="modal-backdrop" id="modalAddApp">
+        <div class="modal-dialog">
+            <div class="modal-header-title">
+                <i class="fa-solid fa-plus" style="color: #ff1744;"></i> Add Monitored Application
+            </div>
+            <input type="text" class="modal-input" id="customAppName" placeholder="Application or Website name (e.g. Duolingo, Netflix)...">
+            <select class="modal-input" id="customAppCategory">
+                <option value="productivity">Productivity (Academics / Tools)</option>
+                <option value="others" selected>Others (Entertainment / Social)</option>
+            </select>
+            <input type="number" class="modal-input" id="customAppMinutes" placeholder="Minutes used today (e.g. 45)" value="30">
+            <div class="modal-actions">
+                <button class="btn-secondary" id="btnCancelCustomApp">Cancel</button>
+                <button class="btn-primary" id="btnSaveCustomApp">Save App</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../../native-bridge.js"></script>
+    <script src="../../main-portal.js"></script>
+    <script src="./screen-scripts.js"></script>
+</body>
+</html>

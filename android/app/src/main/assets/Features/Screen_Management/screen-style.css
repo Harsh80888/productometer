@@ -1,0 +1,631 @@
+/* ==========================================================================
+   PRODUCTOMETER - SCREEN MANAGEMENT (DIGITAL WELLBEING MAINFRAME)
+   Cyberpunk Solid Black Aesthetic · Crimson Red Screen Theme (#ff1744)
+   ========================================================================== */
+
+/* --- ROOT WRAPPER --- */
+.screen-management-container {
+    width: 100%;
+    max-width: 520px;
+    margin: 0 auto;
+    padding: 12px 16px 36px 16px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+/* --- TOP BACK NAV BAR --- */
+.module-top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 0 10px 0;
+}
+
+.back-to-features-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #94a3b8;
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 700;
+    padding: 8px 14px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    transition: all 0.2s ease;
+}
+
+.back-to-features-btn:hover {
+    color: #ff1744;
+    border-color: rgba(255, 23, 68, 0.4);
+    background: rgba(255, 23, 68, 0.08);
+    box-shadow: 0 0 14px rgba(255, 23, 68, 0.15);
+}
+
+.module-title-chip {
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.8px;
+    color: #ff1744;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    background: rgba(255, 23, 68, 0.12);
+    border: 1px solid rgba(255, 23, 68, 0.35);
+    box-shadow: 0 0 10px rgba(255, 23, 68, 0.15);
+}
+
+/* --- GLASS CARD PRIMITIVE (RED THEME) --- */
+.sm-card {
+    background: linear-gradient(180deg, rgba(22, 12, 16, 0.9) 0%, rgba(10, 8, 12, 0.96) 100%);
+    border: 1px solid rgba(255, 23, 68, 0.2);
+    border-radius: 18px;
+    padding: 20px;
+    box-sizing: border-box;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.sm-card:hover {
+    border-color: rgba(255, 23, 68, 0.38);
+    box-shadow: 0 10px 35px rgba(0, 0, 0, 0.8), 0 0 15px rgba(255, 23, 68, 0.1);
+}
+
+.sm-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 20%; width: 60%; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 23, 68, 0.65), transparent);
+}
+
+.sm-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+}
+
+.sm-title {
+    font-size: 1.05rem;
+    font-weight: 800;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #ffffff;
+}
+
+.sm-title i {
+    color: #ff1744;
+    font-size: 1.15rem;
+    text-shadow: 0 0 10px rgba(255, 23, 68, 0.4);
+}
+
+/* --- SECTION 1: HERO SCREEN TIME --- */
+.hero-screen-time-card {
+    text-align: center;
+    padding: 24px 20px 20px 20px;
+    background: radial-gradient(circle at 50% 0%, rgba(255, 23, 68, 0.12) 0%, rgba(10, 8, 12, 0.96) 80%);
+}
+
+.hero-subtitle {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #94a3b8;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+}
+
+.hero-timer-display {
+    display: flex;
+    justify-content: center;
+    align-items: baseline;
+    gap: 4px;
+    margin: 8px 0 14px 0;
+}
+
+.hero-num {
+    font-size: 3.4rem;
+    font-weight: 900;
+    line-height: 1;
+    color: #ffffff;
+    text-shadow: 0 0 30px rgba(255, 23, 68, 0.45);
+    font-variant-numeric: tabular-nums;
+}
+
+.hero-unit {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #ff1744;
+    margin-right: 12px;
+}
+
+.hero-unit:last-child {
+    margin-right: 0;
+}
+
+/* DIGITAL WELLBEING TRI-METRICS ROW */
+.wellbeing-metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.wb-metric-box {
+    background: rgba(255, 255, 255, 0.025);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+    padding: 10px 8px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.wb-metric-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.wb-metric-value {
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: #ffffff;
+}
+
+/* --- SECTION 2: DEDICATED PRODUCTIVITY VS OTHERS BAR (CRIMSON RED) --- */
+.productivity-bar-card {
+    position: relative;
+}
+
+.ratio-meta-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 12px;
+}
+
+.ratio-subtext {
+    font-size: 0.74rem;
+    color: #94a3b8;
+}
+
+.ratio-percentage-display {
+    font-size: 1.25rem;
+    font-weight: 900;
+    color: #ff1744;
+    text-shadow: 0 0 14px rgba(255, 23, 68, 0.5);
+}
+
+.dedicated-bar-container {
+    width: 100%;
+    margin: 8px 0 14px 0;
+}
+
+.dedicated-progress-track {
+    width: 100%;
+    height: 20px;
+    background: #110e14;
+    border-radius: 20px;
+    overflow: hidden;
+    display: flex;
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6);
+}
+
+.seg-productive {
+    height: 100%;
+    background: linear-gradient(90deg, #d50000 0%, #ff1744 50%, #ff5252 100%);
+    box-shadow: 0 0 18px rgba(255, 23, 68, 0.6);
+    transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+}
+
+.seg-productive::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.25), transparent);
+}
+
+.seg-others {
+    height: 100%;
+    background: linear-gradient(90deg, #334155 0%, #475569 100%);
+    transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ratio-legend {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.78rem;
+    font-weight: 700;
+}
+
+.legend-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dot-prod {
+    width: 10px; height: 10px; border-radius: 3px;
+    background: #ff1744; box-shadow: 0 0 8px rgba(255, 23, 68, 0.7);
+}
+
+.dot-oth {
+    width: 10px; height: 10px; border-radius: 3px;
+    background: #64748b;
+}
+
+/* --- SECTION 3: DIGITAL WELLBEING CONTROLS --- */
+.wellbeing-tools-card {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.wb-tool-row {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.wb-tool-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.wb-tool-icon {
+    width: 34px; height: 34px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem;
+    background: rgba(255, 23, 68, 0.12);
+    color: #ff1744;
+    border: 1px solid rgba(255, 23, 68, 0.3);
+}
+
+.wb-tool-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.wb-tool-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.wb-tool-sub {
+    font-size: 0.72rem;
+    color: #94a3b8;
+}
+
+.wb-tool-action {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.goal-input-box {
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 23, 68, 0.35);
+    color: #ff1744;
+    font-size: 0.85rem;
+    font-weight: 800;
+    padding: 6px 10px;
+    border-radius: 8px;
+    width: 65px;
+    text-align: center;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.goal-input-box:focus {
+    border-color: #ff1744;
+    box-shadow: 0 0 10px rgba(255, 23, 68, 0.3);
+}
+
+/* --- SECTION 4: REAL WORKING APP BREAKDOWN --- */
+.app-section-card {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.android-permission-banner {
+    display: none;
+    background: linear-gradient(135deg, rgba(255, 23, 68, 0.15), rgba(255, 179, 0, 0.12));
+    border: 1px solid rgba(255, 23, 68, 0.4);
+    border-radius: 12px;
+    padding: 12px 14px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.perm-text {
+    font-size: 0.76rem;
+    color: #ff5252;
+    line-height: 1.4;
+}
+
+.btn-grant-perm {
+    background: linear-gradient(135deg, #d50000, #ff1744);
+    color: #ffffff;
+    font-size: 0.72rem;
+    font-weight: 800;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    white-space: nowrap;
+    box-shadow: 0 0 12px rgba(255, 23, 68, 0.3);
+}
+
+.app-filters-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+}
+
+.filter-pills {
+    display: flex;
+    gap: 6px;
+    background: rgba(0, 0, 0, 0.4);
+    padding: 4px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.filter-btn {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 5px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.filter-btn.active {
+    background: rgba(255, 23, 68, 0.2);
+    color: #ff1744;
+    border: 1px solid rgba(255, 23, 68, 0.35);
+}
+
+.btn-add-custom-app {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #e2e8f0;
+    font-size: 0.74rem;
+    font-weight: 700;
+    padding: 6px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+}
+
+.btn-add-custom-app:hover {
+    border-color: #ff1744;
+    color: #ff1744;
+    box-shadow: 0 0 10px rgba(255, 23, 68, 0.2);
+}
+
+/* APP LIST */
+.app-breakdown-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.app-card-item {
+    background: rgba(255, 255, 255, 0.025);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: border-color 0.2s, background 0.2s;
+}
+
+.app-card-item:hover {
+    border-color: rgba(255, 23, 68, 0.3);
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.app-top-info {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.app-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.app-avatar {
+    width: 32px; height: 32px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem; color: #ffffff; flex-shrink: 0;
+}
+
+.app-meta-box {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.app-label-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.app-category-toggle {
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    width: fit-content;
+    text-transform: uppercase;
+    transition: all 0.2s;
+    user-select: none;
+}
+
+.cat-prod {
+    background: rgba(255, 23, 68, 0.15);
+    color: #ff1744;
+    border: 1px solid rgba(255, 23, 68, 0.4);
+    box-shadow: 0 0 8px rgba(255, 23, 68, 0.15);
+}
+
+.cat-others {
+    background: rgba(148, 163, 184, 0.1);
+    color: #94a3b8;
+    border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.app-duration-box {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+}
+
+.app-time-bold {
+    font-size: 0.92rem;
+    font-weight: 800;
+    color: #ffffff;
+}
+
+.app-pct-sub {
+    font-size: 0.68rem;
+    color: #94a3b8;
+}
+
+.app-track-rail {
+    width: 100%; height: 4px;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.app-track-fill {
+    height: 100%; border-radius: 4px;
+}
+
+.fill-prod {
+    background: linear-gradient(90deg, #d50000, #ff1744);
+    box-shadow: 0 0 8px rgba(255, 23, 68, 0.4);
+}
+.fill-oth { background: #64748b; }
+
+/* MODAL: ADD / CONFIGURE APP */
+.modal-backdrop {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(4, 3, 6, 0.92);
+    backdrop-filter: blur(14px);
+    z-index: 999999;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.modal-dialog {
+    background: #120a10;
+    border: 1px solid rgba(255, 23, 68, 0.35);
+    border-radius: 18px;
+    padding: 24px;
+    max-width: 400px;
+    width: 100%;
+    box-shadow: 0 0 40px rgba(255, 23, 68, 0.25);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.modal-header-title {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #ffffff;
+}
+
+.modal-input {
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    padding: 10px 12px;
+    color: #ffffff;
+    font-size: 0.85rem;
+    outline: none;
+}
+
+.modal-input:focus {
+    border-color: #ff1744;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+.btn-secondary {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #94a3b8;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #d50000, #ff1744);
+    color: #ffffff;
+    font-weight: 800;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 0 14px rgba(255, 23, 68, 0.4);
+}

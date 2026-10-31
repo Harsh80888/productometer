@@ -1,26 +1,50 @@
 # 🚀 Productometer
 
-> **Advanced Digital Wellbeing & Discipline Operating System**  
-> Solid black cyberpunk interface featuring real-time schedule-aware distraction blocking, digital wellbeing analytics, and academic focus management.
+<div align="center">
+
+[![Download Android APK](https://img.shields.io/badge/Download-Android%20APK%20(v1.0.0)-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://github.com/Harsh80888/productometer/releases/latest/download/Productometer.apk)
+[![Live Web Portal](https://img.shields.io/badge/Live%20Web-Open%20App-00e5ff?style=for-the-badge&logo=googlechrome&logoColor=black)](https://harsh80888.github.io/productometer/)
+[![GitHub Releases](https://img.shields.io/github/v/release/Harsh80888/productometer?style=for-the-badge&color=ff1744&logo=github)](https://github.com/Harsh80888/productometer/releases)
+
+**Advanced Digital Wellbeing & Discipline Operating System**  
+*Cyberpunk high-contrast OLED interface featuring real-time distraction blocking, digital wellbeing analytics, and academic focus management.*
 
 ---
 
-## 🌟 Key Features
+### 📥 [Click Here to Download Productometer.apk Directly](https://github.com/Harsh80888/productometer/releases/latest/download/Productometer.apk)
+*(Or visit the [Releases Page](https://github.com/Harsh80888/productometer/releases) to view all builds)*
 
-### 1. 🛡️ Distraction Blocker & Session Guardian (Me Tab)
+</div>
+
+---
+
+## 📱 How to Install on Android
+
+1. Download **[`Productometer.apk`](https://github.com/Harsh80888/productometer/releases/latest/download/Productometer.apk)** directly to your Android device.
+2. Tap the downloaded file in your browser or Downloads folder.
+3. If prompted, allow *"Install from unknown sources"* for your browser.
+4. Tap **Install** and launch **Productometer**!
+
+---
+
+## 🌟 Core Modules & Features
+
+### 1. 🛡️ Distraction Blocker (Located in Me Tab)
+Access via the **"Distraction blocker"** button on the **Me** profile:
 - **Schedule-Aware Guardian:** Synchronized in real time with the Day Planner schedule to automatically lock down distracting apps during active study or workout sessions.
 - **Granular App Access:** Configure which applications are permitted to run or blocked during focus windows.
-- **2-Way Protection Modes:** Dedicated rule sets for **Academics Sessions** and **Health & Workout Sessions**.
+- **2-Way Protection Modes:** Dedicated rule sets for **Academics Sessions** and **Health & Workout Sessions** (no free time distractions).
 - **Content-Level Defenses:**
-  - 🛑 Block YouTube Shorts only (leaves educational lectures and playlists accessible).
-  - 🛑 Block Instagram Reels & infinite video feeds (leaves direct messaging intact).
-  - 🛑 Block Mobile Games & Social Feeds.
-  - 🛑 Browser Entertainment Shield.
+  - 🛑 **Block YouTube Shorts** (leaves educational lectures and playlists accessible).
+  - 🛑 **Block Instagram Reels** (leaves direct messaging intact).
+  - 🛑 **Block Mobile Games & Social Feeds**.
+  - 🛑 **Browser Entertainment Shield**.
 
-### 2. 📊 Screen Time Manager & Digital Wellbeing (Features)
+### 2. 📊 Screen Time Manager & Digital Wellbeing (Features Tab)
+Vibrant **Crimson Red theme** (`#ff1744`) matching the cyberpunk aesthetics:
 - **Total Screen Time Today:** Live tracking of daily screen hours and minutes.
-- **Dedicated Productivity Ratio Bar:** Stacked progress indicator showing percentage of screen time spent in **Productivity (Academics)** vs. **Others**.
-- **Interactive Classification Engine:** Click any app's category badge to dynamically switch between *Productivity* and *Others*, recalculating daily focus metrics in real time.
+- **Dedicated Productivity Ratio Bar:** Dual-segment progress indicator showing percentage of screen time spent in **Productivity (Academics)** vs. **Others**.
+- **Interactive Classification Engine:** Click any app's category badge to dynamically reclassify between *Productivity* and *Others*, recalculating daily focus metrics in real time.
 - **Core Wellbeing Tri-Metrics:**
   - 🔓 Daily Device Sessions & Screen Opens tracker.
   - 🎯 Customizable Daily Screen Time Target cap with alert threshold.
@@ -34,15 +58,17 @@
 - Full countdown study timer loops with distraction penalty reports and weekly syllabus management.
 
 ### 5. ❤️ Health & Fitness Tracker
-- Workout logs, water intake tracker, habit metrics, and recovery schedules.
+- Workout logs, water intake tracker, habit metrics, animated exercise guides, and recovery schedules.
 
 ---
 
-## 📱 Platforms
-- **Web Portal:** Accessible on any modern browser via [`index.html`](./index.html).
-- **Android Native Wrapper:** Full Android Studio project with `UsageStatsManager` bridge, `AlarmManager` hardware ringers, and foreground focus notifications.
+## 🏗️ Repository Architecture
+
+- `/` — Live Web Application (served via [GitHub Pages](https://harsh80888.github.io/productometer/)).
+- `/android` — Complete Android Studio native project with `UsageStatsManager`, `AlarmManager`, and offline asset bundling.
+- `/.github/workflows/build-apk.yml` — Automated CI/CD pipeline that compiles and publishes `Productometer.apk` to GitHub Releases.
 
 ---
 
 ## 📜 License
-MIT License. Created by Harsh-Codex8.
+MIT License. Created by Harsh80888 / Harsh-Codex8.
