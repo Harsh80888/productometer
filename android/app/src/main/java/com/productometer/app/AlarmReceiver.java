@@ -51,19 +51,21 @@ public class AlarmReceiver extends BroadcastReceiver {
             wakeLock.acquire(10 * 1000L); // 10 seconds
         }
 
-        // Play system notification chime (gentle chime instead of endless looping song)
+        Uri alarmUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
+        if (alarmUri == null) {
+            alarmUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+        }
+
+        AudioAttributes alarmAttributes = new AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_ALARM)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                .build();
+
         try {
-            Uri alarmUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-            if (alarmUri == null) {
-                alarmUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
-            }
             Ringtone ringtone = RingtoneManager.getRingtone(context, alarmUri);
             if (ringtone != null) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    ringtone.setAudioAttributes(new AudioAttributes.Builder()
-                            .setUsage(AudioAttributes.USAGE_NOTIFICATION)
-                            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                            .build());
+                    ringtone.setAudioAttributes(alarmAttributes);
                 }
                 stopAlarm();
                 activeRingtone = ringtone;
@@ -94,6 +96,8 @@ public class AlarmReceiver extends BroadcastReceiver {
                 .setAutoCancel(true)
                 .setContentIntent(contentPendingIntent)
                 .addAction(android.R.drawable.ic_media_play, "✅ I AM READY", contentPendingIntent)
+                .setSound(alarmUri)
+                .setDefaults(NotificationCompat.DEFAULT_ALL)
                 .setVibrate(new long[]{0, 500, 200, 500, 200, 500});
 
         NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);

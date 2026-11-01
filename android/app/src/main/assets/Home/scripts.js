@@ -296,6 +296,79 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         homeTasksBucket.innerHTML = '';
+
+        // 🌟 0. CHECK FOR TRIGGERED OR ONGOING FOCUS SESSION (SHOWN AT TOP OF HOME)
+        let activeSession = null;
+        try {
+            const rawActive = localStorage.getItem('productometer_active_session_state');
+            if (rawActive) {
+                const parsed = JSON.parse(rawActive);
+                if (parsed && parsed.active && parsed.timeRemaining > 0) {
+                    activeSession = parsed;
+                }
+            }
+        } catch (e) {}
+
+        const now = new Date();
+        const currentMins = now.getHours() * 60 + now.getMinutes();
+        const isHomeSubdir = window.location.pathname.includes('/Home/');
+        const acadHref = isHomeSubdir ? '../Features/Academics_Monitoring/index.html' : './Features/Academics_Monitoring/index.html';
+
+        if (activeSession) {
+            const remM = Math.floor(activeSession.timeRemaining / 60).toString().padStart(2, '0');
+            const remS = (activeSession.timeRemaining % 60).toString().padStart(2, '0');
+            const statusLabel = activeSession.isOnBreak ? '☕ BREAK IN PROGRESS' : (activeSession.isPaused ? '⏸️ SESSION PAUSED' : '🎯 ACTIVE FOCUS SESSION');
+            const statusColor = activeSession.isOnBreak ? '#00e5ff' : (activeSession.isPaused ? '#ffd600' : '#ffb300');
+
+            const activeCard = document.createElement('div');
+            activeCard.className = 'home-active-focus-hero';
+            activeCard.style.cssText = `background: rgba(255, 179, 0, 0.08); border: 1.5px solid ${statusColor}; border-radius: 14px; padding: 14px 16px; margin-bottom: 14px; text-align: center; box-shadow: 0 0 20px ${statusColor}33;`;
+            activeCard.innerHTML = `
+                <div style="font-size: 0.72rem; font-weight: 800; color: ${statusColor}; letter-spacing: 0.5px; margin-bottom: 4px; text-transform: uppercase;">
+                    <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: ${statusColor}; margin-right: 6px; box-shadow: 0 0 8px ${statusColor};"></span>${statusLabel}
+                </div>
+                <div style="font-size: 1.05rem; font-weight: 800; color: #fff; margin-bottom: 6px;">${activeSession.title}</div>
+                <div style="font-size: 1.6rem; font-weight: 900; color: ${statusColor}; font-family: monospace; letter-spacing: 1px; margin-bottom: 10px;">${remM}:${remS}</div>
+                <a href="${acadHref}" style="display: inline-flex; align-items: center; gap: 6px; background: ${statusColor}; color: #000; font-weight: 800; font-size: 0.78rem; padding: 6px 14px; border-radius: 7px; text-decoration: none; cursor: pointer;">
+                    <i class="fa-solid fa-graduation-cap"></i> Open Focus Session
+                </a>
+            `;
+            homeTasksBucket.appendChild(activeCard);
+        } else {
+            // Check for triggered / unlocked session (starting within current time window)
+            const triggeredTask = plannerList.find(t => {
+                if (t.completed) return false;
+                const dur = parseFloat(t.durationMin || t.durationMinutes || t.duration) || 60;
+                let sH = 9, sM = 0;
+                if (t.timeDisplayStr) {
+                    const m = t.timeDisplayStr.match(/(\d{1,2}):(\d{2})/);
+                    if (m) { sH = parseInt(m[1], 10); sM = parseInt(m[2], 10); }
+                } else if (t.startMin !== undefined) {
+                    sH = Math.floor(t.startMin / 60); sM = t.startMin % 60;
+                }
+                const taskStartMins = sH * 60 + sM;
+                return (currentMins >= taskStartMins - 10 && currentMins <= taskStartMins + Math.floor(dur / 2));
+            });
+
+            if (triggeredTask) {
+                const triggeredCard = document.createElement('div');
+                triggeredCard.className = 'home-triggered-hero';
+                triggeredCard.style.cssText = 'background: rgba(0, 230, 118, 0.08); border: 1.5px solid #00e676; border-radius: 14px; padding: 14px 16px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; box-shadow: 0 0 20px rgba(0, 230, 118, 0.25);';
+                triggeredCard.innerHTML = `
+                    <div>
+                        <div style="font-size: 0.72rem; font-weight: 800; color: #00e676; letter-spacing: 0.5px; margin-bottom: 3px; text-transform: uppercase;">
+                            <i class="fa-solid fa-bell"></i> Session Ready to Begin
+                        </div>
+                        <div style="font-size: 1rem; font-weight: 800; color: #fff;">${triggeredTask.title}</div>
+                    </div>
+                    <a href="${acadHref}" style="display: inline-flex; align-items: center; gap: 6px; background: #00e676; color: #000; font-weight: 800; font-size: 0.78rem; padding: 7px 14px; border-radius: 7px; text-decoration: none; cursor: pointer;">
+                        <i class="fa-solid fa-play"></i> Start Now
+                    </a>
+                `;
+                homeTasksBucket.appendChild(triggeredCard);
+            }
+        }
+
         const upcomingTasks = plannerList.filter(t => !t.completed);
         const completedTasks = plannerList.filter(t => t.completed);
 
@@ -931,4 +1004,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Auto Refresh every 30 seconds
     setInterval(refreshHomeDashboard, 30000);
+
+    // 1-second live ticker for active focus session card
+    setInterval(() => {
+        const rawActive = localStorage.getItem('productometer_active_session_state');
+        if (rawActive) {
+            try {
+                const parsed = JSON.parse(rawActive);
+                if (parsed && parsed.active) {
+                    const heroClock = document.querySelector('.home-active-focus-hero div[style*="font-family: monospace"]');
+                    if (heroClock && parsed.timeRemaining > 0) {
+                        const remM = Math.floor(parsed.timeRemaining / 60).toString().padStart(2, '0');
+                        const remS = (parsed.timeRemaining % 60).toString().padStart(2, '0');
+                        heroClock.innerText = `${remM}:${remS}`;
+                    } else if (!heroClock) {
+                        refreshHomeDashboard();
+                    }
+                }
+            } catch (e) {}
+        }
+    }, 1000);
+
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) refreshHomeDashboard();
+    });
 });

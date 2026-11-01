@@ -72,6 +72,14 @@ const NativeBridge = {
         return null;
     },
 
+    syncBlockedApps: (jsonArrayStr) => {
+        try {
+            if (typeof window.AndroidBridge !== 'undefined' && window.AndroidBridge.syncBlockedApps) {
+                window.AndroidBridge.syncBlockedApps(jsonArrayStr);
+            }
+        } catch (e) {}
+    },
+
     getInstalledApps: () => {
         try {
             if (typeof window.AndroidBridge !== 'undefined' && window.AndroidBridge.getInstalledApps) {

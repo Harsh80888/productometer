@@ -329,19 +329,36 @@ public class WebAppInterface {
                 e.printStackTrace();
             }
 
-            // 2. Secondary Engine: Merge with UsageStatsManager daily totals (take Math.max to prevent undercounting)
+            // 2. Official Android Daily Aggregator Baseline:
+            try {
+                Map<String, UsageStats> aggregated = usageStatsManager.queryAndAggregateUsageStats(startOfDay, now);
+                if (aggregated != null && !aggregated.isEmpty()) {
+                    for (Map.Entry<String, UsageStats> entry : aggregated.entrySet()) {
+                        long fg = entry.getValue().getTotalTimeInForeground();
+                        if (fg > 0) {
+                            long current = foregroundTimeMap.containsKey(entry.getKey()) ? foregroundTimeMap.get(entry.getKey()) : 0L;
+                            foregroundTimeMap.put(entry.getKey(), Math.max(current, fg));
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            // 3. Multi-slice sum aggregation over queryUsageStats (handles device reboots):
             try {
                 List<UsageStats> statsList = usageStatsManager.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, startOfDay, now);
-                if (statsList == null || statsList.isEmpty()) {
-                    statsList = usageStatsManager.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, now - 86400000L, now);
-                }
-                if (statsList != null) {
+                if (statsList != null && !statsList.isEmpty()) {
+                    Map<String, Long> summedSlices = new HashMap<>();
                     for (UsageStats stat : statsList) {
                         long fg = stat.getTotalTimeInForeground();
                         if (fg > 0) {
-                            long current = foregroundTimeMap.containsKey(stat.getPackageName()) ? foregroundTimeMap.get(stat.getPackageName()) : 0L;
-                            foregroundTimeMap.put(stat.getPackageName(), Math.max(current, fg));
+                            summedSlices.put(stat.getPackageName(), (summedSlices.containsKey(stat.getPackageName()) ? summedSlices.get(stat.getPackageName()) : 0L) + fg);
                         }
+                    }
+                    for (Map.Entry<String, Long> entry : summedSlices.entrySet()) {
+                        long current = foregroundTimeMap.containsKey(entry.getKey()) ? foregroundTimeMap.get(entry.getKey()) : 0L;
+                        foregroundTimeMap.put(entry.getKey(), Math.max(current, entry.getValue()));
                     }
                 }
             } catch (Exception e) {
@@ -399,6 +416,24 @@ public class WebAppInterface {
         } catch (Exception e) {
             e.printStackTrace();
             return "[]";
+        }
+    }
+
+    /**
+     * Synchronizes user's blocked applications list into SharedPreferences for ShortsReelsBlockerService.
+     */
+    @JavascriptInterface
+    public void syncBlockedApps(String jsonArrayStr) {
+        try {
+            JSONArray arr = new JSONArray(jsonArrayStr);
+            Set<String> set = new HashSet<>();
+            for (int i = 0; i < arr.length(); i++) {
+                set.add(arr.getString(i));
+            }
+            SharedPreferences prefs = context.getSharedPreferences(ShortsReelsBlockerService.PREFS_NAME, Context.MODE_PRIVATE);
+            prefs.edit().putStringSet("blocked_packages_set", set).apply();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 

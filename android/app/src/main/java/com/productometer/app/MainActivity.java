@@ -4,6 +4,9 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.media.RingtoneManager;
+import android.media.AudioAttributes;
+import android.net.Uri;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
@@ -34,7 +37,7 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
-    public static final String CHANNEL_ID_ALARMS = "productometer_alarms";
+    public static final String CHANNEL_ID_ALARMS = "productometer_study_alarms_v3";
     public static final String CHANNEL_ID_FOCUS = "productometer_focus";
     private static final int PERMISSION_REQUEST_CODE = 200;
 
@@ -184,6 +187,16 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             alarmChannel.setLightColor(Color.CYAN);
             alarmChannel.enableVibration(true);
             alarmChannel.setVibrationPattern(new long[]{0, 500, 200, 500, 200, 500});
+
+            Uri alarmSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
+            if (alarmSoundUri == null) {
+                alarmSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+            }
+            AudioAttributes audioAttributes = new AudioAttributes.Builder()
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                    .setUsage(AudioAttributes.USAGE_ALARM)
+                    .build();
+            alarmChannel.setSound(alarmSoundUri, audioAttributes);
             manager.createNotificationChannel(alarmChannel);
 
             NotificationChannel focusChannel = new NotificationChannel(

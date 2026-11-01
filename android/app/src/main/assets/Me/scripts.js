@@ -55,6 +55,24 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (e) {
             console.error('Failed to save session rules:', e);
         }
+
+        try {
+            if (window.NativeBridge && window.NativeBridge.syncBlockedApps) {
+                const allowedSet = new Set(currentMode === 'academics' ? rules.academicsAllowed : rules.healthAllowed);
+                const blockedList = ['com.whatsapp', 'com.facebook.katana', 'com.facebook.orca', 'com.instagram.android', 'com.twitter.android', 'com.snapchat.android', 'com.netflix.mediaclient'];
+                if (rules.customApps && Array.isArray(rules.customApps)) {
+                    rules.customApps.forEach(ca => {
+                        if (ca.pkg && !allowedSet.has(ca.pkg) && !blockedList.includes(ca.pkg)) {
+                            blockedList.push(ca.pkg);
+                        }
+                    });
+                }
+                const filteredBlocked = blockedList.filter(p => !allowedSet.has(p));
+                window.NativeBridge.syncBlockedApps(JSON.stringify(filteredBlocked));
+            }
+        } catch (err) {
+            console.warn('[Me] syncBlockedApps notice:', err);
+        }
     }
 
     // --- 2. MERGE APPS (ANDROID NATIVE + BUILTIN + CUSTOM) ---
@@ -161,6 +179,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         saveAppRules(rules);
         renderSessionAppRules();
+    saveAppRules(getStoredAppRules());
 
         if (window.NativeBridge && window.NativeBridge.vibrate) {
             window.NativeBridge.vibrate(25);

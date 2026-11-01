@@ -1,10 +1,14 @@
 /* --- GLOBAL STATE FOR ACADEMICS SESSIONS --- */
 let sessionActive = false;
 let sessionPausedForDistraction = false;
+let sessionPausedManual = false;
+let sessionOnBreak = false;
+let breakSecondsRemaining = 0;
 let currentSessionInterval = null;
 let timeRemaining = 25 * 60; // 25 minutes in seconds
 let notifiedAvailableTasks = new Set();
 let currentActiveTaskTitle = "";
+let currentActiveTaskId = null;
 
 /* --- AUDIO ELEMENTS & BACKGROUND CONTEXT --- */
 const startAlarm = document.getElementById('startAlarm');
@@ -352,36 +356,45 @@ function renderAcademicTasks() {
         else lockedTasks.push(taskObj);
     });
 
-    let shouldRingStartAlarm = false;
+    const todayStr = new Date().toDateString();
+    let dismissedMap = {};
+    try {
+        const stored = sessionStorage.getItem('productometer_dismissed_unlocked_popups');
+        if (stored) dismissedMap = JSON.parse(stored);
+    } catch (e) {}
+
+    let readyTaskToPrompt = null;
     availableTasks.forEach(t => {
-        if (!notifiedAvailableTasks.has(t.title)) {
-            notifiedAvailableTasks.add(t.title);
-            shouldRingStartAlarm = true;
-            if (!sessionActive) {
-                showIndependentStartBox(t.title);
-            }
+        const key = `${todayStr}_${t.title}_${t.startH}_${t.startM}`;
+        if (!t.completed && !dismissedMap[key] && !notifiedAvailableTasks.has(key)) {
+            notifiedAvailableTasks.add(key);
+            dismissedMap[key] = true;
+            try { sessionStorage.setItem('productometer_dismissed_unlocked_popups', JSON.stringify(dismissedMap)); } catch (e) {}
+            if (!readyTaskToPrompt) readyTaskToPrompt = t;
         }
     });
 
-    if (shouldRingStartAlarm && !sessionActive) {
+    if (readyTaskToPrompt && !sessionActive) {
         if (window.NativeBridge && window.NativeBridge.vibrate) {
             window.NativeBridge.vibrate(250);
         }
         
-        const readyTask = availableTasks[0];
-        const readyTaskTitle = readyTask?.title || 'Study Session';
-        const readyDuration = readyTask?.duration || 60;
+        const readyTitle = readyTaskToPrompt.title || 'Study Session';
+        const readyDur = readyTaskToPrompt.duration || 60;
+        const readyId = readyTaskToPrompt.id;
         
+        showIndependentStartBox(readyTitle, readyDur, readyId);
+
         showCustomModal(
             "⏰ SESSION UNLOCKED!", 
-            `Your scheduled task "${readyTaskTitle}" (${readyDuration}m) is ready to begin! Tap "I am ready" to start your focus session.`, 
+            `Your scheduled task "${readyTitle}" (${readyDur}m) is ready to begin! Tap "I am ready" to start your focus session.`, 
             "info",
             (confirmed) => {
                 if (confirmed) {
                     if (window.NativeBridge && window.NativeBridge.stopAlarm) {
                         window.NativeBridge.stopAlarm();
                     }
-                    beginActivePomodoroCountdown(readyTaskTitle, readyDuration);
+                    beginActivePomodoroCountdown(readyTitle, readyDur, readyId);
                 }
             },
             "✅ I am ready"
@@ -500,10 +513,118 @@ window.adjustSessionDuration = function(mins) {
     }
 };
 
+window.toggleSessionPauseResume = function() {
+    if (!sessionActive) return;
+    sessionPausedManual = !sessionPausedManual;
+    const btn = document.getElementById('btnSessionPauseResume');
+    const headerStatus = document.getElementById('activeSessionHeaderStatus');
+    const clockNode = document.getElementById('liveCountdownClock');
+
+    if (sessionPausedManual) {
+        if (btn) btn.innerHTML = '<i class="fa-solid fa-play"></i> Resume';
+        if (headerStatus) {
+            headerStatus.innerText = '⏸️ Session Paused';
+            headerStatus.style.color = '#ffd600';
+        }
+        if (clockNode) clockNode.style.opacity = '0.6';
+    } else {
+        if (btn) btn.innerHTML = '<i class="fa-solid fa-pause"></i> Pause';
+        if (headerStatus) {
+            headerStatus.innerText = 'Active Session In Progress';
+            headerStatus.style.color = '#ffb300';
+        }
+        if (clockNode) clockNode.style.opacity = '1';
+    }
+    syncSessionStateToStorage();
+};
+
+window.triggerSessionBreak = function(breakMins = 5) {
+    if (!sessionActive) return;
+    sessionOnBreak = true;
+    breakSecondsRemaining = breakMins * 60;
+    const headerStatus = document.getElementById('activeSessionHeaderStatus');
+    const clockNode = document.getElementById('liveCountdownClock');
+    if (headerStatus) {
+        headerStatus.innerText = `☕ Taking a ${breakMins}m Break`;
+        headerStatus.style.color = '#00e5ff';
+    }
+    if (clockNode) {
+        clockNode.style.color = '#00e5ff';
+        clockNode.style.textShadow = '0 0 20px rgba(0, 229, 255, 0.4)';
+    }
+    syncSessionStateToStorage();
+};
+
+window.endSessionEarlyPrompt = function() {
+    if (!sessionActive) return;
+    showCustomModal(
+        "Complete Session Early?", 
+        `Would you like to finish "${currentActiveTaskTitle}" and mark it completed in Day Planner?`, 
+        "confirm",
+        (confirmed) => {
+            if (confirmed) {
+                completeActiveSession(true);
+            }
+        },
+        "Yes, Complete"
+    );
+};
+
+function syncSessionStateToStorage() {
+    try {
+        if (sessionActive) {
+            localStorage.setItem('productometer_active_session_state', JSON.stringify({
+                active: true,
+                title: currentActiveTaskTitle,
+                taskId: currentActiveTaskId,
+                timeRemaining: timeRemaining,
+                isPaused: sessionPausedManual || sessionPausedForDistraction,
+                isOnBreak: sessionOnBreak,
+                timestamp: Date.now()
+            }));
+        } else {
+            localStorage.removeItem('productometer_active_session_state');
+        }
+    } catch (e) {}
+}
+
+function completeActiveSession(manualCompletion = false) {
+    if (currentSessionInterval) clearInterval(currentSessionInterval);
+    sessionActive = false;
+    sessionPausedManual = false;
+    sessionOnBreak = false;
+    syncSessionStateToStorage();
+
+    if (window.NativeBridge && window.NativeBridge.isAvailable()) {
+        try {
+            window.NativeBridge.stopFocusSession();
+            window.NativeBridge.vibrate(500);
+        } catch (e) {}
+    }
+
+    if (breakAlarm && !manualCompletion) {
+        breakAlarm.play().catch(e => console.log("Break Audio notice:", e));
+    }
+
+    showCustomModal(
+        "Session Completed!", 
+        `Great focus! You completed your study session for "${currentActiveTaskTitle}". Marked as completed in your Day Planner!`, 
+        "break"
+    );
+
+    markPlannerTaskCompleted(currentActiveTaskTitle, currentActiveTaskId);
+
+    const boxContainer = document.getElementById('activeSessionBoxContainer');
+    if (boxContainer) boxContainer.innerHTML = "";
+    renderAcademicTasks();
+}
+
 function beginActivePomodoroCountdown(title, customDurationMinutes = null, taskId = null) {
     currentActiveTaskId = taskId;
     sessionActive = true;
     sessionPausedForDistraction = false;
+    sessionPausedManual = false;
+    sessionOnBreak = false;
     currentActiveTaskTitle = title;
     
     let targetMins = 25;
@@ -514,7 +635,7 @@ function beginActivePomodoroCountdown(title, customDurationMinutes = null, taskI
             const raw = localStorage.getItem('productometer_chrono_planner_list');
             if (raw) {
                 const list = JSON.parse(raw);
-                const found = list.find(t => (t.title === title || t.name === title));
+                const found = list.find(t => (t.id === taskId || t.title === title || t.name === title));
                 if (found) {
                     const d = parseFloat(found.durationMinutes || found.durationMin || found.duration);
                     if (d > 0) targetMins = d;
@@ -524,6 +645,7 @@ function beginActivePomodoroCountdown(title, customDurationMinutes = null, taskI
     }
 
     timeRemaining = Math.round(targetMins * 60);
+    syncSessionStateToStorage();
 
     if (window.NativeBridge && window.NativeBridge.isAvailable()) {
         try {
@@ -544,13 +666,27 @@ function beginActivePomodoroCountdown(title, customDurationMinutes = null, taskI
             <div class="glow-card" style="border: 1.5px solid #ffb300; margin-bottom: 24px; text-align: center;">
                 <div class="soft-heading" id="activeSessionHeaderStatus" style="color: #ffb300; margin-bottom: 4px;">Active Session In Progress</div>
                 <div style="font-size: 1.15rem; font-weight: 800; color: #fff; margin-bottom: 8px;">${title}</div>
-                <div id="liveCountdownClock" class="study-timer-display" style="color: #ffb300; text-shadow: 0 0 20px rgba(255, 179, 0, 0.4); margin-bottom: 12px;">${initialM}:${initialS}</div>
+                <div id="liveCountdownClock" class="study-timer-display" style="color: #ffb300; text-shadow: 0 0 20px rgba(255, 179, 0, 0.4); margin-bottom: 14px;">${initialM}:${initialS}</div>
                 
-                <div style="display: flex; justify-content: center; gap: 8px; flex-wrap: wrap;">
-                    <button type="button" onclick="adjustSessionDuration(25)" style="background: rgba(255,179,0,0.15); border: 1px solid #ffb300; color: #ffb300; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; cursor: pointer;">25m Pomodoro</button>
-                    <button type="button" onclick="adjustSessionDuration(45)" style="background: rgba(255,179,0,0.15); border: 1px solid #ffb300; color: #ffb300; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; cursor: pointer;">45m Deep</button>
-                    <button type="button" onclick="adjustSessionDuration(60)" style="background: rgba(255,179,0,0.15); border: 1px solid #ffb300; color: #ffb300; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; cursor: pointer;">60m Hour</button>
-                    <button type="button" onclick="adjustSessionDuration(90)" style="background: rgba(255,179,0,0.15); border: 1px solid #ffb300; color: #ffb300; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; cursor: pointer;">90m Intensive</button>
+                <!-- Primary Session Controls: Pause / Break / Complete -->
+                <div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 14px; flex-wrap: wrap;">
+                    <button type="button" id="btnSessionPauseResume" onclick="toggleSessionPauseResume()" style="background: rgba(255, 214, 0, 0.15); border: 1px solid #ffd600; color: #ffd600; padding: 7px 16px; border-radius: 8px; font-weight: 800; font-size: 0.82rem; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                        <i class="fa-solid fa-pause"></i> Pause
+                    </button>
+                    <button type="button" id="btnSessionTakeBreak" onclick="triggerSessionBreak(5)" style="background: rgba(0, 229, 255, 0.15); border: 1px solid #00e5ff; color: #00e5ff; padding: 7px 16px; border-radius: 8px; font-weight: 800; font-size: 0.82rem; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                        <i class="fa-solid fa-mug-hot"></i> Take a Break (5m)
+                    </button>
+                    <button type="button" id="btnSessionEndEarly" onclick="endSessionEarlyPrompt()" style="background: rgba(0, 230, 118, 0.15); border: 1px solid #00e676; color: #00e676; padding: 7px 16px; border-radius: 8px; font-weight: 800; font-size: 0.82rem; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                        <i class="fa-solid fa-circle-check"></i> Complete
+                    </button>
+                </div>
+
+                <!-- Duration Adjustment Chips -->
+                <div style="display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; opacity: 0.85;">
+                    <button type="button" onclick="adjustSessionDuration(25)" style="background: rgba(255,179,0,0.12); border: 1px solid rgba(255,179,0,0.3); color: #ffb300; padding: 3px 8px; border-radius: 6px; font-size: 0.72rem; font-weight: 700; cursor: pointer;">25m</button>
+                    <button type="button" onclick="adjustSessionDuration(45)" style="background: rgba(255,179,0,0.12); border: 1px solid rgba(255,179,0,0.3); color: #ffb300; padding: 3px 8px; border-radius: 6px; font-size: 0.72rem; font-weight: 700; cursor: pointer;">45m</button>
+                    <button type="button" onclick="adjustSessionDuration(60)" style="background: rgba(255,179,0,0.12); border: 1px solid rgba(255,179,0,0.3); color: #ffb300; padding: 3px 8px; border-radius: 6px; font-size: 0.72rem; font-weight: 700; cursor: pointer;">60m</button>
+                    <button type="button" onclick="adjustSessionDuration(90)" style="background: rgba(255,179,0,0.12); border: 1px solid rgba(255,179,0,0.3); color: #ffb300; padding: 3px 8px; border-radius: 6px; font-size: 0.72rem; font-weight: 700; cursor: pointer;">90m</button>
                 </div>
             </div>
         `;
@@ -561,38 +697,43 @@ function beginActivePomodoroCountdown(title, customDurationMinutes = null, taskI
     if (currentSessionInterval) clearInterval(currentSessionInterval);
 
     currentSessionInterval = setInterval(() => {
-        if (sessionPausedForDistraction) return; 
+        if (sessionPausedForDistraction || sessionPausedManual) {
+            syncSessionStateToStorage();
+            return; 
+        }
+
+        if (sessionOnBreak) {
+            breakSecondsRemaining--;
+            let bm = Math.floor(breakSecondsRemaining / 60).toString().padStart(2, '0');
+            let bs = (breakSecondsRemaining % 60).toString().padStart(2, '0');
+            if (clockNode) { clockNode.innerText = `${bm}:${bs}`; }
+            if (breakSecondsRemaining <= 0) {
+                sessionOnBreak = false;
+                if (breakAlarm) breakAlarm.play().catch(() => {});
+                showCustomModal("☕ Break Finished!", "Hope you are refreshed! Resuming focus session now.", "info");
+                const headerStatus = document.getElementById('activeSessionHeaderStatus');
+                if (headerStatus) {
+                    headerStatus.innerText = 'Active Session In Progress';
+                    headerStatus.style.color = '#ffb300';
+                }
+                if (clockNode) {
+                    clockNode.style.color = '#ffb300';
+                    clockNode.style.textShadow = '0 0 20px rgba(255, 179, 0, 0.4)';
+                }
+            }
+            syncSessionStateToStorage();
+            return;
+        }
 
         timeRemaining--;
         let m = Math.floor(timeRemaining / 60).toString().padStart(2, '0');
         let s = (timeRemaining % 60).toString().padStart(2, '0');
         
         if (clockNode) { clockNode.innerText = `${m}:${s}`; }
+        syncSessionStateToStorage();
 
         if (timeRemaining <= 0) {
-            clearInterval(currentSessionInterval);
-            sessionActive = false;
-            if (window.NativeBridge && window.NativeBridge.isAvailable()) {
-                window.NativeBridge.stopFocusSession();
-                window.NativeBridge.vibrate(500);
-            }
-            
-            if (breakAlarm) { breakAlarm.play().catch(e => console.log("Break Audio Blocked:", e)); }
-            
-            showCustomModal(
-                "Session Completed!", 
-                `Great focus! You completed your study session for "${currentActiveTaskTitle}".
-
-Please take a 5-minute break. Marked as completed in your Day Planner!`, 
-                "break"
-            );
-
-            // Automatically mark task as completed in Day Planner!
-            markPlannerTaskCompleted(currentActiveTaskTitle, currentActiveTaskId);
-            
-            const boxContainer = document.getElementById('activeSessionBoxContainer');
-            if (boxContainer) boxContainer.innerHTML = "";
-            renderAcademicTasks();
+            completeActiveSession(false);
         }
     }, 1000);
 }
