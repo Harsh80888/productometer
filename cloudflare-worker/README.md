@@ -19,7 +19,7 @@ This lightweight serverless worker provides **Meta Llama 3.1 8B** AI intelligenc
    - Variable name: `AI`.
    - Click **Save**.
 9. Copy your Worker URL (e.g., `https://producto-ai.<your-subdomain>.workers.dev`).
-10. In Productivity Meter, tap the **Settings ⚙️** icon in the Producto chat window, paste your URL, and click **Save**!
+10. In Productometer, tap the **Settings ⚙️** icon in the Producto chat window, paste your URL, and click **Save**!
 
 ---
 

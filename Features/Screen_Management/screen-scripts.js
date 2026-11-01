@@ -49,8 +49,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Default monitored apps template (starts aligned with real tracked time)
 
     const DEFAULT_APPS = [
-        { id: 'app_prod_meter', name: 'Productivity Meter (Academics Timer)', category: 'productivity', seconds: 0, icon: 'fa-solid fa-graduation-cap', bg: '#00e5ff', color: '#fff' },
-        { id: 'app_active_session', name: 'Productivity Meter (Active Focus)', category: 'productivity', seconds: 0, icon: 'fa-solid fa-bolt', bg: '#0284c7', color: '#fff' }
+        { id: 'app_prod_meter', name: 'Productometer (Academics Timer)', category: 'productivity', seconds: 0, icon: 'fa-solid fa-graduation-cap', bg: '#00e5ff', color: '#fff' },
+        { id: 'app_active_session', name: 'Productometer (Active Focus)', category: 'productivity', seconds: 0, icon: 'fa-solid fa-bolt', bg: '#0284c7', color: '#fff' }
     ];
 
     // --- 2. ACTIVE SESSION TRACKER ---
@@ -276,7 +276,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 id: 'app_prod_meter',
 
-                name: 'Productivity Meter (Academics Timer)',
+                name: 'Productometer (Academics Timer)',
 
                 category: 'productivity',
 

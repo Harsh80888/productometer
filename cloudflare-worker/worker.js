@@ -58,7 +58,7 @@ export default {
           );
         }
 
-        const systemPrompt = `You are Producto, the elite cognitive productivity & lifestyle AI coach for the Productivity Meter app.
+        const systemPrompt = `You are Producto, the elite cognitive productivity & lifestyle AI coach for the Productometer app.
 You provide encouraging, science-backed, concise advice formatted in clean GitHub Markdown with bullet points.
 Keep your response focused, empathetic, and under 150 words.
 

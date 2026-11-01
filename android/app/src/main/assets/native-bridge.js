@@ -1,4 +1,4 @@
-// --- 📱 PRODUCTIVITY METER NATIVE ANDROID BRIDGE ---
+// --- 📱 PRODUCTOMETER NATIVE ANDROID BRIDGE ---
 const NativeBridge = {
     isAvailable: () => typeof window.AndroidBridge !== 'undefined',
 

@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Default applications list for session control
     const DEFAULT_APPS = [
-        { id: 'com.productometer.app', name: 'Productivity Meter', pkg: 'com.productometer.app', icon: 'fa-solid fa-graduation-cap', bg: '#00e5ff', color: '#000', defaultAcademicsAllowed: true, defaultHealthAllowed: true },
+        { id: 'com.productometer.app', name: 'Productometer', pkg: 'com.productometer.app', icon: 'fa-solid fa-graduation-cap', bg: '#00e5ff', color: '#000', defaultAcademicsAllowed: true, defaultHealthAllowed: true },
         { id: 'com.google.android.youtube', name: 'YouTube (Video & Lectures)', pkg: 'com.google.android.youtube', icon: 'fa-brands fa-youtube', bg: '#e50914', color: '#fff', defaultAcademicsAllowed: true, defaultHealthAllowed: false },
         { id: 'com.android.chrome', name: 'Chrome (Browser & Docs)', pkg: 'com.android.chrome', icon: 'fa-brands fa-chrome', bg: '#4285f4', color: '#fff', defaultAcademicsAllowed: true, defaultHealthAllowed: false },
         { id: 'com.whatsapp', name: 'WhatsApp (Messaging)', pkg: 'com.whatsapp', icon: 'fa-brands fa-whatsapp', bg: '#25d366', color: '#fff', defaultAcademicsAllowed: false, defaultHealthAllowed: false },

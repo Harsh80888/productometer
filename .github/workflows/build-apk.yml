@@ -65,17 +65,17 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create v1.1.1 dist/Productometer.apk \
-            --title "Productometer v1.1.1 - Android Release APK" \
-            --notes "### 📱 Productometer Android Release v1.1.1
+          gh release create v1.1.2 dist/Productometer.apk \
+            --title "Productometer v1.1.2 - Android Release APK" \
+            --notes "### 📱 Productometer Android Release v1.1.2
 
-          Maintenance release fixing Screen Time Manager execution.
+          Official release renaming app label to **Productometer** and delivering Screen Time fixes.
 
-          #### 🚀 Fixes in v1.1.1:
-          - **🛠️ Screen Time Manager Fix:** Resolved syntax error in \`screen-scripts.js\` that prevented the Screen Time section from initializing and displaying app stats.
-          - **⚡ Icon Caching Optimization:** Added in-memory concurrent icon cache in \`WebAppInterface.java\` to eliminate lag during usage stats queries.
-          - **📱 Digital Wellbeing Screen Time:** Full foreground usage synchronization restored.
+          #### 🚀 Highlights in v1.1.2:
+          - **🏷️ Official App Name:** Renamed Android app launcher label and system strings to **Productometer**.
+          - **🛠️ Screen Time Manager Fix:** Clean syntax compilation restoring full digital wellbeing analytics, app breakdown, and daily limit locks.
+          - **⚡ High Performance Icon Caching:** In-memory icon caching for instant app usage stats retrieval.
 
           #### 📦 Direct Download:
           - Click **\`Productometer.apk\`** under Assets below to download and install." || \
-          gh release upload v1.1.1 dist/Productometer.apk --clobber
+          gh release upload v1.1.2 dist/Productometer.apk --clobber
