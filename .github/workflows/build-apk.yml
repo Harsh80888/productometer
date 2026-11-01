@@ -65,24 +65,20 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create v1.1.4 dist/Productometer.apk \
-            --title "Productometer v1.1.4 - Android Release APK" \
-            --notes "### 📱 Productometer Android Release v1.1.4
+          gh release create v1.1.5 dist/Productometer.apk \
+            --title "Productometer v1.1.5 - Android Release APK" \
+            --notes "### 📱 Productometer Android Release v1.1.5
 
-          Enhanced screen time tracking algorithm based directly on high-accuracy v1.0.9 reference, with mobile UI alignment polish.
+          Critical fix resolving app usage breakdown rendering and restoring active App Time Limit enforcement.
 
-          #### 🚀 Highlights in v1.1.4:
-          - **🎯 Enhanced Screen Time Accuracy (v1.0.9 Reference Engine):**
-            - Reverted to and enhanced the authoritative v1.0.9 \`UsageEvents\` algorithm.
-            - Pre-seeds active foreground sessions from 15 minutes prior to midnight, capturing midnight rollover sessions.
-            - Restores top foreground application upon device unlock, recovering the 1-2 minute undercounting observed in v1.0.9.
-            - Multi-launcher and system IME input method filtering to avoid counting background UI.
-          - **📱 Android Mobile Alignment & UI Polish:**
-            - Bedtime Mode time input boxes and pickers refined with \`box-sizing: border-box\` and responsive grid.
-            - App Daily Limits header and tab navigation made horizontally scrollable with touch-momentum for all phone aspect ratios.
-            - Active App Limit cards upgraded with responsive \`.limit-card-right\` and truncated \`.limit-app-name\` to eliminate mobile text clipping and wrapping.
-            - Day Planner quick date chips and calendar day cells reinforced with \`min-height\` and \`flex-shrink: 0\`.
+          #### 🚀 Highlights in v1.1.5:
+          - **🛠️ Fixed App Usage Breakdown List Rendering:**
+            - Resolved a JavaScript runtime initialization ordering issue where premature dashboard execution halted before rendering the app list.
+            - All individual apps and their live tracked usage times are now fully visible in the App & Website Breakdown section.
+          - **⏱️ App Daily Time Limits Enforcement:**
+            - Upgraded \`getAppTodayForegroundMs\` in \`WebAppInterface\` with multi-tier querying (OS rollup aggregation + \`UsageEvents\` stream) to ensure accurate live usage is always fed to \`ShortsReelsBlockerService\`.
+            - Full active enforcement of daily time limits, 10-minute grace window countdown, and frozen app state locks.
 
           #### 📦 Direct Download:
           - Click **\`Productometer.apk\`** under Assets below to download and install." || \
-          gh release upload v1.1.4 dist/Productometer.apk --clobber
+          gh release upload v1.1.5 dist/Productometer.apk --clobber

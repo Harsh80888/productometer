@@ -303,6 +303,16 @@ public class WebAppInterface {
             long startOfDay = calendar.getTimeInMillis();
             long now = System.currentTimeMillis();
 
+            // 1. Direct aggregated query (official OS rollup)
+            Map<String, UsageStats> map = usm.queryAndAggregateUsageStats(startOfDay, now);
+            if (map != null && map.containsKey(packageName)) {
+                UsageStats u = map.get(packageName);
+                if (u != null && u.getTotalTimeInForeground() > 0) {
+                    return u.getTotalTimeInForeground();
+                }
+            }
+
+            // 2. Daily interval query
             List<UsageStats> statsList = usm.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, startOfDay, now);
             if (statsList != null) {
                 long total = 0L;
@@ -316,10 +326,37 @@ public class WebAppInterface {
                 if (total > 0) return total;
             }
 
-            Map<String, UsageStats> map = usm.queryAndAggregateUsageStats(startOfDay, now);
-            if (map != null && map.containsKey(packageName)) {
-                UsageStats u = map.get(packageName);
-                if (u != null) return u.getTotalTimeInForeground();
+            // 3. Authoritative UsageEvents stream fallback
+            long queryStart = Math.max(0L, startOfDay - (15 * 60 * 1000L));
+            UsageEvents events = usm.queryEvents(queryStart, now);
+            if (events != null) {
+                UsageEvents.Event event = new UsageEvents.Event();
+                long totalMs = 0L;
+                long sessionStart = 0L;
+                boolean inFg = false;
+                while (events.hasNextEvent()) {
+                    events.getNextEvent(event);
+                    if (!packageName.equals(event.getPackageName())) continue;
+                    int type = event.getEventType();
+                    long time = event.getTimeStamp();
+                    if (type == UsageEvents.Event.ACTIVITY_RESUMED || type == UsageEvents.Event.MOVE_TO_FOREGROUND) {
+                        sessionStart = Math.max(time, startOfDay);
+                        inFg = true;
+                    } else if (type == UsageEvents.Event.ACTIVITY_PAUSED || type == UsageEvents.Event.MOVE_TO_BACKGROUND) {
+                        if (inFg && sessionStart > 0) {
+                            long delta = time - sessionStart;
+                            if (delta > 0 && delta < 12 * 3600 * 1000L) {
+                                totalMs += delta;
+                            }
+                        }
+                        inFg = false;
+                        sessionStart = 0L;
+                    }
+                }
+                if (inFg && sessionStart > 0 && now > sessionStart) {
+                    totalMs += (now - sessionStart);
+                }
+                if (totalMs > 0) return totalMs;
             }
         } catch (Exception e) {
             e.printStackTrace();

@@ -1093,11 +1093,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     }
 
-    // Initial render & background tick
 
-    refreshDigitalWellbeingDashboard();
-
-    setInterval(refreshDigitalWellbeingDashboard, 10000);
 
 
     // ==========================================================================
@@ -1414,6 +1410,10 @@ document.addEventListener('DOMContentLoaded', () => {
             renderPickerList(getRealScreenApps(), e.target.value);
         });
     }
+
+    // Initial render & background tick (Executed after all controllers and listeners are initialized)
+    refreshDigitalWellbeingDashboard();
+    setInterval(refreshDigitalWellbeingDashboard, 10000);
 
 });
 
