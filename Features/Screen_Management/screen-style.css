@@ -657,3 +657,73 @@
     box-shadow: 0 0 8px rgba(255, 23, 68, 0.6);
 }
 
+
+/* Proactive Special Permission Card at Top */
+.special-permission-card {
+    display: none;
+    background: linear-gradient(135deg, rgba(2, 132, 199, 0.15), rgba(15, 23, 42, 0.98));
+    border: 1.5px solid rgba(0, 229, 255, 0.45);
+    box-shadow: 0 0 25px rgba(0, 229, 255, 0.15);
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    gap: 12px;
+    align-items: flex-start;
+}
+.perm-card-icon {
+    font-size: 1.5rem;
+    color: #00e5ff;
+    padding-top: 2px;
+}
+.perm-card-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.perm-card-title {
+    font-size: 0.88rem;
+    font-weight: 800;
+    color: #00e5ff;
+}
+.perm-card-desc {
+    font-size: 0.76rem;
+    color: #cbd5e1;
+    line-height: 1.4;
+}
+.perm-card-steps {
+    font-size: 0.72rem;
+    color: #ffd166;
+    background: rgba(255, 209, 102, 0.1);
+    border: 1px solid rgba(255, 209, 102, 0.25);
+    border-radius: 8px;
+    padding: 6px 10px;
+    line-height: 1.4;
+}
+.perm-card-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+}
+.btn-perm-primary {
+    background: linear-gradient(135deg, #0284c7, #00e5ff);
+    color: #04121d;
+    font-size: 0.76rem;
+    font-weight: 800;
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 0 12px rgba(0, 229, 255, 0.3);
+}
+.btn-perm-secondary {
+    background: rgba(255, 209, 102, 0.15);
+    border: 1px solid #ffd166;
+    color: #ffd166;
+    font-size: 0.76rem;
+    font-weight: 700;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+}

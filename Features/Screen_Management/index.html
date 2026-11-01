@@ -47,6 +47,22 @@
                 </div>
             </div>
 
+            <!-- 🚨 SPECIAL PERMISSION PROACTIVE PROMPT (Visible on Android if Usage Access needed) -->
+            <div class="special-permission-card" id="screenSpecialPermCard">
+                <div class="perm-card-icon"><i class="fa-solid fa-shield-halved"></i></div>
+                <div class="perm-card-content">
+                    <div class="perm-card-title">⚠️ Special Permission Required: Android Usage Access</div>
+                    <div class="perm-card-desc">Productometer needs Android Usage Access to track your real application screen time and deliver digital wellbeing analytics.</div>
+                    <div class="perm-card-steps">
+                        <strong>For Android 13/14/15:</strong> If greyed out under "Restricted settings", tap <em>Unlock First</em> &rarr; tap the 3-dots (&vellip;) top-right &rarr; select <em>Allow restricted settings</em>.
+                    </div>
+                    <div class="perm-card-actions">
+                        <button class="btn-perm-primary" id="btnProactiveGrantUsage"><i class="fa-solid fa-lock-open"></i> Enable Usage Access</button>
+                        <button class="btn-perm-secondary" id="btnProactiveUnlockRestricted"><i class="fa-solid fa-gear"></i> Unlock First (App Info)</button>
+                    </div>
+                </div>
+            </div>
+
             <!-- SECTION 1: HERO SCREEN TIME & DIGITAL WELLBEING TRI-METRICS -->
             <section class="sm-card hero-screen-time-card" id="heroScreenCard">
                 <div class="hero-subtitle">

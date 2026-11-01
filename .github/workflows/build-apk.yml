@@ -65,44 +65,35 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create v1.0.3 dist/Productometer.apk \
-            --title "Productometer v1.0.3 - Android Release APK" \
-            --notes "### 📱 Productometer Android Release v1.0.3
+          gh release create v1.0.4 dist/Productometer.apk \
+            --title "Productometer v1.0.4 - Android Release APK" \
+            --notes "### 📱 Productometer Android Release v1.0.4
 
-          Comprehensive update resolving Academics Monitoring Day Planner sync, Android 13/14/15 Restricted Settings access, Reels & Shorts Doomscroll Blocker with 1-reel grace, high-precision GPS anti-drift tracking, decoupled hardware step counting, and clean UI framing.
+          Major stability & feature update: Academics task list rendering fix, Alarm \"I am ready\" instant start & dismiss, Screen Management proactive permission prompt & syntax resolution, verified Home productivity score engine, and anti-drift GPS.
 
-          #### 🚀 Enhancements & Bug Fixes:
-          - **Academics Monitoring <-> Day Planner Two-Way Sync:**
-            - Day Planner tasks categorized under \`academics\`, \`skills\`, or containing study keywords (\`study\`, \`math\`, \`physic\`, \`code\`, \`exam\`, \`dsa\`, etc.) now automatically synchronize into Academics Monitoring.
-            - Added direct **Start** and **Start Early** buttons on task cards, allowing immediate launch of Pomodoro study timers without waiting for the exact scheduled minute.
-            - Completing a 25-minute Pomodoro study cycle now automatically marks the planned task as completed in Day Planner (\`completed: true\`).
-            - Cross-tab reactive updates ensure live synchronization whenever tasks are added, edited, or marked done.
+          #### 🚀 Key Fixes & Features in v1.0.4:
+          - **Academics Monitoring Task Rendering Fix:**
+            - Resolved JavaScript ReferenceError that was halting script execution; tasks from Day Planner now reliably render into the Academics Monitoring bucket.
+            - Broadened categorization so all non-health study, skill, and custom objectives appear in the task bucket with interactive \"Start\" and \"Start Early\" triggers.
+            - Completing a 25-minute Pomodoro study block marks the task completed in Day Planner.
 
-          - **Android 13/14/15 Restricted Settings Unlock Hub:**
-            - Solved Android's greyed-out \"Restricted settings\" issue for sideloaded APKs.
-            - Added a dedicated **System Access & Permissions** hub under the **Me** profile with a direct one-tap shortcut to App Info (\`ACTION_APPLICATION_DETAILS_SETTINGS\`).
-            - Step-by-step guided instructions direct users to tap the **3 dots (⋮)** in the top right and select **\"Allow restricted settings\"** to enable Accessibility, Usage Access, and Overlay permissions.
+          - **Task Alarm \"I am ready\" Option:**
+            - Replaced generic dismiss buttons with a prominent **\"✅ I am ready\"** option on both the on-screen alert modal and the native Android notification.
+            - Tapping **\"I am ready\"** instantly silences both the native Android alarm ringtone and web audio, closes the alert, and starts the Pomodoro focus countdown session.
 
-          - **Reels & Shorts Anti-Doomscroll Blocker (1-Reel Grace & 5s Auto-Exit):**
-            - Dedicated native Android Accessibility Service (\`ShortsReelsBlockerService\`) actively detects Instagram Reels and YouTube Shorts.
-            - **1st Reel Grace Period:** Allows you to enjoy a single reel or short sent by a friend without interruption.
-            - **2nd Reel Countdown Alert:** Triggers an interactive 5-second countdown notification on consecutive reel scrolling.
-            - **Single-Step Back Action:** Automatically sends a single back command to return you cleanly to the exact chat, feed, or page you were on before getting distracted.
+          - **Screen Management Proactive Permission Prompt & Syntax Resolution:**
+            - Resolved duplicate variable syntax error that was preventing Screen Management scripts from compiling.
+            - Added a proactive top-level **Special Permission Card** that asks for Android Usage Access immediately upon opening Screen Management if not already granted.
+            - Direct one-tap buttons to **Enable Usage Access** and **Unlock Restricted Settings** for Android 13/14/15.
+            - Auto-refreshes and loads live application statistics immediately upon returning from system settings.
 
-          - **High-Precision Anti-Drift GPS & Independent Pedometer:**
-            - Completely decoupled step counting from GPS coordinate jitter—steps are driven strictly by hardware pedometer sensors (\`TYPE_STEP_COUNTER\` / \`TYPE_STEP_DETECTOR\`) and accelerometer peak detection.
-            - Built-in stationary deadband filter (< 0.6 m/s / < 6m) eliminates the ~100m phantom distance gap when stopped or resting.
-
-          - **Screen Management Clean Human App Names:**
-            - Android \`QUERY_ALL_PACKAGES\` visibility and native package label resolver replaces raw package identifiers (\`com.facebook.katana\`, \`com.google.android.youtube\`) with clean readable names.
-
-          - **Compact Mobile Frame & Home Screen Light/Dark Mode Switcher:**
-            - Compacted HUD and dock navigation with viewport normalization.
-            - One-tap Light & Dark mode switch button on the Home screen HUD with full CSS token adaptation.
+          - **Verified Home Productivity Score Formulation:**
+            - Refined score formulation to accurately reward completed task hours and tracked live sessions, preventing uncompleted future tasks from prematurely inflating the score.
+            - Guaranteed non-negative health workout scores and reset initial dummy screen time so fresh installs start cleanly at a baseline.
 
           - **100% Offline Capability:**
-            - Fully functional offline without requiring an active internet connection.
+            - Fully offline-functional without requiring an active internet connection.
 
           #### 📦 Direct Download:
           - Click **\`Productometer.apk\`** under Assets below to download and install." || \
-          gh release upload v1.0.3 dist/Productometer.apk --clobber
+          gh release upload v1.0.4 dist/Productometer.apk --clobber

@@ -253,6 +253,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     @Override
     protected void onResume() {
         super.onResume();
+        AlarmReceiver.stopAlarm();
         if (webView != null) webView.onResume();
         registerStepSensorListener();
     }

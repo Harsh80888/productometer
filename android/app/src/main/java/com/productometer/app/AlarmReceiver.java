@@ -16,6 +16,22 @@ import androidx.core.app.NotificationCompat;
 
 public class AlarmReceiver extends BroadcastReceiver {
 
+    private static Ringtone activeRingtone = null;
+
+    /**
+     * Silences any active alarm ringtone immediately.
+     */
+    public static synchronized void stopAlarm() {
+        if (activeRingtone != null) {
+            try {
+                if (activeRingtone.isPlaying()) {
+                    activeRingtone.stop();
+                }
+            } catch (Exception ignored) {}
+            activeRingtone = null;
+        }
+    }
+
     @Override
     public void onReceive(Context context, Intent intent) {
         String taskTitle = intent.getStringExtra("task_title");
@@ -49,6 +65,8 @@ public class AlarmReceiver extends BroadcastReceiver {
                             .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                             .build());
                 }
+                stopAlarm();
+                activeRingtone = ringtone;
                 ringtone.play();
             }
         } catch (Exception e) {
@@ -75,6 +93,7 @@ public class AlarmReceiver extends BroadcastReceiver {
                 .setCategory(NotificationCompat.CATEGORY_ALARM)
                 .setAutoCancel(true)
                 .setContentIntent(contentPendingIntent)
+                .addAction(android.R.drawable.ic_media_play, "✅ I AM READY", contentPendingIntent)
                 .setVibrate(new long[]{0, 500, 200, 500, 200, 500});
 
         NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);

@@ -222,17 +222,28 @@ document.addEventListener('DOMContentLoaded', () => {
         let plannerOtherProdMins = 0;
         let plannerScreenMins = 0;
 
+        let completedAcadMins = 0;
+        let completedHealthMins = 0;
+        let completedOtherProdMins = 0;
+        let completedScreenMins = 0;
+
         plannerList.forEach(task => {
-            const dur = parseFloat(task.durationMin) || 0;
+            const dur = parseFloat(task.durationMin || task.durationMinutes || task.duration) || 0;
             const cat = (task.category || '').toLowerCase();
-            if (cat === 'academics' || cat === 'study') {
+            const isDone = !!task.completed;
+
+            if (cat === 'academics' || cat === 'study' || cat === 'academic' || cat === 'school') {
                 plannerAcadMins += dur;
-            } else if (cat === 'health') {
+                if (isDone) completedAcadMins += dur;
+            } else if (cat === 'health' || cat === 'fitness' || cat === 'workout') {
                 plannerHealthMins += dur;
-            } else if (cat === 'skills' || cat === 'school' || cat === 'work') {
+                if (isDone) completedHealthMins += dur;
+            } else if (cat === 'skills' || cat === 'school' || cat === 'work' || cat === 'other' || cat === 'general') {
                 plannerOtherProdMins += dur;
+                if (isDone) completedOtherProdMins += dur;
             } else if (cat === 'screen') {
                 plannerScreenMins += dur;
+                if (isDone) completedScreenMins += dur;
             }
         });
 
@@ -358,6 +369,10 @@ document.addEventListener('DOMContentLoaded', () => {
             plannerHealthHours: plannerHealthMins / 60,
             plannerOtherProdHours: plannerOtherProdMins / 60,
             plannerScreenHours: plannerScreenMins / 60,
+            completedAcadHours: completedAcadMins / 60,
+            completedHealthHours: completedHealthMins / 60,
+            completedOtherProdHours: completedOtherProdMins / 60,
+            completedScreenHours: completedScreenMins / 60,
             plannerList
         };
     }
@@ -370,13 +385,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // Others: 0
     // Completed Task/Session Bonus: +50 pts each
     function calculateProductivityScore(healthData, screenData, acadData, plannerData) {
-        // Merge hours from modules and planner
-        const nHealth = Math.max(healthData.workoutHours || 0, plannerData.plannerHealthHours || 0);
-        const nAcad = Math.max(acadData.studyHours || 0, plannerData.plannerAcadHours || 0);
-        const nOtherProd = plannerData.plannerOtherProdHours || 0;
-        const nScreen = Math.max(screenData.nonProdHours || 0, plannerData.plannerScreenHours || 0);
+        // Earned hours from live-tracked sessions or completed planner tasks
+        const nHealth = Math.max(healthData.workoutHours || 0, plannerData.completedHealthHours || 0);
+        const nAcad = Math.max(acadData.studyHours || 0, plannerData.completedAcadHours || 0);
+        const nOtherProd = plannerData.completedOtherProdHours || 0;
+        const nScreen = screenData.nonProdHours || 0;
 
-        const healthScore = nHealth > 0 ? (150.0 - (30.0 * nHealth)) : 0.0;
+        const healthScore = nHealth > 0 ? Math.max(0, (150.0 - (30.0 * nHealth))) : 0.0;
         const acadScore = 100.0 * nAcad;
         const otherProdScore = 50.0 * nOtherProd;
         const screenScore = nScreen > 0 ? -(50.0 + (50.0 * nScreen)) : 0.0;

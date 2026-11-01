@@ -2,11 +2,7 @@
 let sessionActive = false;
 let sessionPausedForDistraction = false;
 let currentSessionInterval = null;
-let timeRemaining = 25 * 60;
-    if (window.NativeBridge && window.NativeBridge.isAvailable()) {
-        window.NativeBridge.startFocusSession(title, timeRemaining);
-        window.NativeBridge.vibrate(60);
-    } // 25 minutes in seconds
+let timeRemaining = 25 * 60; // 25 minutes in seconds
 let notifiedAvailableTasks = new Set();
 let currentActiveTaskTitle = "";
 
@@ -33,7 +29,7 @@ document.addEventListener('click', () => {
 }, { once: true });
 
 /* --- CUSTOM MODAL UTILITY --- */
-function showCustomModal(title, message, type = 'info', confirmCallback = null) {
+function showCustomModal(title, message, type = 'info', confirmCallback = null, confirmBtnText = 'OK') {
     const overlay = document.getElementById('customModalOverlay');
     const box = document.getElementById('customModalBox');
     const titleEl = document.getElementById('customModalTitle');
@@ -50,6 +46,7 @@ function showCustomModal(title, message, type = 'info', confirmCallback = null) 
 
     titleEl.innerText = title;
     msgEl.innerText = message;
+    if (confirmBtn) confirmBtn.innerText = confirmBtnText;
 
     if (type === 'distraction') {
         box.style.border = '1px solid #ff3d71';
@@ -299,7 +296,8 @@ function renderAcademicTasks() {
     const academicPlannerTasks = dayPlannerTasks.filter(task => {
         if (!task) return false;
         const cat = (task.category || '').toLowerCase();
-        if (cat === 'academics' || cat === 'skills') return true;
+        if (cat === 'academics' || cat === 'skills' || cat === 'study' || cat === 'academic' || cat === 'school' || cat === 'work' || cat === 'other' || cat === 'general') return true;
+        if (cat !== 'health' && cat !== 'fitness' && cat !== 'workout' && cat !== 'running' && cat !== 'hiit') return true;
         const t = (task.title || '').toLowerCase();
         return t.includes('study') || t.includes('math') || t.includes('physic') ||
                t.includes('chem') || t.includes('bio') || t.includes('read') ||
@@ -367,10 +365,21 @@ function renderAcademicTasks() {
             setTimeout(() => { startAlarm.play().catch(err => console.log("Retry failed:", err)); }, 1000);
         });
         
+        const readyTaskTitle = availableTasks[0]?.title || 'Study Session';
         showCustomModal(
-            "SESSION UNLOCKED!", 
-            `Your scheduled task "${availableTasks[0]?.title || 'Study Session'}" is now ready to begin!`, 
-            "info"
+            "⏰ SESSION UNLOCKED!", 
+            `Your scheduled task "${readyTaskTitle}" is ready to begin! Tap "I am ready" to start your 25-minute Pomodoro focus session.`, 
+            "info",
+            (confirmed) => {
+                if (confirmed) {
+                    if (startAlarm) { startAlarm.pause(); startAlarm.currentTime = 0; }
+                    if (window.NativeBridge && window.NativeBridge.stopAlarm) {
+                        window.NativeBridge.stopAlarm();
+                    }
+                    beginActivePomodoroCountdown(readyTaskTitle);
+                }
+            },
+            "✅ I am ready"
         );
     }
 
@@ -478,6 +487,16 @@ function beginActivePomodoroCountdown(title) {
     if (startAlarm) {
         startAlarm.pause();
         startAlarm.currentTime = 0;
+    }
+
+    if (window.NativeBridge && window.NativeBridge.isAvailable()) {
+        try {
+            if (window.NativeBridge.stopAlarm) window.NativeBridge.stopAlarm();
+            if (window.NativeBridge.startFocusSession) window.NativeBridge.startFocusSession(title, timeRemaining);
+            if (window.NativeBridge.vibrate) window.NativeBridge.vibrate(60);
+        } catch (e) {
+            console.warn("NativeBridge error:", e);
+        }
     }
 
     const boxContainer = document.getElementById('activeSessionBoxContainer');

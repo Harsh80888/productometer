@@ -101,6 +101,14 @@ const NativeBridge = {
         } catch (e) {}
     },
 
+    stopAlarm: () => {
+        try {
+            if (typeof window.AndroidBridge !== 'undefined' && window.AndroidBridge.stopAlarm) {
+                window.AndroidBridge.stopAlarm();
+            }
+        } catch (e) {}
+    },
+
     startFocusSession: (title, durationSeconds) => {
         try {
             if (typeof window.AndroidBridge !== 'undefined' && window.AndroidBridge.startFocusSession) {

@@ -49,19 +49,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Default monitored apps template (starts aligned with real tracked time)
 
     const DEFAULT_APPS = [
-
-        { id: 'app_prod_meter', name: 'Productivity Meter (Academics Timer)', category: 'productivity', seconds: 0, icon: 'fa-solid fa-graduation-cap', bg: '#ff1744', color: '#fff' },
-
-        { id: 'app_active_session', name: 'Productivity Meter (Active Dashboard Focus)', category: 'productivity', seconds: 0, icon: 'fa-solid fa-bolt', bg: '#d50000', color: '#fff' },
-
-        { id: 'app_yt', name: 'YouTube (Lectures & Notes)', category: 'productivity', seconds: 1800, icon: 'fa-brands fa-youtube', bg: '#e50914', color: '#fff' },
-
-        { id: 'app_chrome', name: 'Chrome (Browser & Research)', category: 'productivity', seconds: 1200, icon: 'fa-brands fa-chrome', bg: '#4285f4', color: '#fff' },
-
-        { id: 'app_insta', name: 'Instagram', category: 'others', seconds: 900, icon: 'fa-brands fa-instagram', bg: '#e1306c', color: '#fff' },
-
-        { id: 'app_whatsapp', name: 'WhatsApp & Messages', category: 'others', seconds: 600, icon: 'fa-brands fa-whatsapp', bg: '#25d366', color: '#fff' }
-
+        { id: 'app_prod_meter', name: 'Productivity Meter (Academics Timer)', category: 'productivity', seconds: 0, icon: 'fa-solid fa-graduation-cap', bg: '#00e5ff', color: '#fff' },
+        { id: 'app_active_session', name: 'Productivity Meter (Active Focus)', category: 'productivity', seconds: 0, icon: 'fa-solid fa-bolt', bg: '#0284c7', color: '#fff' }
     ];
 
     // --- 2. ACTIVE SESSION TRACKER ---
@@ -189,57 +178,39 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (e) {}
 
         // A. If on Android Native with UsageStats permission:
+        const permBanner = document.getElementById('androidPermissionBanner');
+        const specialPermCard = document.getElementById('screenSpecialPermCard');
 
         if (window.NativeBridge && window.NativeBridge.isAvailable()) {
-
-            if (window.NativeBridge.hasUsageStatsPermission()) {
-
-                const permBanner = document.getElementById('androidPermissionBanner');
-
+            const hasPerm = window.NativeBridge.hasUsageStatsPermission();
+            if (hasPerm) {
                 if (permBanner) permBanner.style.display = 'none';
+                if (specialPermCard) specialPermCard.style.display = 'none';
 
                 const androidStats = window.NativeBridge.getRealAppUsageStats();
-
                 if (androidStats && Array.isArray(androidStats) && androidStats.length > 0) {
-
                     return androidStats.map(item => {
-
                         const cleanTitle = formatCleanAppName(item.appName, item.packageName);
-
                         const assignedCategory = savedOverrides[item.packageName] || item.category || 'others';
-
                         return {
-
                             id: item.packageName,
-
                             name: cleanTitle,
-
                             category: assignedCategory,
-
                             seconds: item.totalSeconds || (item.minutes * 60) || 0,
-
                             icon: 'fa-solid fa-mobile-screen',
-
                             bg: assignedCategory === 'productivity' ? '#00e5ff' : '#334155',
-
                             color: '#fff',
-
                             isNativeAndroid: true
-
                         };
-
                     });
-
                 }
-
             } else {
-
-                const permBanner = document.getElementById('androidPermissionBanner');
-
                 if (permBanner) permBanner.style.display = 'flex';
-
+                if (specialPermCard) specialPermCard.style.display = 'flex';
             }
-
+        } else {
+            if (permBanner) permBanner.style.display = 'none';
+            if (specialPermCard) specialPermCard.style.display = 'none';
         }
 
         // B. Load stored apps or defaults
@@ -428,7 +399,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const topChip = document.getElementById('topModuleChip');
         const healthStatus = document.getElementById('screenHealthStatus');
         const goalInputBox = document.getElementById('dailyGoalInput');
-        const barOthers = document.getElementById('segOthers');
+        let barOthers = document.getElementById('segOthers');
 
         if (isOverLimit) {
             // 🚨 THINGS GOING WRONG: Excessive Screentime triggers RED warnings!
@@ -521,7 +492,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const barProd = document.getElementById('segProductive');
 
-        const barOthers = document.getElementById('segOthers');
+        barOthers = document.getElementById('segOthers');
 
         const ratioBadge = document.getElementById('ratioPercentageBadge');
 
@@ -735,33 +706,37 @@ document.addEventListener('DOMContentLoaded', () => {
 
     }
 
-    // Android Usage Access
+    // Android Usage Access Handlers (Both Banner & Proactive Card)
+    function handleOpenUsageAccess() {
+        if (window.NativeBridge && window.NativeBridge.openUsageAccessSettings) {
+            window.NativeBridge.openUsageAccessSettings();
+        } else {
+            alert('Please enable Android Usage Access in Settings -> Apps -> Special Access -> Usage Access.');
+        }
+    }
+
+    function handleOpenAppDetails() {
+        if (window.NativeBridge && window.NativeBridge.openAppDetailsSettings) {
+            window.NativeBridge.openAppDetailsSettings();
+        } else {
+            alert('Open phone Settings -> Apps -> Productometer -> Tap 3 dots (⋮) in top-right -> Allow restricted settings');
+        }
+    }
 
     const btnGrant = document.getElementById('btnGrantUsageAccess');
     const btnUnlockUsage = document.getElementById('btnUnlockUsageAccess');
-    if (btnUnlockUsage) {
-        btnUnlockUsage.addEventListener('click', () => {
-            if (window.NativeBridge && window.NativeBridge.openAppDetailsSettings) {
-                window.NativeBridge.openAppDetailsSettings();
-            } else {
-                alert('Open phone Settings -> Apps -> Productometer -> Tap 3 dots (⋮) -> Allow restricted settings');
-            }
-        });
-    }
+    const btnProactiveGrant = document.getElementById('btnProactiveGrantUsage');
+    const btnProactiveUnlock = document.getElementById('btnProactiveUnlockRestricted');
 
-    if (btnGrant) {
+    if (btnGrant) btnGrant.addEventListener('click', handleOpenUsageAccess);
+    if (btnProactiveGrant) btnProactiveGrant.addEventListener('click', handleOpenUsageAccess);
+    if (btnUnlockUsage) btnUnlockUsage.addEventListener('click', handleOpenAppDetails);
+    if (btnProactiveUnlock) btnProactiveUnlock.addEventListener('click', handleOpenAppDetails);
 
-        btnGrant.addEventListener('click', () => {
-
-            if (window.NativeBridge && window.NativeBridge.openUsageAccessSettings) {
-
-                window.NativeBridge.openUsageAccessSettings();
-
-            }
-
-        });
-
-    }
+    // Auto-refresh when user returns to app from system settings
+    window.addEventListener('focus', () => {
+        refreshDigitalWellbeingDashboard();
+    });
 
     // (Manual app modal removed: All apps & sites are automatically captured)
 

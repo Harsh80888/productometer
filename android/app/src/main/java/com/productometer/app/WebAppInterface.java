@@ -87,6 +87,14 @@ public class WebAppInterface {
     }
 
     /**
+     * Silences any active alarm ringtone immediately.
+     */
+    @JavascriptInterface
+    public void stopAlarm() {
+        AlarmReceiver.stopAlarm();
+    }
+
+    /**
      * Checks if the user has granted PACKAGE_USAGE_STATS permission for Digital Wellbeing stats.
      */
     @JavascriptInterface
