@@ -1,0 +1,7 @@
+name = "producto-ai"
+main = "worker.js"
+compatibility_date = "2024-11-01"
+
+# Enable Workers AI binding
+[ai]
+binding = "AI"

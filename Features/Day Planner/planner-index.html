@@ -47,6 +47,7 @@
             flex: 1;
         }
     </style>
+    <link rel="stylesheet" href="../AI_Coach/coach-style.css">
 </head>
 <body class="cyberpunk-portal-body">
 
@@ -182,6 +183,15 @@
 
             </div>
 
+            <!-- Reminder / Alarm Toggle Badge Row -->
+            <div class="reminder-badge-row">
+                <span class="reminder-badge-label"><i class="fa-solid fa-clock-rotate-left"></i> Session Alarm</span>
+                <button type="button" class="reminder-toggle-badge is-on" id="taskReminderToggleBtn" title="Click to Toggle Reminder ON/OFF">
+                    <i class="fa-solid fa-bell" id="taskReminderIcon"></i>
+                    <span id="taskReminderStateLabel">Reminder ON</span>
+                </button>
+            </div>
+
             <!-- Error Notice Banner (Hidden by default) -->
             <div id="taskErrorNotice" class="custom-error-notice hidden" style="display: none;">
                 <i class="fa-solid fa-triangle-exclamation"></i>
@@ -222,5 +232,7 @@
     <script src="../../native-bridge.js"></script>
     <script src="../../main-portal.js"></script>
     <script src="./planner-scripts.js"></script>
+    <script src="../AI_Coach/coach-brain.js"></script>
+    <script src="../AI_Coach/coach-ui.js"></script>
 </body>
 </html>

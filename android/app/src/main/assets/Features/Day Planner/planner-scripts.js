@@ -80,6 +80,37 @@ const savePermanentCheckbox = document.getElementById('savePermanentCheckbox');
 const taskConfirmBtn = document.getElementById('taskConfirmBtn');
 const taskCancelBtn = document.getElementById('taskCancelBtn');
 
+// --- 🔔 TASK REMINDER TOGGLE BADGE ENGINE ---
+let activeReminderSetting = true;
+const taskReminderToggleBtn = document.getElementById('taskReminderToggleBtn');
+const taskReminderIcon = document.getElementById('taskReminderIcon');
+const taskReminderStateLabel = document.getElementById('taskReminderStateLabel');
+
+function updateReminderBadgeUI() {
+    if (!taskReminderToggleBtn || !taskReminderStateLabel) return;
+    if (activeReminderSetting) {
+        taskReminderToggleBtn.className = 'reminder-toggle-badge is-on';
+        if (taskReminderIcon) taskReminderIcon.className = 'fa-solid fa-bell';
+        taskReminderStateLabel.textContent = 'Reminder ON';
+    } else {
+        taskReminderToggleBtn.className = 'reminder-toggle-badge is-off';
+        if (taskReminderIcon) taskReminderIcon.className = 'fa-solid fa-bell-slash';
+        taskReminderStateLabel.textContent = 'Reminder OFF';
+    }
+}
+
+if (taskReminderToggleBtn) {
+    taskReminderToggleBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        activeReminderSetting = !activeReminderSetting;
+        updateReminderBadgeUI();
+        if (window.NativeBridge && window.NativeBridge.vibrate) {
+            window.NativeBridge.vibrate(30);
+        }
+    });
+}
+
 // --- INITIALIZATION ON LOAD ---
 document.addEventListener('DOMContentLoaded', () => {
     rebuildCategoryPresetButtons();
@@ -87,6 +118,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setupCategoryTabs();
     setupDialogBackdropDismiss();
     ensureDrumsInitialized();
+    updateReminderBadgeUI();
 });
 
 // Safe helper to open modal without throwing InvalidStateError
@@ -122,6 +154,9 @@ function openTaskBuilderForAdd() {
 
     if (taskBuilderDeckTitle) taskBuilderDeckTitle.textContent = "Configure Target Objective Parameters";
     if (addToPlannerBtnText) addToPlannerBtnText.textContent = "Add To Planner Track";
+
+    activeReminderSetting = true;
+    updateReminderBadgeUI();
 
     // Set defaults: 09:00 AM, 1 Hour Duration
     activeStartHour = '09';
@@ -538,6 +573,8 @@ if (addToPlannerBtn) {
         const optionalDesc = taskDescriptionInput ? taskDescriptionInput.value.trim() : "";
         const formattedTime = `${activeStartHour.toString().padStart(2, '0')}:${activeStartMinute.toString().padStart(2, '0')}`;
 
+        let savedTaskObj = null;
+
         if (selectedTaskIdForEdit) {
             // 🔄 EDIT MODE: Update existing task object
             const taskIndex = plannerListData.findIndex(t => t.id === selectedTaskIdForEdit);
@@ -552,8 +589,10 @@ if (addToPlannerBtn) {
                     timeDisplayStr: formattedTime,
                     time: formattedTime,
                     durationMinutes: durationMin,
+                    reminder: activeReminderSetting,
                     description: optionalDesc || plannerListData[taskIndex].description || `Objective mapped for your daily ${currentSelectedCategoryType} routine timeline.`
                 };
+                savedTaskObj = plannerListData[taskIndex];
             }
             selectedTaskIdForEdit = null;
         } else {
@@ -569,24 +608,28 @@ if (addToPlannerBtn) {
                 time: formattedTime,
                 durationMinutes: durationMin,
                 completed: false,
+                reminder: activeReminderSetting,
                 description: optionalDesc || `Objective mapped for your daily ${currentSelectedCategoryType} routine timeline.`
             };
             plannerListData.push(newPlannerItem);
+            savedTaskObj = newPlannerItem;
         }
-        // Safe Native Alarm Integration
+
+        // 🔔 Safe Native Alarm Integration honoring Reminder setting
         try {
-            if (window.NativeBridge && window.NativeBridge.isAvailable()) {
-                const activeItemForAlarm = plannerListData[plannerListData.length - 1];
-                if (activeItemForAlarm) {
+            if (window.NativeBridge && window.NativeBridge.isAvailable() && savedTaskObj) {
+                if (savedTaskObj.reminder) {
                     const now = new Date();
                     const startH = parseInt(activeStartHour, 10) || 0;
                     const startM = parseInt(activeStartMinute, 10) || 0;
                     const schedDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), startH, startM, 0);
                     if (schedDate.getTime() > Date.now()) {
-                        window.NativeBridge.scheduleAlarm(activeItemForAlarm.id, activeItemForAlarm.title, activeItemForAlarm.timeDisplayStr, schedDate.getTime());
+                        window.NativeBridge.scheduleAlarm(savedTaskObj.id, savedTaskObj.title, savedTaskObj.timeDisplayStr, schedDate.getTime());
                     }
-                    window.NativeBridge.vibrate(40);
+                } else {
+                    window.NativeBridge.cancelAlarm(savedTaskObj.id);
                 }
+                window.NativeBridge.vibrate(40);
             }
         } catch (alarmErr) {
             console.warn("[DayPlanner] Alarm notice:", alarmErr);
@@ -645,19 +688,94 @@ function renderChronologicalMasterTimelineGrid() {
     plannerListData.forEach(task => {
         const card = document.createElement('div');
         card.classList.add('chrono-task-card');
+        if (task.completed) card.classList.add('task-done');
         card.setAttribute('data-task-id', task.id);
         if (selectedTaskIdForEdit === task.id) card.classList.add('selected-for-edit');
-        card.style.borderColor = (task.color || '#00e5ff') + '55';
-        card.style.boxShadow = `0 0 25px ${(task.color || '#00e5ff')}15, inset 0 0 15px ${(task.color || '#00e5ff')}10`;
+        card.style.borderColor = task.completed ? '#00e676' : ((task.color || '#00e5ff') + '55');
+        card.style.boxShadow = task.completed
+            ? '0 0 25px rgba(0, 230, 118, 0.25), inset 0 0 15px rgba(0, 230, 118, 0.15)'
+            : `0 0 25px ${(task.color || '#00e5ff')}15, inset 0 0 15px ${(task.color || '#00e5ff')}10`;
 
+        const isDone = !!task.completed;
+        const isReminderOn = task.reminder !== false;
         card.innerHTML = `
+            <button type="button" class="chrono-task-complete-btn ${isDone ? 'is-completed' : ''}" title="${isDone ? 'Mark Incomplete' : 'Mark Completed (+50 pts)'}">
+                <i class="${isDone ? 'fa-solid fa-circle-check' : 'fa-regular fa-circle'}"></i>
+            </button>
             <div class="card-time-badge" style="color: ${task.color || '#00e5ff'}; border-color: ${(task.color || '#00e5ff')}33;">${task.timeDisplayStr}</div>
             <div class="card-info-stack">
-                <div class="card-main-title">${task.title}</div>
+                <div class="card-main-title ${isDone ? 'completed-title' : ''}">
+                    ${task.title}
+                    ${isDone ? '<span class="task-done-badge"><i class="fa-solid fa-check"></i> +50 pts Done</span>' : ''}
+                </div>
                 <div class="card-sub-description">${task.description} (${(task.durationMin / 60).toFixed(1)}h)</div>
             </div>
+            <button type="button" class="card-reminder-pill ${isReminderOn ? 'reminder-active' : 'reminder-muted'}" title="${isReminderOn ? 'Alarm Reminder: ON (Tap to Mute)' : 'Alarm Reminder: OFF (Tap to Enable)'}">
+                <i class="${isReminderOn ? 'fa-solid fa-bell' : 'fa-solid fa-bell-slash'}"></i>
+            </button>
             <button type="button" class="delete-chrono-item-btn" title="Delete Task">&times;</button>
         `;
+
+        // Interactive Reminder Toggle directly on Card
+        const reminderBtn = card.querySelector('.card-reminder-pill');
+        if (reminderBtn) {
+            reminderBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                task.reminder = (task.reminder === false) ? true : false;
+
+                if (window.NativeBridge && window.NativeBridge.isAvailable()) {
+                    if (task.reminder) {
+                        const now = new Date();
+                        const schedH = Math.floor(task.startMin / 60);
+                        const schedM = task.startMin % 60;
+                        const schedDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), schedH, schedM, 0);
+                        if (schedDate.getTime() > Date.now()) {
+                            window.NativeBridge.scheduleAlarm(task.id, task.title, task.timeDisplayStr, schedDate.getTime());
+                        }
+                    } else {
+                        window.NativeBridge.cancelAlarm(task.id);
+                    }
+                    if (window.NativeBridge.vibrate) window.NativeBridge.vibrate(30);
+                }
+
+                localStorage.setItem('productometer_chrono_planner_list', JSON.stringify(plannerListData));
+                try { window.dispatchEvent(new Event('storage')); } catch (err) {}
+                renderChronologicalMasterTimelineGrid();
+            });
+        }
+
+        // Interactive Completion Toggle
+        const completeBtn = card.querySelector('.chrono-task-complete-btn');
+        if (completeBtn) {
+            completeBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                task.completed = !task.completed;
+                localStorage.setItem('productometer_chrono_planner_list', JSON.stringify(plannerListData));
+                try { window.dispatchEvent(new Event('storage')); } catch (err) {}
+
+                // Play tactile completion chime
+                try {
+                    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(task.completed ? 880 : 440, audioCtx.currentTime);
+                    gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.3);
+                } catch (audioErr) {}
+
+                if (window.NativeBridge && window.NativeBridge.vibrate) {
+                    window.NativeBridge.vibrate(40);
+                }
+
+                synchronizeLegacyTimelineArray();
+                renderChronologicalMasterTimelineGrid();
+            });
+        }
 
         // Desktop Double Click
         card.addEventListener('dblclick', () => {
@@ -798,6 +916,9 @@ if (openEditTaskDialogBtn) {
         activeStartMinute = startTimeObj.minutes;
         activeDurationHour = durationTimeObj.hours;
         activeDurationMinute = durationTimeObj.minutes;
+
+        activeReminderSetting = taskToEdit.reminder !== false;
+        updateReminderBadgeUI();
 
         ensureDrumsInitialized();
         safeShowModal(taskBuilderDialog);

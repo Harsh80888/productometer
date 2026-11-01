@@ -13,6 +13,7 @@
     
     <!-- Health Tracker Stylesheet -->
     <link rel="stylesheet" href="./health-style.css">
+    <link rel="stylesheet" href="../AI_Coach/coach-style.css">
 </head>
 <body>
 
@@ -173,7 +174,12 @@
                         <div class="tile-icon-halo diet">
                             <i class="fa-solid fa-chart-pie"></i>
                         </div>
-                        <span class="tile-badge diet"><i class="fa-solid fa-apple-whole text-yellow"></i> Calculator</span>
+                        <div style="display: flex; gap: 6px; align-items: center;">
+                            <span class="tile-badge diet" id="mainTileVegBadge" style="display: none; background: rgba(0, 230, 118, 0.15); border: 1px solid rgba(0, 230, 118, 0.4); color: #00e676; font-weight: 800; font-size: 0.68rem; padding: 2px 8px; border-radius: 10px;">
+                                🌱 Veg Mode
+                            </span>
+                            <span class="tile-badge diet"><i class="fa-solid fa-apple-whole text-yellow"></i> Calculator</span>
+                        </div>
                     </div>
                     <div class="tile-content-stack">
                         <h3 class="tile-main-title">Diet</h3>
@@ -1042,6 +1048,26 @@
         </div>
 
         <div class="diet-modal-body">
+            <!-- 0. VEG MODE CONTROL BAR -->
+            <div class="diet-veg-mode-card" id="dietVegModeCard">
+                <div class="veg-mode-left">
+                    <div class="veg-icon-badge">
+                        🌱
+                    </div>
+                    <div class="veg-mode-text-group">
+                        <div class="veg-mode-title-row">
+                            <span class="veg-mode-title">🌱 Pure Veg Mode</span>
+                            <span class="veg-mode-status-tag" id="vegModeStatusTag">OFF</span>
+                        </div>
+                        <span class="veg-mode-desc" id="vegModeDesc">Showing all foods (Veg &amp; Non-Veg)</span>
+                    </div>
+                </div>
+                <label class="switch-toggle veg-switch-wrap" style="position: relative; display: inline-block; width: 44px; height: 24px; margin: 0; flex-shrink: 0;">
+                    <input type="checkbox" id="toggleDietVegMode" style="opacity: 0; width: 0; height: 0;">
+                    <span class="slider round" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #334155; transition: .3s; border-radius: 24px;"></span>
+                </label>
+            </div>
+
             <!-- 1. GOAL SELECTION & BIOMETRIC TARGET BAR -->
             <div class="diet-goal-card">
                 <div class="diet-goal-header-row">
@@ -1274,6 +1300,15 @@
             </button>
         </div>
 
+        <!-- Veg Mode Quick Filter Row in Library -->
+        <div class="library-veg-filter-row">
+            <button type="button" class="btn-library-veg-toggle" id="btnLibraryVegToggle">
+                <span class="diet-type-indicator veg"><span class="dot"></span></span>
+                <span id="libraryVegToggleText">Veg Mode: OFF</span>
+            </button>
+            <span class="library-veg-hint" id="libraryVegHint">Toggle to hide eggs, chicken &amp; meat</span>
+        </div>
+
         <!-- Food Category Filter Pills -->
         <div class="exercise-filter-tabs" id="foodCategoryFilters">
             <button class="filter-tab-pill active" data-fcat="all">All</button>
@@ -1305,6 +1340,19 @@
             <div class="input-field-group">
                 <label>Food Name *</label>
                 <input type="text" id="customFoodName" class="cyber-input" placeholder="e.g. Homemade Protein Pancake" required>
+            </div>
+            <div class="input-field-group">
+                <label>Food Classification *</label>
+                <div class="custom-diet-type-selector">
+                    <label class="custom-diet-type-pill active" id="pillCustomVeg">
+                        <input type="radio" name="customDietTypeRadio" value="veg" checked style="display: none;">
+                        <span class="diet-type-indicator veg"><span class="dot"></span></span> Vegetarian (Veg)
+                    </label>
+                    <label class="custom-diet-type-pill is-nonveg" id="pillCustomNonVeg">
+                        <input type="radio" name="customDietTypeRadio" value="nonveg" style="display: none;">
+                        <span class="diet-type-indicator non-veg"><span class="dot"></span></span> Non-Vegetarian
+                    </label>
+                </div>
             </div>
             <div class="input-field-group">
                 <label>Serving Unit / Portion Size *</label>
@@ -1341,5 +1389,7 @@
     <script src="../../native-bridge.js"></script>
     <script src="../../main-portal.js"></script>
     <script src="./health-scripts.js"></script>
+    <script src="../AI_Coach/coach-brain.js"></script>
+    <script src="../AI_Coach/coach-ui.js"></script>
 </body>
 </html>

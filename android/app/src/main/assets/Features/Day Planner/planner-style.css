@@ -318,3 +318,162 @@ dialog.custom-task-sub-dialog::backdrop {
 
 .planner-actions-row { display: flex; gap: 12px; align-items: center; width: 100%; }
 .planner-actions-row .open-task-dialog-btn { flex: 1; }
+
+/* --- ✅ TASK COMPLETION & INTERACTIVE BADGE STYLES --- */
+.chrono-task-card.task-done {
+    border-color: rgba(0, 230, 118, 0.6) !important;
+    background: linear-gradient(135deg, rgba(0, 230, 118, 0.06) 0%, rgba(5, 5, 8, 0.98) 100%) !important;
+    box-shadow: 0 0 25px rgba(0, 230, 118, 0.22), inset 0 0 15px rgba(0, 230, 118, 0.1) !important;
+}
+
+.chrono-task-complete-btn {
+    background: transparent;
+    border: none;
+    font-size: 1.35rem;
+    color: #4e4e5e;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    padding: 0 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    outline: none;
+}
+
+.chrono-task-complete-btn:hover {
+    color: #00e676;
+    transform: scale(1.2);
+}
+
+.chrono-task-complete-btn.is-completed {
+    color: #00e676;
+    text-shadow: 0 0 12px rgba(0, 230, 118, 0.7);
+}
+
+.card-main-title.completed-title {
+    text-decoration: line-through;
+    color: #94a3b8;
+    opacity: 0.85;
+}
+
+.task-done-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.68rem;
+    font-weight: 800;
+    color: #00e676;
+    background: rgba(0, 230, 118, 0.15);
+    border: 1px solid rgba(0, 230, 118, 0.35);
+    padding: 2px 7px;
+    border-radius: 12px;
+    text-decoration: none !important;
+    vertical-align: middle;
+    margin-left: 6px;
+    letter-spacing: 0.2px;
+}
+
+/* --- 🔔 REMINDER BADGE ROW IN TASK BUILDER --- */
+.reminder-badge-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-top: 14px;
+    margin-bottom: 6px;
+    padding: 10px 14px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 14px;
+    box-sizing: border-box;
+}
+
+.reminder-badge-label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.reminder-toggle-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.76rem;
+    font-weight: 800;
+    letter-spacing: 0.4px;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    outline: none;
+    font-family: inherit;
+}
+
+.reminder-toggle-badge.is-on {
+    background: rgba(0, 229, 255, 0.12);
+    border: 1.5px solid #00e5ff;
+    color: #00e5ff;
+    box-shadow: 0 0 14px rgba(0, 229, 255, 0.25);
+}
+
+.reminder-toggle-badge.is-on:hover {
+    background: rgba(0, 229, 255, 0.22);
+    box-shadow: 0 0 20px rgba(0, 229, 255, 0.45);
+    transform: translateY(-1px);
+}
+
+.reminder-toggle-badge.is-off {
+    background: rgba(100, 116, 139, 0.12);
+    border: 1.5px solid rgba(100, 116, 139, 0.35);
+    color: #64748b;
+    box-shadow: none;
+}
+
+.reminder-toggle-badge.is-off:hover {
+    background: rgba(100, 116, 139, 0.2);
+    color: #94a3b8;
+    border-color: rgba(148, 163, 184, 0.5);
+}
+
+/* Card Reminder Pill */
+.card-reminder-pill {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.card-reminder-pill.reminder-active {
+    color: #00e5ff;
+    border-color: rgba(0, 229, 255, 0.35);
+    background: rgba(0, 229, 255, 0.08);
+    box-shadow: 0 0 8px rgba(0, 229, 255, 0.18);
+}
+
+.card-reminder-pill.reminder-active:hover {
+    border-color: #00e5ff;
+    box-shadow: 0 0 14px rgba(0, 229, 255, 0.35);
+    transform: scale(1.1);
+}
+
+.card-reminder-pill.reminder-muted {
+    color: #475569;
+    border-color: rgba(255, 255, 255, 0.06);
+}
+
+.card-reminder-pill.reminder-muted:hover {
+    color: #94a3b8;
+    border-color: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+}

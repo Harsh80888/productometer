@@ -240,13 +240,88 @@ public class WebAppInterface {
     }
 
     /**
-     * Queries actual daily app screen time from Android UsageStatsManager (ground truth).
-     * Accurately tracks multi-activity transitions, screen locks, and daily aggregations.
+     * Identifies if a package belongs to a game based on Android categories, flags, and known patterns.
      */
+    public static boolean isGameApp(PackageManager pm, String pkgName, String appLabel) {
+        try {
+            ApplicationInfo appInfo = pm.getApplicationInfo(pkgName, 0);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                if (appInfo.category == ApplicationInfo.CATEGORY_GAME) {
+                    return true;
+                }
+            }
+            if ((appInfo.flags & ApplicationInfo.FLAG_IS_GAME) != 0) {
+                return true;
+            }
+        } catch (Exception ignored) {}
+
+        String combined = ((pkgName != null ? pkgName : "") + " " + (appLabel != null ? appLabel : "")).toLowerCase();
+        return combined.contains("game") || combined.contains("chess") || combined.contains("daman") ||
+               combined.contains("pubg") || combined.contains("freefire") || combined.contains("ludo") ||
+               combined.contains("candycrush") || combined.contains("subway") || combined.contains("roblox") ||
+               combined.contains("minecraft") || combined.contains("clash") || combined.contains("asphalt") ||
+               combined.contains("bgmi") || combined.contains("fifa") || combined.contains("pes") ||
+               combined.contains("supercell") || combined.contains("gameloft") || combined.contains("ea.games") ||
+               combined.contains("unity3d") || combined.contains("epicgames") || combined.contains("puzzle") ||
+               combined.contains("arcade") || combined.contains("casino") || combined.contains("poker") ||
+               combined.contains("teenpatti");
+    }
+
+    /**
+     * Determines whether an application has mandatory compulsory screen limits (FB, IG, Games).
+     */
+    public static boolean isCompulsoryApp(PackageManager pm, String pkgName, String appLabel, boolean isGame) {
+        if (isGame) return true;
+        String combined = ((pkgName != null ? pkgName : "") + " " + (appLabel != null ? appLabel : "")).toLowerCase();
+        return pkgName.equals("com.facebook.katana") || pkgName.equals("com.facebook.lite") ||
+               pkgName.equals("com.facebook.orca") || pkgName.equals("com.instagram.android") ||
+               pkgName.equals("com.instagram.lite") || combined.contains("facebook") ||
+               combined.contains("instagram");
+    }
+
+    /**
+     * Authoritative daily foreground screen time helper using Android OS kernel UsageStats.
+     */
+    public static long getAppTodayForegroundMs(Context context, String packageName) {
+        try {
+            UsageStatsManager usm = (UsageStatsManager) context.getSystemService(Context.USAGE_STATS_SERVICE);
+            if (usm == null) return 0L;
+
+            Calendar calendar = Calendar.getInstance();
+            calendar.set(Calendar.HOUR_OF_DAY, 0);
+            calendar.set(Calendar.MINUTE, 0);
+            calendar.set(Calendar.SECOND, 0);
+            calendar.set(Calendar.MILLISECOND, 0);
+            long startOfDay = calendar.getTimeInMillis();
+            long now = System.currentTimeMillis();
+
+            List<UsageStats> statsList = usm.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, startOfDay, now);
+            if (statsList != null) {
+                long total = 0L;
+                for (UsageStats u : statsList) {
+                    if (u != null && packageName.equals(u.getPackageName())) {
+                        if (u.getLastTimeUsed() >= startOfDay || u.getLastTimeStamp() >= startOfDay) {
+                            total += u.getTotalTimeInForeground();
+                        }
+                    }
+                }
+                if (total > 0) return total;
+            }
+
+            Map<String, UsageStats> map = usm.queryAndAggregateUsageStats(startOfDay, now);
+            if (map != null && map.containsKey(packageName)) {
+                UsageStats u = map.get(packageName);
+                if (u != null) return u.getTotalTimeInForeground();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0L;
+    }
+
     /**
      * Queries actual daily app screen time from Android UsageStatsManager (ground truth).
-     * Computes foreground app visibility strictly from 00:00 midnight today to now
-     * using the pure UsageEvents stream — exactly matching Android Digital Wellbeing.
+     * Strictly matches Android Digital Wellbeing by reading OS kernel foreground aggregations.
      */
     @JavascriptInterface
     public String getRealAppUsageStats() {
@@ -269,6 +344,39 @@ public class WebAppInterface {
             PackageManager pm = context.getPackageManager();
             Map<String, Long> foregroundTimeMap = new HashMap<>();
 
+            // 1. Authoritative ground truth from UsageStatsManager daily interval
+            List<UsageStats> statsList = usageStatsManager.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, startOfDay, now);
+            if (statsList != null) {
+                for (UsageStats u : statsList) {
+                    if (u == null) continue;
+                    // Filter out buckets that ended prior to startOfDay
+                    if (u.getLastTimeUsed() < startOfDay && u.getLastTimeStamp() < startOfDay) {
+                        continue;
+                    }
+                    long fg = u.getTotalTimeInForeground();
+                    if (fg > 0) {
+                        long prev = foregroundTimeMap.containsKey(u.getPackageName()) ? foregroundTimeMap.get(u.getPackageName()) : 0L;
+                        foregroundTimeMap.put(u.getPackageName(), prev + fg);
+                    }
+                }
+            }
+
+            // Fallback to queryAndAggregateUsageStats if queryUsageStats was empty
+            if (foregroundTimeMap.isEmpty()) {
+                Map<String, UsageStats> aggregated = usageStatsManager.queryAndAggregateUsageStats(startOfDay, now);
+                if (aggregated != null) {
+                    for (Map.Entry<String, UsageStats> entry : aggregated.entrySet()) {
+                        UsageStats u = entry.getValue();
+                        if (u.getLastTimeUsed() >= startOfDay || u.getLastTimeStamp() >= startOfDay) {
+                            long fg = u.getTotalTimeInForeground();
+                            if (fg > 0) {
+                                foregroundTimeMap.put(entry.getKey(), fg);
+                            }
+                        }
+                    }
+                }
+            }
+
             // Determine default home launcher to filter out home screen wallpaper time
             String defaultLauncherPkg = "";
             try {
@@ -280,73 +388,10 @@ public class WebAppInterface {
                 }
             } catch (Exception ignored) {}
 
-            // Ground Truth Engine: Pure UsageEvents timeline from midnight (00:00:00) to now
-            try {
-                UsageEvents events = usageStatsManager.queryEvents(startOfDay, now);
-                UsageEvents.Event event = new UsageEvents.Event();
-
-                String currentForegroundPkg = null;
-                long currentSessionStart = startOfDay;
-                boolean isScreenInteractive = true;
-
-                while (events != null && events.hasNextEvent()) {
-                    events.getNextEvent(event);
-                    int type = event.getEventType();
-                    long time = event.getTimeStamp();
-                    String pkg = event.getPackageName();
-
-                    if (type == UsageEvents.Event.SCREEN_NON_INTERACTIVE || type == UsageEvents.Event.KEYGUARD_SHOWN) {
-                        // Phone locked or display turned off: commit active app session
-                        if (currentForegroundPkg != null && isScreenInteractive) {
-                            long duration = time - Math.max(currentSessionStart, startOfDay);
-                            if (duration > 0 && duration < 12 * 3600 * 1000L) {
-                                long current = foregroundTimeMap.containsKey(currentForegroundPkg) ? foregroundTimeMap.get(currentForegroundPkg) : 0L;
-                                foregroundTimeMap.put(currentForegroundPkg, current + duration);
-                            }
-                        }
-                        currentForegroundPkg = null;
-                        isScreenInteractive = false;
-                    } else if (type == UsageEvents.Event.SCREEN_INTERACTIVE || type == UsageEvents.Event.KEYGUARD_HIDDEN) {
-                        isScreenInteractive = true;
-                        currentSessionStart = time;
-                    } else if (type == UsageEvents.Event.ACTIVITY_RESUMED || type == UsageEvents.Event.MOVE_TO_FOREGROUND) {
-                        isScreenInteractive = true;
-                        if (currentForegroundPkg != null && !currentForegroundPkg.equals(pkg)) {
-                            // User switched to a different application
-                            long duration = time - Math.max(currentSessionStart, startOfDay);
-                            if (duration > 0 && duration < 12 * 3600 * 1000L) {
-                                long current = foregroundTimeMap.containsKey(currentForegroundPkg) ? foregroundTimeMap.get(currentForegroundPkg) : 0L;
-                                foregroundTimeMap.put(currentForegroundPkg, current + duration);
-                            }
-                            currentForegroundPkg = pkg;
-                            currentSessionStart = time;
-                        } else if (currentForegroundPkg == null) {
-                            currentForegroundPkg = pkg;
-                            currentSessionStart = time;
-                        }
-                    } else if (type == UsageEvents.Event.ACTIVITY_PAUSED || type == UsageEvents.Event.MOVE_TO_BACKGROUND) {
-                        if (pkg != null && pkg.equals(currentForegroundPkg)) {
-                            long duration = time - Math.max(currentSessionStart, startOfDay);
-                            if (duration > 0 && duration < 12 * 3600 * 1000L) {
-                                long current = foregroundTimeMap.containsKey(currentForegroundPkg) ? foregroundTimeMap.get(currentForegroundPkg) : 0L;
-                                foregroundTimeMap.put(currentForegroundPkg, current + duration);
-                            }
-                            currentForegroundPkg = null;
-                        }
-                    }
-                }
-
-                // If an app is active in foreground right now, add its elapsed running time
-                if (currentForegroundPkg != null && isScreenInteractive) {
-                    long duration = now - Math.max(currentSessionStart, startOfDay);
-                    if (duration > 0 && duration < 4 * 3600 * 1000L) {
-                        long current = foregroundTimeMap.containsKey(currentForegroundPkg) ? foregroundTimeMap.get(currentForegroundPkg) : 0L;
-                        foregroundTimeMap.put(currentForegroundPkg, current + duration);
-                    }
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            // Load saved daily app limits
+            SharedPreferences prefs = context.getSharedPreferences(ShortsReelsBlockerService.PREFS_NAME, Context.MODE_PRIVATE);
+            String limitsJsonStr = prefs.getString("productometer_app_limits_json", "{}");
+            JSONObject limitsObj = new JSONObject(limitsJsonStr);
 
             JSONArray jsonArray = new JSONArray();
 
@@ -363,11 +408,46 @@ public class WebAppInterface {
                 String appLabel = getFriendlyAppName(pm, pkgName);
                 String iconBase64 = getAppIconBase64(pm, pkgName);
 
+                boolean isGame = isGameApp(pm, pkgName, appLabel);
+                boolean isCompulsory = isCompulsoryApp(pm, pkgName, appLabel, isGame);
+
+                // Determine limit: compulsory apps default to 30 minutes if unconfigured
+                int limitMinutes = 0;
+                if (limitsObj.has(pkgName)) {
+                    limitMinutes = limitsObj.optInt(pkgName, 0);
+                } else if (isCompulsory) {
+                    limitMinutes = 30; // Default 30 min for compulsory apps (FB, IG, Games)
+                }
+
+                int usedMinutes = Math.round(totalForegroundMs / 60000f);
+                boolean isFrozen = false;
+                boolean isGrace = false;
+                int graceRemaining = 0;
+                boolean isUnchangeable = false;
+
+                if (limitMinutes > 0) {
+                    if (usedMinutes >= limitMinutes + 10) {
+                        isFrozen = true;
+                        isUnchangeable = true;
+                    } else if (usedMinutes >= limitMinutes) {
+                        isGrace = true;
+                        graceRemaining = (limitMinutes + 10) - usedMinutes;
+                        isUnchangeable = true;
+                    }
+                }
+
                 JSONObject obj = new JSONObject();
                 obj.put("packageName", pkgName);
                 obj.put("appName", appLabel);
                 obj.put("totalSeconds", totalForegroundMs / 1000L);
-                obj.put("minutes", Math.round(totalForegroundMs / 60000f));
+                obj.put("minutes", usedMinutes);
+                obj.put("isGame", isGame);
+                obj.put("isCompulsory", isCompulsory);
+                obj.put("limitMinutes", limitMinutes);
+                obj.put("isFrozen", isFrozen);
+                obj.put("isGrace", isGrace);
+                obj.put("graceRemaining", graceRemaining);
+                obj.put("isUnchangeable", isUnchangeable);
                 if (iconBase64 != null) {
                     obj.put("iconBase64", iconBase64);
                 }
@@ -388,6 +468,64 @@ public class WebAppInterface {
         } catch (Exception e) {
             e.printStackTrace();
             return "[]";
+        }
+    }
+
+    /**
+     * Sets daily time limit for an app.
+     * Enforces strict immutability if the app is currently in grace period or frozen.
+     */
+    @JavascriptInterface
+    public boolean setAppDailyLimit(String packageName, int limitMinutes) {
+        try {
+            long usedMs = getAppTodayForegroundMs(context, packageName);
+            int usedMinutes = Math.round(usedMs / 60000f);
+
+            SharedPreferences prefs = context.getSharedPreferences(ShortsReelsBlockerService.PREFS_NAME, Context.MODE_PRIVATE);
+            String currentLimitsJson = prefs.getString("productometer_app_limits_json", "{}");
+            JSONObject limitsObj = new JSONObject(currentLimitsJson);
+
+            PackageManager pm = context.getPackageManager();
+            String appLabel = getFriendlyAppName(pm, packageName);
+            boolean isGame = isGameApp(pm, packageName, appLabel);
+            boolean isCompulsory = isCompulsoryApp(pm, packageName, appLabel, isGame);
+
+            int currentLimit = limitsObj.optInt(packageName, isCompulsory ? 30 : 0);
+
+            // Strict immutability rule: Cannot change or increase if in grace period or frozen!
+            if (currentLimit > 0 && usedMinutes >= currentLimit) {
+                return false;
+            }
+
+            // Compulsory apps cannot have 0 limit (no limit)
+            if (isCompulsory && limitMinutes <= 0) {
+                limitMinutes = 30;
+            }
+
+            if (limitMinutes > 0) {
+                limitsObj.put(packageName, limitMinutes);
+            } else {
+                limitsObj.remove(packageName);
+            }
+
+            prefs.edit().putString("productometer_app_limits_json", limitsObj.toString()).apply();
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * Gets all configured app daily limits as a JSON map string.
+     */
+    @JavascriptInterface
+    public String getAppDailyLimits() {
+        try {
+            SharedPreferences prefs = context.getSharedPreferences(ShortsReelsBlockerService.PREFS_NAME, Context.MODE_PRIVATE);
+            return prefs.getString("productometer_app_limits_json", "{}");
+        } catch (Exception e) {
+            return "{}";
         }
     }
 

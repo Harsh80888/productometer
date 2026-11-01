@@ -70,6 +70,15 @@ document.addEventListener('DOMContentLoaded', () => {
             
             let folderIdentifier = card.dataset.target;
             
+            if (folderIdentifier === "AI_Coach" || folderIdentifier === "AI Coach") {
+                if (window.ProductoUI && window.ProductoUI.open) {
+                    window.ProductoUI.open();
+                } else if (document.getElementById('chronoCoachFab')) {
+                    document.getElementById('chronoCoachFab').click();
+                }
+                return;
+            }
+
             if (folderIdentifier === "Day_Planner" || folderIdentifier === "Day Planner") {
                 window.location.href = "./Day Planner/planner-index.html";
                 return;

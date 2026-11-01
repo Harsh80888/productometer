@@ -65,39 +65,39 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create v1.0.8 dist/Productometer.apk \
-            --title "Productometer v1.0.8 - Android Release APK" \
-            --notes "### 📱 Productometer Android Release v1.0.8
+          gh release create v1.1.0 dist/Productometer.apk \
+            --title "Productometer v1.1.0 - Android Release APK" \
+            --notes "### 📱 Productometer Android Release v1.1.0
 
-          Major stability & accuracy update featuring exact Digital Wellbeing screen time parity, dedicated Master ON/OFF Switch for The Distraction Blocker, and seamless two-way synchronization between Day Planner and Academics Monitoring with instant session starting. (Pause, Take a Break), live ongoing session card on top of the Home tab, audible alarm sounds on the system Alarm stream, exact Digital Wellbeing screen time aggregation, and upgraded Distraction Blocker with 15s casual video delay warning & native Emergency Pass popup.
+          Major release featuring the new in-app AI Coach chatbot integration, exact Digital Wellbeing screen time parity, compulsory daily app limits with 10-minute grace window and freezing, pure Veg Mode in the Diet & Nutrition calculator, and Day Planner reminder badges.
 
-          #### 🚀 Key Fixes & Enhancements in v1.0.8:
-          - **Academics Monitoring — Session Controls & Clear UI:**
-            - Added **Pause / Resume** button to temporarily freeze study timer and study seconds accumulator.
-            - Added **Take a Break (5m)** button to relax without losing focus progress.
-            - Unlocked session notifications are now persisted so you are prompted **only once per session window**, eliminating repeated popups and page refresh flashing.
-            - Manual session completion button directly updates the Day Planner schedule.
+          #### 🚀 Key Features & Enhancements in v1.1.0:
+          - **🤖 In-App AI Coach & Chatbot Integration:**
+            - Integrated AI Coach assistant across all main modules with edge AI integration via Cloudflare Workers AI.
+            - Fast, intelligent context-aware coaching for habits, academics, diet, and productivity.
 
-          - **Live Triggered / Ongoing Focus Session on Home Screen:**
-            - Added a live **Active Focus Session Hero Banner** right at the top of the Home tab with a real-time countdown clock, active task title, status badge, and direct button to Academics.
-            - Displays an **Unlocked & Ready to Begin** banner whenever a scheduled task arrives.
+          - **📱 Exact Screen Time Parity (Digital Wellbeing):**
+            - Replaced queryEvents with native Android OS kernel foreground aggregations (UsageStats.getTotalTimeInForeground()).
+            - Eliminates phantom phone-lock screen hours, matching Android Digital Wellbeing values precisely.
 
-          - **Alarms Ring Aloud with Sound:**
-            - Recreated notification channel on modern Android with explicit alarm ringtone sound and \`AudioAttributes.USAGE_ALARM\`.
-            - Directs alarm playback over the dedicated **Alarm Audio Stream**, ensuring reminders ring aloud even if phone notifications or ringers are on vibrate.
+          - **⏱️ App Daily Time Limits, 10m Grace & Freezing:**
+            - Added customizable daily limits per app in Screen Time Manager.
+            - Enforced **compulsory limits** for Facebook, Instagram, and all games (detected automatically).
+            - **10-minute grace period** with audible chime \`2.mp3\` and live countdown notices before freezing.
+            - **App Freezing Overlay** intercepts frozen apps with Return to Home (no bypass).
+            - **Strict Immutability:** limits cannot be increased, changed, or disabled during grace period or after freezing.
 
-          - **Screen Manager — Ground-Truth Aggregation:**
-            - Implemented native multi-slice aggregation over \`queryAndAggregateUsageStats\` and daily interval buckets, eliminating discarded slices from system reboots.
-            - Total screen time and individual app minutes match Android's system Digital Wellbeing setting exactly.
+          - **🥗 Pure Veg Mode in Diet Section:**
+            - Added dedicated Pure Veg Mode toggle to filter out eggs, chicken, and non-veg foods from the food catalog and regular meals tray.
+            - Iconic FSSAI vegetarian (🟢) and non-vegetarian (🔺) indicator symbols on all food cards and logs.
+            - Support for custom food diet classification.
 
-          - **Distraction Blocker — App Blocking, Autoplay Fix & Emergency Pass:**
-            - **YouTube Feed Autoplay Ignored:** Removed inline player checks so scrolling past auto-playing previews in the home feed never triggers alerts.
-            - **15-Second Delay Warning:** Casual YouTube videos now grant a 15-second grace window, gently playing warning chime \`2.mp3\` after 15 seconds instead of abruptly navigating back.
-            - **Permanently Blocked Apps (WhatsApp, FB, etc.):** When opened, immediately displays the native **Access Intercepted** dialog matching the Me tab test card, featuring \'Return to Focus\' and a **30-second Emergency Pass**.
+          - **📅 Day Planner Reminder Badges:**
+            - Interactive Reminder ON/OFF badge in the Add Task dialog.
 
           - **100% Offline Capability:**
-            - Fully functional offline without requiring an active internet connection.
+            - Core tracking, study timers, distraction blocking, and wellbeing analytics remain 100% functional offline.
 
           #### 📦 Direct Download:
           - Click **\`Productometer.apk\`** under Assets below to download and install." || \
-          gh release upload v1.0.8 dist/Productometer.apk --clobber
+          gh release upload v1.1.0 dist/Productometer.apk --clobber

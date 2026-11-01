@@ -80,6 +80,29 @@ const NativeBridge = {
         } catch (e) {}
     },
 
+    setAppDailyLimit: (packageName, limitMinutes) => {
+        try {
+            if (typeof window.AndroidBridge !== 'undefined' && window.AndroidBridge.setAppDailyLimit) {
+                return window.AndroidBridge.setAppDailyLimit(packageName, limitMinutes);
+            }
+        } catch (e) {
+            console.error('[NativeBridge] setAppDailyLimit error:', e);
+        }
+        return true;
+    },
+
+    getAppDailyLimits: () => {
+        try {
+            if (typeof window.AndroidBridge !== 'undefined' && window.AndroidBridge.getAppDailyLimits) {
+                const raw = window.AndroidBridge.getAppDailyLimits();
+                if (raw) return JSON.parse(raw);
+            }
+        } catch (e) {
+            console.error('[NativeBridge] getAppDailyLimits error:', e);
+        }
+        return {};
+    },
+
     getInstalledApps: () => {
         try {
             if (typeof window.AndroidBridge !== 'undefined' && window.AndroidBridge.getInstalledApps) {

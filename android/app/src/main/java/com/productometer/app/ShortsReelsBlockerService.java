@@ -27,6 +27,8 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.content.pm.PackageManager;
+import org.json.JSONObject;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -121,6 +123,10 @@ public class ShortsReelsBlockerService extends AccessibilityService {
     private boolean isOverlayActive = false;
     private boolean isCoolingDown = false;
 
+    // Daily Limit Grace Period Audio & Notification State
+    private long lastGraceAudioWarningTimestamp = 0L;
+    private String lastGraceWarnedPackage = "";
+
     private WindowManager windowManager;
     private View overlayView;
     private CountDownTimer countdownTimer;
@@ -155,8 +161,53 @@ public class ShortsReelsBlockerService extends AccessibilityService {
         if (packageNameChar == null) return;
         String packageName = packageNameChar.toString();
 
+        if (packageName.equals(getPackageName())) return;
+
+        // --- 1. DAILY APP LIMITS & 10-MINUTE GRACE / FREEZING ENGINE ---
+        // Operates independently of focus session to enforce mandatory daily limits (FB, IG, Games)
+        try {
+            SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+            String limitsJsonStr = prefs.getString("productometer_app_limits_json", "{}");
+            JSONObject limitsObj = new JSONObject(limitsJsonStr);
+
+            PackageManager pm = getPackageManager();
+            String appLabel = getFriendlyName(packageName);
+            boolean isGame = WebAppInterface.isGameApp(pm, packageName, appLabel);
+            boolean isCompulsory = WebAppInterface.isCompulsoryApp(pm, packageName, appLabel, isGame);
+
+            int limitMinutes = 0;
+            if (limitsObj.has(packageName)) {
+                limitMinutes = limitsObj.optInt(packageName, 0);
+            } else if (isCompulsory) {
+                limitMinutes = 30; // Compulsory default daily limit (30m)
+            }
+
+            if (limitMinutes > 0) {
+                long usedMs = WebAppInterface.getAppTodayForegroundMs(getApplicationContext(), packageName);
+                int usedMinutes = Math.round(usedMs / 60000f);
+
+                // Case A: FROZEN (daily limit + 10-minute grace exceeded)
+                if (usedMinutes >= limitMinutes + 10) {
+                    if (!isOverlayActive) {
+                        final int fLimit = limitMinutes;
+                        final int fUsed = usedMinutes;
+                        mainHandler.post(() -> showAppFrozenDialog(packageName, appLabel, fLimit, fUsed));
+                    }
+                    return;
+                }
+
+                // Case B: 10-MINUTE GRACE PERIOD
+                if (usedMinutes >= limitMinutes) {
+                    int graceRemaining = (limitMinutes + 10) - usedMinutes;
+                    handleGracePeriodWarning(packageName, appLabel, graceRemaining);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         // Track user's productive / previous app
-        if (!DISTRACTING_APPS.contains(packageName) && !PKG_YOUTUBE.equals(packageName) && !packageName.equals(getPackageName())) {
+        if (!DISTRACTING_APPS.contains(packageName) && !PKG_YOUTUBE.equals(packageName)) {
             previousNonDistractingPackage = packageName;
             resetDistractionSession();
             return;
@@ -524,6 +575,121 @@ public class ShortsReelsBlockerService extends AccessibilityService {
         }
     }
 
+    private void handleGracePeriodWarning(String pkg, String appLabel, int minutesLeft) {
+        long now = System.currentTimeMillis();
+        // Warn at most once every 60 seconds per package, or immediately on package switch
+        if (!pkg.equals(lastGraceWarnedPackage) || (now - lastGraceAudioWarningTimestamp > 60000L)) {
+            lastGraceWarnedPackage = pkg;
+            lastGraceAudioWarningTimestamp = now;
+            mainHandler.post(() -> {
+                playWarningAudioTrack();
+                Toast.makeText(
+                        getApplicationContext(),
+                        "⏳ Grace Period: " + minutesLeft + "m left for " + appLabel + " before it freezes!",
+                        Toast.LENGTH_LONG
+                ).show();
+            });
+        }
+    }
+
+    @SuppressLint("SetTextI18n")
+    private void showAppFrozenDialog(String pkgName, String appLabel, int limitMinutes, int usedMinutes) {
+        if (isOverlayActive) return;
+        isOverlayActive = true;
+
+        int windowType;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
+            windowType = WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY;
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            windowType = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
+        } else {
+            windowType = WindowManager.LayoutParams.TYPE_PHONE;
+        }
+
+        WindowManager.LayoutParams params = new WindowManager.LayoutParams(
+                WindowManager.LayoutParams.MATCH_PARENT,
+                WindowManager.LayoutParams.WRAP_CONTENT,
+                windowType,
+                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL | WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
+                PixelFormat.TRANSLUCENT
+        );
+        params.gravity = Gravity.CENTER;
+
+        LinearLayout rootLayout = new LinearLayout(this);
+        rootLayout.setOrientation(LinearLayout.VERTICAL);
+        rootLayout.setGravity(Gravity.CENTER);
+        int pad = dpToPx(24);
+        rootLayout.setPadding(pad, pad, pad, pad);
+
+        // Cyberpunk Ice-Frost Theme
+        GradientDrawable bgShape = new GradientDrawable();
+        bgShape.setColor(Color.parseColor("#EE060D1A"));
+        bgShape.setCornerRadius(dpToPx(22));
+        bgShape.setStroke(dpToPx(2), Color.parseColor("#00E5FF"));
+        rootLayout.setBackground(bgShape);
+
+        // Frost Snowflake Icon
+        TextView iconView = new TextView(this);
+        iconView.setText("❄️");
+        iconView.setTextSize(40);
+        iconView.setGravity(Gravity.CENTER);
+        rootLayout.addView(iconView);
+
+        // Title: App Frozen
+        TextView titleView = new TextView(this);
+        titleView.setText("App Frozen: Daily Limit Exceeded");
+        titleView.setTextSize(18);
+        titleView.setTypeface(Typeface.DEFAULT_BOLD);
+        titleView.setTextColor(Color.parseColor("#E0F2FE"));
+        titleView.setGravity(Gravity.CENTER);
+        titleView.setPadding(0, dpToPx(8), 0, 0);
+        rootLayout.addView(titleView);
+
+        // Details
+        TextView reasonView = new TextView(this);
+        reasonView.setText(appLabel + " has exceeded its " + limitMinutes + "m daily limit (10m grace period expired).\n\n🔒 Daily limits cannot be changed or increased while frozen.");
+        reasonView.setTextSize(13);
+        reasonView.setTextColor(Color.parseColor("#94A3B8"));
+        reasonView.setGravity(Gravity.CENTER);
+        reasonView.setPadding(dpToPx(12), dpToPx(10), dpToPx(12), dpToPx(20));
+        rootLayout.addView(reasonView);
+
+        // Action: Return to Home
+        Button returnBtn = new Button(this);
+        returnBtn.setText("⬅️ Return to Home");
+        returnBtn.setTextSize(14);
+        returnBtn.setTypeface(Typeface.DEFAULT_BOLD);
+        returnBtn.setTextColor(Color.BLACK);
+
+        GradientDrawable returnBg = new GradientDrawable();
+        returnBg.setColor(Color.parseColor("#00E5FF"));
+        returnBg.setCornerRadius(dpToPx(12));
+        returnBtn.setBackground(returnBg);
+
+        LinearLayout.LayoutParams btnParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                dpToPx(48)
+        );
+        rootLayout.addView(returnBtn, btnParams);
+
+        returnBtn.setOnClickListener(v -> {
+            dismissOverlay();
+            performBackActionOnce();
+            performGlobalAction(AccessibilityService.GLOBAL_ACTION_HOME);
+        });
+
+        overlayView = rootLayout;
+
+        try {
+            windowManager.addView(overlayView, params);
+        } catch (Exception e) {
+            e.printStackTrace();
+            isOverlayActive = false;
+            performBackActionOnce();
+            performGlobalAction(AccessibilityService.GLOBAL_ACTION_HOME);
+        }
+    }
+
     @SuppressLint("SetTextI18n")
     private void showCountdownOverlay(String label) {
         if (isOverlayActive) return;
@@ -711,6 +877,11 @@ public class ShortsReelsBlockerService extends AccessibilityService {
     }
 
     private String getFriendlyName(String pkg) {
+        try {
+            PackageManager pm = getPackageManager();
+            CharSequence label = pm.getApplicationLabel(pm.getApplicationInfo(pkg, 0));
+            if (label != null && label.length() > 0) return label.toString();
+        } catch (Exception ignored) {}
         if (pkg.contains("facebook")) return "Facebook";
         if (pkg.contains("instagram")) return "Instagram";
         if (pkg.contains("twitter")) return "X (Twitter)";
@@ -718,7 +889,7 @@ public class ShortsReelsBlockerService extends AccessibilityService {
         if (pkg.contains("reddit")) return "Reddit";
         if (pkg.contains("netflix")) return "Netflix";
         if (pkg.contains("tiktok") || pkg.contains("musically")) return "TikTok";
-        return "Distracting App";
+        return "Application";
     }
 
     private int dpToPx(int dp) {

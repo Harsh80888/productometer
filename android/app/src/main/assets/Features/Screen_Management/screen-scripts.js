@@ -224,7 +224,14 @@ document.addEventListener('DOMContentLoaded', () => {
                             icon: 'fa-solid fa-mobile-screen',
                             bg: assignedCategory === 'productivity' ? '#00e5ff' : '#334155',
                             color: '#fff',
-                            isNativeAndroid: true
+                            isNativeAndroid: true,
+                            isGame: !!item.isGame,
+                            isCompulsory: !!item.isCompulsory,
+                            limitMinutes: typeof item.limitMinutes === 'number' ? item.limitMinutes : (item.isCompulsory ? 30 : 0),
+                            isFrozen: !!item.isFrozen,
+                            isGrace: !!item.isGrace,
+                            graceRemaining: typeof item.graceRemaining === 'number' ? item.graceRemaining : 0,
+                            isUnchangeable: !!item.isUnchangeable
                         };
                     });
                 }
@@ -286,14 +293,55 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // D. EXACT ALIGNMENT WITH ACTIVE SESSION FOCUS:
-
         let activeApp = apps.find(a => a.id === 'app_active_session');
-
         if (activeApp) {
-
             activeApp.seconds = activeWebSeconds;
-
         }
+
+        // Web Fallback: calculate limit & compulsory rules
+        let localLimits = {};
+        try {
+            localLimits = JSON.parse(localStorage.getItem('productometer_app_limits') || '{}');
+        } catch (e) {}
+
+        apps.forEach(app => {
+            const lower = ((app.id || '') + ' ' + (app.name || '')).toLowerCase();
+            const isGame = lower.includes('game') || lower.includes('chess') || lower.includes('daman');
+            const isCompulsory = isGame || lower.includes('facebook') || lower.includes('instagram');
+            app.isGame = isGame;
+            app.isCompulsory = isCompulsory;
+
+            let lim = localLimits[app.id];
+            if (typeof lim !== 'number') {
+                lim = isCompulsory ? 30 : 0;
+            }
+            app.limitMinutes = lim;
+
+            const usedMinutes = Math.round((app.seconds || 0) / 60);
+            if (lim > 0) {
+                if (usedMinutes >= lim + 10) {
+                    app.isFrozen = true;
+                    app.isUnchangeable = true;
+                    app.isGrace = false;
+                    app.graceRemaining = 0;
+                } else if (usedMinutes >= lim) {
+                    app.isGrace = true;
+                    app.isUnchangeable = true;
+                    app.isFrozen = false;
+                    app.graceRemaining = (lim + 10) - usedMinutes;
+                } else {
+                    app.isFrozen = false;
+                    app.isGrace = false;
+                    app.isUnchangeable = false;
+                    app.graceRemaining = 0;
+                }
+            } else {
+                app.isFrozen = false;
+                app.isGrace = false;
+                app.isUnchangeable = false;
+                app.graceRemaining = 0;
+            }
+        });
 
         return apps;
 
@@ -596,6 +644,44 @@ document.addEventListener('DOMContentLoaded', () => {
             const isProd = app.category === 'productivity';
             const isExcessiveApp = !isProd && (s > 3600);
 
+            // Build Limit Badge
+            let limitBadgeHtml = '';
+            const limit = app.limitMinutes || 0;
+
+            if (app.isFrozen) {
+                limitBadgeHtml = `
+                    <button class="app-limit-badge badge-frozen badge-locked" data-app-id="${app.id}" title="App is frozen until midnight">
+                        <i class="fa-solid fa-lock"></i> ❄️ Frozen (${limit}m)
+                    </button>`;
+            } else if (app.isGrace) {
+                limitBadgeHtml = `
+                    <button class="app-limit-badge badge-grace badge-locked" data-app-id="${app.id}" title="10-minute grace period active">
+                        <i class="fa-solid fa-lock"></i> ⏳ Grace (${app.graceRemaining || 1}m left)
+                    </button>`;
+            } else if (limit > 0) {
+                if (app.isCompulsory) {
+                    limitBadgeHtml = `
+                        <button class="app-limit-badge badge-active badge-compulsory" data-app-id="${app.id}" title="Compulsory daily limit (click to adjust)">
+                            <i class="fa-solid fa-bolt"></i> ${limit}m (Compulsory)
+                        </button>`;
+                } else {
+                    limitBadgeHtml = `
+                        <button class="app-limit-badge badge-active" data-app-id="${app.id}" title="Daily time limit (click to adjust)">
+                            <i class="fa-solid fa-stopwatch"></i> ${limit}m limit
+                        </button>`;
+                }
+            } else {
+                limitBadgeHtml = `
+                    <button class="app-limit-badge badge-none" data-app-id="${app.id}" title="Set daily time limit">
+                        <i class="fa-solid fa-plus"></i> Set Limit
+                    </button>`;
+            }
+
+            let trackFillClass = isProd ? 'fill-prod' : (isExcessiveApp ? 'fill-excessive' : 'fill-oth');
+            if (app.isFrozen || app.isGrace) {
+                trackFillClass = 'fill-excessive';
+            }
+
             return `
 
             <div class="app-card-item" data-id="${app.id}">
@@ -614,11 +700,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
                             <span class="app-label-title">${escapeHTML(app.name)}</span>
 
-                            <button class="app-category-toggle ${isProd ? 'cat-prod' : 'cat-others'}" data-app-id="${app.id}" title="Click to reclassify">
-
-                                ${isProd ? '🎓 Productivity' : '🌐 Others'} (Click to change)
-
-                            </button>
+                            <div class="app-tags-row">
+                                <button class="app-category-toggle ${isProd ? 'cat-prod' : 'cat-others'}" data-app-id="${app.id}" title="Click to reclassify">
+                                    ${isProd ? '🎓 Productivity' : '🌐 Others'}
+                                </button>
+                                ${limitBadgeHtml}
+                            </div>
 
                         </div>
 
@@ -636,7 +723,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 <div class="app-track-rail">
 
-                    <div class="app-track-fill ${isProd ? 'fill-prod' : (isExcessiveApp ? 'fill-excessive' : 'fill-oth')}" style="width: ${appPct}%;"></div>
+                    <div class="app-track-fill ${trackFillClass}" style="width: ${appPct}%;"></div>
 
                 </div>
 
@@ -659,6 +746,142 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
         });
+
+        // Limit button click listeners (Enforce strict immutability if in grace or frozen)
+        container.querySelectorAll('.app-limit-badge').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const appId = btn.dataset.appId;
+                const currentApps = getRealScreenApps();
+                const app = currentApps.find(a => a.id === appId);
+                if (!app) return;
+
+                if (app.isUnchangeable) {
+                    if (window.NativeBridge && window.NativeBridge.vibrate) {
+                        window.NativeBridge.vibrate(120);
+                    }
+                    if (app.isFrozen) {
+                        alert(`❄️ App Frozen: "${app.name}" has reached its ${app.limitMinutes}m daily limit and the 10-minute grace period has expired.\n\n🔒 Daily limits cannot be changed, increased, or removed once an app is frozen.`);
+                    } else if (app.isGrace) {
+                        alert(`⏳ Grace Period Active: "${app.name}" has reached its ${app.limitMinutes}m daily limit and is in its 10-minute grace window (${app.graceRemaining || 1}m remaining).\n\n🔒 Daily limits are locked and cannot be changed or increased during the grace period.`);
+                    }
+                    return;
+                }
+
+                // If editable, open limit configuration modal
+                openAppLimitModal(app);
+            });
+        });
+
+    }
+
+    // --- APP LIMIT MODAL CONTROLLER ---
+    let selectedAppForLimit = null;
+    let selectedLimitMinutes = 30;
+
+    function openAppLimitModal(app) {
+        selectedAppForLimit = app;
+        selectedLimitMinutes = app.limitMinutes || (app.isCompulsory ? 30 : 0);
+
+        const modal = document.getElementById('appLimitModal');
+        const titleEl = document.getElementById('limitModalAppName');
+        const compulsoryNotice = document.getElementById('limitCompulsoryNotice');
+        const btnNoLimit = document.getElementById('btnChipNoLimit');
+
+        if (!modal) return;
+
+        if (titleEl) titleEl.textContent = `Limit for ${app.name}`;
+
+        if (app.isCompulsory) {
+            if (compulsoryNotice) compulsoryNotice.style.display = 'flex';
+            if (btnNoLimit) btnNoLimit.style.display = 'none'; // Compulsory: cannot disable limit
+            if (selectedLimitMinutes <= 0) selectedLimitMinutes = 30;
+        } else {
+            if (compulsoryNotice) compulsoryNotice.style.display = 'none';
+            if (btnNoLimit) btnNoLimit.style.display = 'block';
+        }
+
+        // Highlight active preset chip
+        document.querySelectorAll('.limit-preset-chip').forEach(chip => {
+            const mins = parseInt(chip.dataset.mins, 10);
+            if (mins === selectedLimitMinutes) {
+                chip.classList.add('active');
+            } else {
+                chip.classList.remove('active');
+            }
+        });
+
+        modal.style.display = 'flex';
+    }
+
+    function closeAppLimitModal() {
+        const modal = document.getElementById('appLimitModal');
+        if (modal) modal.style.display = 'none';
+        selectedAppForLimit = null;
+    }
+
+    // Modal preset chips click handler
+    document.querySelectorAll('.limit-preset-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+            document.querySelectorAll('.limit-preset-chip').forEach(c => c.classList.remove('active'));
+            chip.classList.add('active');
+            selectedLimitMinutes = parseInt(chip.dataset.mins, 10);
+        });
+    });
+
+    const btnCloseModal = document.getElementById('btnCloseLimitModal');
+    if (btnCloseModal) btnCloseModal.addEventListener('click', closeAppLimitModal);
+    const btnCancelModal = document.getElementById('btnCancelLimitModal');
+    if (btnCancelModal) btnCancelModal.addEventListener('click', closeAppLimitModal);
+
+    const btnSaveLimit = document.getElementById('btnSaveAppLimit');
+    if (btnSaveLimit) {
+        btnSaveLimit.addEventListener('click', () => {
+            if (!selectedAppForLimit) return;
+            const appId = selectedAppForLimit.id;
+            const appName = selectedAppForLimit.name;
+
+            // Compulsory protection
+            if (selectedAppForLimit.isCompulsory && selectedLimitMinutes <= 0) {
+                selectedLimitMinutes = 30;
+            }
+
+            // Save locally
+            let localLimits = {};
+            try {
+                localLimits = JSON.parse(localStorage.getItem('productometer_app_limits') || '{}');
+            } catch (e) {}
+
+            if (selectedLimitMinutes > 0) {
+                localLimits[appId] = selectedLimitMinutes;
+            } else {
+                delete localLimits[appId];
+            }
+            localStorage.setItem('productometer_app_limits', JSON.stringify(localLimits));
+
+            // Sync to Native Android Bridge
+            if (window.NativeBridge && window.NativeBridge.setAppDailyLimit) {
+                const ok = window.NativeBridge.setAppDailyLimit(appId, selectedLimitMinutes);
+                if (ok === false) {
+                    alert('⚠️ Limit is locked! This app is currently in grace period or frozen and cannot be edited.');
+                    closeAppLimitModal();
+                    refreshDigitalWellbeingDashboard();
+                    return;
+                }
+            }
+
+            if (window.NativeBridge && window.NativeBridge.showToast) {
+                if (selectedLimitMinutes > 0) {
+                    window.NativeBridge.showToast(`Daily limit for "${appName}" set to ${selectedLimitMinutes}m`);
+                } else {
+                    window.NativeBridge.showToast(`Daily limit removed for "${appName}"`);
+                }
+            }
+
+            closeAppLimitModal();
+            refreshDigitalWellbeingDashboard();
+        });
+    }
 
     }
 
@@ -762,7 +985,115 @@ document.addEventListener('DOMContentLoaded', () => {
     // Auto-refresh when user returns to app from system settings
     window.addEventListener('focus', () => {
         refreshDigitalWellbeingDashboard();
+        updateFocusShieldUI();
     });
+
+    // --- 🛡️ FOCUS SHIELD & ACCESSIBILITY GUARDIAN HANDLERS ---
+    function updateFocusShieldUI() {
+        const badge = document.getElementById('shieldServiceStatusBadge');
+        const btnToggle = document.getElementById('btnToggleAccessibilityService');
+        const toggleShorts = document.getElementById('toggleBlockYouTubeShorts');
+        const toggleReels = document.getElementById('toggleBlockInstaReels');
+
+        let isServiceRunning = false;
+        if (window.NativeBridge && window.NativeBridge.isAccessibilityServiceEnabled) {
+            isServiceRunning = window.NativeBridge.isAccessibilityServiceEnabled();
+        }
+
+        if (badge) {
+            if (isServiceRunning) {
+                badge.style.background = 'rgba(0, 230, 118, 0.15)';
+                badge.style.color = '#00e676';
+                badge.style.borderColor = 'rgba(0, 230, 118, 0.35)';
+                badge.innerHTML = '<i class="fa-solid fa-circle-check"></i> Shield Active';
+            } else {
+                badge.style.background = 'rgba(255, 61, 113, 0.15)';
+                badge.style.color = '#ff3d71';
+                badge.style.borderColor = 'rgba(255, 61, 113, 0.35)';
+                badge.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> Service Disabled';
+            }
+        }
+
+        if (btnToggle) {
+            if (isServiceRunning) {
+                btnToggle.style.background = 'rgba(0, 230, 118, 0.15)';
+                btnToggle.style.color = '#00e676';
+                btnToggle.style.border = '1px solid rgba(0, 230, 118, 0.35)';
+                btnToggle.innerHTML = '<i class="fa-solid fa-shield-halved"></i> Focus Shield Active (Tap to Configure)';
+            } else {
+                btnToggle.style.background = 'linear-gradient(135deg, #00e5ff, #00e676)';
+                btnToggle.style.color = '#030305';
+                btnToggle.style.border = 'none';
+                btnToggle.innerHTML = '<i class="fa-solid fa-power-off"></i> Enable Focus Shield in Accessibility';
+            }
+        }
+
+        if (toggleShorts && window.NativeBridge && window.NativeBridge.isShortsBlockerEnabled) {
+            toggleShorts.checked = window.NativeBridge.isShortsBlockerEnabled();
+        }
+        if (toggleReels && window.NativeBridge && window.NativeBridge.isReelsBlockerEnabled) {
+            toggleReels.checked = window.NativeBridge.isReelsBlockerEnabled();
+        }
+    }
+
+    const btnToggleShield = document.getElementById('btnToggleAccessibilityService');
+    if (btnToggleShield) {
+        btnToggleShield.addEventListener('click', () => {
+            if (window.NativeBridge && window.NativeBridge.openAccessibilitySettings) {
+                window.NativeBridge.openAccessibilitySettings();
+            } else {
+                alert('On Android, Accessibility Settings opens to let you enable Productometer Focus Shield.');
+            }
+        });
+    }
+
+    const toggleShortsEl = document.getElementById('toggleBlockYouTubeShorts');
+    if (toggleShortsEl) {
+        toggleShortsEl.addEventListener('change', () => {
+            if (window.NativeBridge && window.NativeBridge.setShortsBlockerEnabled) {
+                window.NativeBridge.setShortsBlockerEnabled(toggleShortsEl.checked);
+            }
+        });
+    }
+
+    const toggleReelsEl = document.getElementById('toggleBlockInstaReels');
+    if (toggleReelsEl) {
+        toggleReelsEl.addEventListener('change', () => {
+            if (window.NativeBridge && window.NativeBridge.setReelsBlockerEnabled) {
+                window.NativeBridge.setReelsBlockerEnabled(toggleReelsEl.checked);
+            }
+        });
+    }
+
+    // Modal Guide Handlers
+    const guideModal = document.getElementById('restrictedGuideModal');
+    const btnShowGuide = document.getElementById('btnShowRestrictedGuide');
+    const btnCloseGuide = document.getElementById('btnCloseRestrictedGuide');
+    const btnDismissGuide = document.getElementById('btnModalDismissGuide');
+    const btnModalAppInfo = document.getElementById('btnModalOpenAppInfo');
+
+    if (btnShowGuide && guideModal) {
+        btnShowGuide.addEventListener('click', () => {
+            guideModal.style.display = 'flex';
+        });
+    }
+    if (btnCloseGuide && guideModal) {
+        btnCloseGuide.addEventListener('click', () => {
+            guideModal.style.display = 'none';
+        });
+    }
+    if (btnDismissGuide && guideModal) {
+        btnDismissGuide.addEventListener('click', () => {
+            guideModal.style.display = 'none';
+        });
+    }
+    if (btnModalAppInfo) {
+        btnModalAppInfo.addEventListener('click', () => {
+            handleOpenAppDetails();
+        });
+    }
+
+    updateFocusShieldUI();
 
     // (Manual app modal removed: All apps & sites are automatically captured)
 

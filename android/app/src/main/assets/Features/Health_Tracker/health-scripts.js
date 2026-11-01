@@ -6696,7 +6696,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const customFoodForm = document.getElementById('customFoodForm');
 
+    // --- 🌱 VEG MODE ENGINE & CLASSIFICATION ---
+    const KEY_DIET_VEG_MODE = 'productometer_diet_veg_mode';
 
+    function isVegModeActive() {
+        return localStorage.getItem(KEY_DIET_VEG_MODE) === 'true';
+    }
+
+    function isFoodVegetarian(food) {
+        if (!food) return true;
+        if (typeof food.isVeg === 'boolean') return food.isVeg;
+        const text = ((food.id || '') + ' ' + (food.name || '') + ' ' + (food.category || '')).toLowerCase();
+        if (text.includes('chicken') || text.includes('egg') || text.includes('fish') || text.includes('meat') || text.includes('mutton') || text.includes('prawn') || text.includes('beef') || text.includes('pork')) {
+            return false;
+        }
+        return true;
+    }
 
     // --- COMPLETE FOOD NUTRITION DATABASE (COMBINED STAPLES & SIMILARS) ---
 
@@ -6894,6 +6909,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             icon: '🍗',
 
+            isVeg: false,
+
             unit: '100g Fillet',
 
             carbs: 0,
@@ -6915,6 +6932,8 @@ document.addEventListener('DOMContentLoaded', () => {
             category: 'protein',
 
             icon: '🥤',
+
+            isVeg: true,
 
             unit: '1 Scoop (30g)',
 
@@ -6938,6 +6957,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             icon: '🥚',
 
+            isVeg: false,
+
             unit: '1 Egg (50g)',
 
             carbs: 0.5,
@@ -6959,6 +6980,8 @@ document.addEventListener('DOMContentLoaded', () => {
             category: 'protein',
 
             icon: '🍳',
+
+            isVeg: false,
 
             unit: '3 Egg Whites',
 
@@ -7842,7 +7865,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         }
 
-
+        const isVeg = isFoodVegetarian(food);
+        const vegIndicatorHtml = isVeg ?
+            `<span class="diet-type-indicator veg" title="Vegetarian"><span class="dot"></span></span>` :
+            `<span class="diet-type-indicator non-veg" title="Non-Vegetarian"><span class="dot"></span></span>`;
 
         card.innerHTML = `
 
@@ -7852,7 +7878,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 <div class="food-tile-info">
 
-                    <span class="food-tile-name" title="${food.name}">${food.name}</span>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        ${vegIndicatorHtml}
+                        <span class="food-tile-name" title="${food.name}">${food.name}</span>
+                    </div>
 
                     <span class="food-tile-serving">${food.unit}</span>
 
@@ -8034,13 +8063,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         regularFoodsTray.innerHTML = '';
 
-
-
         const pinnedKeys = getRegularFoodsKeys();
 
         const allFoods = getAllFoodsCatalog();
-
-
 
         const pinnedFoods = [];
 
@@ -8052,17 +8077,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
         });
 
+        const isVegMode = isVegModeActive();
+        const visibleFoods = pinnedFoods.filter(f => !isVegMode || isFoodVegetarian(f));
 
-
-        if (pinnedFoods.length === 0) {
+        if (visibleFoods.length === 0) {
 
             regularFoodsTray.innerHTML = `
 
                 <div class="empty-sessions-placeholder" style="grid-column: 1 / -1; padding: 18px; text-align: center;">
 
-                    No regular foods pinned yet.<br>
-
-                    Tap <strong>"Full Food Library"</strong> above to pin your daily meals!
+                    ${isVegMode ? 'All regular foods are non-veg.<br>Tap <strong>"Full Food Library"</strong> to pin vegetarian foods!' : 'No regular foods pinned yet.<br>Tap <strong>"Full Food Library"</strong> above to pin your daily meals!'}
 
                 </div>
 
@@ -8072,9 +8096,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         }
 
-
-
-        pinnedFoods.forEach(food => {
+        visibleFoods.forEach(food => {
 
             regularFoodsTray.appendChild(createFoodTileElement(food, true, 'regular'));
 
@@ -8092,17 +8114,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
         foodLibraryGrid.innerHTML = '';
 
-
-
         const allFoods = getAllFoodsCatalog();
 
         const pinnedKeys = getRegularFoodsKeys();
 
         const searchQ = (foodSearchInput ? foodSearchInput.value : '').toLowerCase().trim();
-
-
+        const isVegMode = isVegModeActive();
 
         const filtered = allFoods.filter(f => {
+
+            if (isVegMode && !isFoodVegetarian(f)) return false;
 
             const matchCat = (currentFoodCatFilter === 'all') || (f.category === currentFoodCatFilter);
 
@@ -8112,15 +8133,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         });
 
-
-
         if (filtered.length === 0) {
 
             foodLibraryGrid.innerHTML = `
 
                 <div class="empty-sessions-placeholder" style="grid-column: 1 / -1; padding: 22px; text-align: center;">
 
-                    No foods found matching "${searchQ}".<br>
+                    ${isVegMode ? 'No vegetarian foods found matching "' + searchQ + '".' : 'No foods found matching "' + searchQ + '".'}<br>
 
                     Tap "+ Custom Food" to create your own!
 
@@ -8188,7 +8207,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
             row.className = 'diet-log-item-card';
 
-
+            const isItemVeg = isFoodVegetarian(item);
+            const vegBadgeHtml = isItemVeg ?
+                `<span class="diet-type-indicator veg" title="Vegetarian"><span class="dot"></span></span>` :
+                `<span class="diet-type-indicator non-veg" title="Non-Vegetarian"><span class="dot"></span></span>`;
 
             row.innerHTML = `
 
@@ -8198,7 +8220,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     <div class="diet-log-info">
 
-                        <span class="diet-log-title">${item.name} <span style="color: #00e676; font-weight: 900;">× ${item.qty}</span></span>
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            ${vegBadgeHtml}
+                            <span class="diet-log-title">${item.name} <span style="color: #00e676; font-weight: 900;">× ${item.qty}</span></span>
+                        </div>
 
                         <span class="diet-log-details">${item.unit} • ${item.carbs}g C | ${item.protein}g P | ${item.fat}g F</span>
 
@@ -8254,7 +8279,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (qtyFoodIcon) qtyFoodIcon.textContent = food.icon || '🍽️';
 
-        if (qtyFoodTitle) qtyFoodTitle.textContent = food.name;
+        if (qtyFoodTitle) {
+            const isVeg = isFoodVegetarian(food);
+            const vegIcon = isVeg ?
+                `<span class="diet-type-indicator veg" style="margin-right: 6px;"><span class="dot"></span></span>` :
+                `<span class="diet-type-indicator non-veg" style="margin-right: 6px;"><span class="dot"></span></span>`;
+            qtyFoodTitle.innerHTML = `${vegIcon} ${food.name}`;
+        }
 
         if (qtyFoodServingBase) qtyFoodServingBase.textContent = `Base: ${food.unit} (${food.carbs}g C • ${food.protein}g P • ${food.fat}g F)`;
 
@@ -8393,6 +8424,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 fat: f,
 
                 calories: kcal,
+
+                isVeg: isFoodVegetarian(currentPendingFeedFood),
 
                 timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 
@@ -8694,7 +8727,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             }
 
-
+            const isCustomVeg = (document.querySelector('input[name="customDietTypeRadio"]:checked')?.value || 'veg') === 'veg';
 
             const newFood = {
 
@@ -8704,7 +8737,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 category: 'staples',
 
-                icon: '🥗',
+                icon: isCustomVeg ? '🥗' : '🍗',
 
                 unit: unit,
 
@@ -8715,6 +8748,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 fat: fat,
 
                 calories: calories,
+
+                isVeg: isCustomVeg,
 
                 isCustom: true
 
@@ -8732,6 +8767,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
             customFoodForm.reset();
 
+            // Reset custom diet type pill to veg default
+            const pillV = document.getElementById('pillCustomVeg');
+            const pillNV = document.getElementById('pillCustomNonVeg');
+            if (pillV && pillNV) {
+                pillV.classList.add('active');
+                pillNV.classList.remove('active');
+                const rad = pillV.querySelector('input');
+                if (rad) rad.checked = true;
+            }
+
             if (customFoodModal) customFoodModal.close();
 
             renderFoodLibraryGrid();
@@ -8740,9 +8785,106 @@ document.addEventListener('DOMContentLoaded', () => {
 
     }
 
+    // --- VEG MODE UI SYNC & EVENT LISTENERS ---
+    function updateVegModeUI() {
+        const isVeg = isVegModeActive();
+        const toggleEl = document.getElementById('toggleDietVegMode');
+        const cardEl = document.getElementById('dietVegModeCard');
+        const statusTag = document.getElementById('vegModeStatusTag');
+        const descEl = document.getElementById('vegModeDesc');
+        const libToggle = document.getElementById('btnLibraryVegToggle');
+        const libToggleText = document.getElementById('libraryVegToggleText');
+        const libHint = document.getElementById('libraryVegHint');
+        const mainBadge = document.getElementById('mainTileVegBadge');
 
+        if (toggleEl) toggleEl.checked = isVeg;
+
+        if (cardEl) {
+            if (isVeg) cardEl.classList.add('is-active');
+            else cardEl.classList.remove('is-active');
+        }
+
+        if (statusTag) {
+            statusTag.textContent = isVeg ? 'VEG ONLY' : 'OFF';
+        }
+
+        if (descEl) {
+            descEl.textContent = isVeg ?
+                'Filtered strictly for vegetarian foods (eggs & meat hidden)' :
+                'Showing all foods (Veg & Non-Veg)';
+        }
+
+        if (libToggle) {
+            if (isVeg) libToggle.classList.add('active');
+            else libToggle.classList.remove('active');
+        }
+
+        if (libToggleText) {
+            libToggleText.textContent = isVeg ? 'Veg Mode: ON' : 'Veg Mode: OFF';
+        }
+
+        if (libHint) {
+            libHint.textContent = isVeg ? 'Hiding eggs & meat' : 'Toggle to hide eggs, chicken & meat';
+        }
+
+        if (mainBadge) {
+            mainBadge.style.display = isVeg ? 'inline-block' : 'none';
+        }
+    }
+
+    const toggleDietVegModeEl = document.getElementById('toggleDietVegMode');
+    if (toggleDietVegModeEl) {
+        toggleDietVegModeEl.addEventListener('change', () => {
+            const active = toggleDietVegModeEl.checked;
+            localStorage.setItem(KEY_DIET_VEG_MODE, active ? 'true' : 'false');
+            updateVegModeUI();
+            renderRegularFoodsTray();
+            renderFoodLibraryGrid();
+            if (window.NativeBridge && window.NativeBridge.showToast) {
+                window.NativeBridge.showToast(active ? '🌱 Pure Veg Mode Enabled: Non-veg hidden' : 'Veg Mode Disabled: Showing all foods');
+            }
+            if (window.NativeBridge && window.NativeBridge.vibrate) {
+                window.NativeBridge.vibrate(35);
+            }
+        });
+    }
+
+    const btnLibVegToggle = document.getElementById('btnLibraryVegToggle');
+    if (btnLibVegToggle) {
+        btnLibVegToggle.addEventListener('click', () => {
+            const current = isVegModeActive();
+            const next = !current;
+            localStorage.setItem(KEY_DIET_VEG_MODE, next ? 'true' : 'false');
+            updateVegModeUI();
+            renderRegularFoodsTray();
+            renderFoodLibraryGrid();
+            if (window.NativeBridge && window.NativeBridge.showToast) {
+                window.NativeBridge.showToast(next ? '🌱 Pure Veg Mode Enabled: Non-veg hidden' : 'Veg Mode Disabled: Showing all foods');
+            }
+        });
+    }
+
+    // Custom food diet classification radio pills
+    const pillVeg = document.getElementById('pillCustomVeg');
+    const pillNonVeg = document.getElementById('pillCustomNonVeg');
+    if (pillVeg && pillNonVeg) {
+        pillVeg.addEventListener('click', () => {
+            pillVeg.classList.add('active');
+            pillNonVeg.classList.remove('active');
+            const radio = pillVeg.querySelector('input');
+            if (radio) radio.checked = true;
+        });
+        pillNonVeg.addEventListener('click', () => {
+            pillNonVeg.classList.add('active');
+            pillVeg.classList.remove('active');
+            const radio = pillNonVeg.querySelector('input');
+            if (radio) radio.checked = true;
+        });
+    }
 
     // Initialize Diet & Macro Reactor
+
+    updateVegModeUI();
 
     updateDietHUD();
 

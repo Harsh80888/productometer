@@ -1,0 +1,874 @@
+/* ==========================================================================
+   🤖 CHRONOCOACH - MASTER CYBERPUNK HUD STYLING
+   Aesthetic: Space-Grade Neo-Futuristic HUD · Pitch Black OLED · Neon Glow
+   Matches Productivity Meter Core Design System Tokens
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Floating Action Launch Button (FAB Pulsing Beacon)
+   -------------------------------------------------------------------------- */
+.chrono-coach-fab {
+    position: fixed;
+    bottom: 84px;
+    right: 20px;
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #00e5ff 0%, #00e676 50%, #d500f9 100%);
+    border: 1.5px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 0 25px rgba(0, 229, 255, 0.6), 0 6px 20px rgba(0, 0, 0, 0.7);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.chrono-coach-fab:hover {
+    transform: scale(1.1) translateY(-3px);
+    box-shadow: 0 0 35px rgba(0, 229, 255, 0.85), 0 0 20px rgba(213, 0, 249, 0.5), 0 8px 25px rgba(0, 0, 0, 0.8);
+}
+
+.chrono-coach-fab:active {
+    transform: scale(0.92);
+}
+
+.chrono-coach-fab .fab-icon {
+    font-size: 1.55rem;
+    color: #030305;
+    animation: coachPulseIcon 3s infinite ease-in-out;
+}
+
+.chrono-coach-fab .fab-badge-dot {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 14px;
+    height: 14px;
+    background: #00e676;
+    border: 2.5px solid #030305;
+    border-radius: 50%;
+    box-shadow: 0 0 10px #00e676;
+    animation: badgePulse 2s infinite ease-in-out;
+}
+
+@keyframes coachPulseIcon {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.14); }
+}
+
+@keyframes badgePulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(1.2); }
+}
+
+/* --------------------------------------------------------------------------
+   2. Main Chatbot Drawer Modal (Frosted Cyberpunk Glass)
+   -------------------------------------------------------------------------- */
+.chrono-coach-modal {
+    position: fixed;
+    bottom: 92px;
+    right: 20px;
+    width: 430px;
+    max-width: calc(100vw - 32px);
+    height: 650px;
+    max-height: calc(100vh - 110px);
+    background: rgba(6, 8, 14, 0.94);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1.5px solid rgba(0, 229, 255, 0.35);
+    border-radius: 20px;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.9), 0 0 35px rgba(0, 229, 255, 0.22);
+    display: flex;
+    flex-direction: column;
+    z-index: 10000;
+    overflow: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(24px) scale(0.95);
+    transition: opacity 0.28s ease, transform 0.28s cubic-bezier(0.175, 0.885, 0.32, 1.15);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: #e2e8f0;
+}
+
+.chrono-coach-modal.active {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0) scale(1);
+}
+
+/* --------------------------------------------------------------------------
+   3. Header HUD Bar
+   -------------------------------------------------------------------------- */
+.coach-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    background: linear-gradient(180deg, rgba(16, 22, 38, 0.9) 0%, rgba(6, 8, 14, 0.85) 100%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    position: relative;
+    flex-shrink: 0;
+}
+
+.coach-header::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent 0%, rgba(0, 229, 255, 0.4) 30%, rgba(213, 0, 249, 0.4) 70%, transparent 100%);
+}
+
+.coach-header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.coach-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(0, 229, 255, 0.2), rgba(0, 230, 118, 0.2));
+    border: 1px solid rgba(0, 229, 255, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    color: #00e5ff;
+    box-shadow: 0 0 16px rgba(0, 229, 255, 0.35);
+    flex-shrink: 0;
+}
+
+.coach-header-titles {
+    display: flex;
+    flex-direction: column;
+}
+
+.coach-title {
+    font-size: 1.02rem;
+    font-weight: 800;
+    color: #ffffff;
+    letter-spacing: 0.3px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.text-cyan {
+    color: #00e5ff !important;
+}
+
+.coach-status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #00e676;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+}
+
+.coach-status-dot {
+    width: 7px;
+    height: 7px;
+    background: #00e676;
+    border-radius: 50%;
+    box-shadow: 0 0 8px #00e676;
+    animation: statusBlink 2s infinite ease-in-out;
+}
+
+@keyframes statusBlink {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.35; transform: scale(0.85); }
+}
+
+.coach-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.coach-hdr-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.85rem;
+    outline: none;
+}
+
+.coach-hdr-btn:hover {
+    background: rgba(0, 229, 255, 0.15);
+    color: #00e5ff;
+    border-color: rgba(0, 229, 255, 0.45);
+    box-shadow: 0 0 10px rgba(0, 229, 255, 0.3);
+}
+
+.coach-hdr-btn:active {
+    transform: scale(0.92);
+}
+
+/* --------------------------------------------------------------------------
+   4. Quick Action Prompt Chips Ribbon (Horizontal Carousel)
+   -------------------------------------------------------------------------- */
+.coach-quick-ribbon,
+.coach-chips-ribbon {
+    display: flex;
+    gap: 8px;
+    padding: 10px 14px;
+    overflow-x: auto;
+    background: rgba(4, 6, 12, 0.55);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    flex-shrink: 0;
+}
+
+.coach-quick-ribbon::-webkit-scrollbar,
+.coach-chips-ribbon::-webkit-scrollbar {
+    display: none;
+}
+
+.coach-chip,
+.coach-chip-btn {
+    white-space: nowrap;
+    background: rgba(0, 229, 255, 0.08);
+    border: 1px solid rgba(0, 229, 255, 0.28);
+    color: #00e5ff;
+    padding: 6px 13px;
+    border-radius: 20px;
+    font-size: 0.74rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.22s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    flex-shrink: 0;
+    outline: none;
+    font-family: inherit;
+}
+
+.coach-chip:hover,
+.coach-chip-btn:hover {
+    background: rgba(0, 229, 255, 0.22);
+    border-color: #00e5ff;
+    color: #ffffff;
+    box-shadow: 0 0 14px rgba(0, 229, 255, 0.45);
+    transform: translateY(-1.5px);
+}
+
+.coach-chip:active,
+.coach-chip-btn:active {
+    transform: scale(0.95);
+}
+
+/* First prompt chip ("Summarise My Day") highlighted */
+.coach-chip:first-child,
+.coach-chip-btn:first-child {
+    background: linear-gradient(135deg, rgba(0, 229, 255, 0.18), rgba(0, 230, 118, 0.18));
+    border-color: rgba(0, 230, 118, 0.45);
+    color: #00e676;
+}
+
+.coach-chip:first-child:hover,
+.coach-chip-btn:first-child:hover {
+    background: linear-gradient(135deg, rgba(0, 229, 255, 0.3), rgba(0, 230, 118, 0.3));
+    border-color: #00e676;
+    box-shadow: 0 0 15px rgba(0, 230, 118, 0.5);
+    color: #ffffff;
+}
+
+/* --------------------------------------------------------------------------
+   5. Chat Message Feed
+   -------------------------------------------------------------------------- */
+.coach-feed {
+    flex: 1;
+    padding: 16px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    scroll-behavior: smooth;
+    background: transparent;
+}
+
+.coach-feed::-webkit-scrollbar {
+    width: 5px;
+}
+
+.coach-feed::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.coach-feed::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.14);
+    border-radius: 4px;
+}
+
+.coach-feed::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 229, 255, 0.4);
+}
+
+/* --------------------------------------------------------------------------
+   6. Message Rows & Bubbles
+   -------------------------------------------------------------------------- */
+.coach-msg-row {
+    display: flex;
+    gap: 10px;
+    max-width: 90%;
+    animation: msgFadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes msgFadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.coach-msg-row.user-row {
+    align-self: flex-end;
+    flex-direction: row-reverse;
+}
+
+.coach-msg-row.bot-row {
+    align-self: flex-start;
+}
+
+.coach-msg-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: rgba(0, 229, 255, 0.15);
+    border: 1px solid rgba(0, 229, 255, 0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    color: #00e5ff;
+    flex-shrink: 0;
+    margin-top: 3px;
+}
+
+.coach-msg-bubble {
+    padding: 12px 15px;
+    border-radius: 16px;
+    font-size: 0.86rem;
+    line-height: 1.55;
+    word-break: break-word;
+}
+
+/* User Message: Gradient Neon Cyan to Purple */
+.user-row .coach-msg-bubble {
+    background: linear-gradient(135deg, #0099ff 0%, #7928ca 100%);
+    color: #ffffff;
+    border-bottom-right-radius: 4px;
+    box-shadow: 0 4px 18px rgba(0, 153, 255, 0.3);
+    font-weight: 500;
+}
+
+/* Bot Message: Deep OLED Glass with Subtle Border */
+.bot-row .coach-msg-bubble {
+    background: rgba(14, 18, 30, 0.88);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #e2e8f0;
+    border-bottom-left-radius: 4px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+}
+
+/* Markdown Typography within Bot Bubble */
+.bot-row .coach-msg-bubble h3 {
+    margin: 0 0 8px 0;
+    font-size: 0.98rem;
+    font-weight: 800;
+    color: #00e5ff;
+    letter-spacing: -0.2px;
+}
+
+.bot-row .coach-msg-bubble h2 {
+    margin: 0 0 10px 0;
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #00e5ff;
+}
+
+.bot-row .coach-msg-bubble strong {
+    color: #ffffff;
+    font-weight: 700;
+}
+
+.bot-row .coach-msg-bubble em {
+    color: #94a3b8;
+    font-style: italic;
+}
+
+.coach-inline-code,
+.bot-row .coach-msg-bubble code {
+    background: rgba(0, 229, 255, 0.12);
+    border: 1px solid rgba(0, 229, 255, 0.28);
+    color: #00f2fe;
+    padding: 2px 6px;
+    border-radius: 5px;
+    font-family: 'JetBrains Mono', Consolas, Monaco, monospace;
+    font-size: 0.82em;
+    font-weight: 600;
+}
+
+.coach-quote {
+    margin: 8px 0;
+    padding: 8px 12px;
+    background: rgba(0, 229, 255, 0.06);
+    border-left: 3px solid #00e5ff;
+    border-radius: 0 8px 8px 0;
+    color: #94a3b8;
+    font-size: 0.83rem;
+}
+
+.coach-bullet {
+    margin: 4px 0 4px 4px;
+    line-height: 1.5;
+}
+
+.coach-num-item {
+    margin: 4px 0 4px 4px;
+    line-height: 1.5;
+}
+
+.coach-num-item b {
+    color: #00e5ff;
+}
+
+.coach-divider {
+    margin: 10px 0;
+    border: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.coach-gap {
+    height: 8px;
+}
+
+/* --------------------------------------------------------------------------
+   7. Typing Indicator (Glowing Pulsing Dots + Label)
+   -------------------------------------------------------------------------- */
+.coach-typing-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 9px 15px;
+    background: rgba(14, 18, 30, 0.88);
+    border: 1px solid rgba(0, 229, 255, 0.25);
+    border-radius: 14px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.35);
+}
+
+.coach-typing-dot {
+    width: 6px;
+    height: 6px;
+    background: #00e5ff;
+    border-radius: 50%;
+    animation: typingJump 1.2s infinite ease-in-out;
+}
+
+.coach-typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.coach-typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes typingJump {
+    0%, 80%, 100% { transform: translateY(0); opacity: 0.35; }
+    40% { transform: translateY(-5px); opacity: 1; }
+}
+
+.coach-typing-label {
+    margin-left: 8px;
+    font-size: 0.74rem;
+    color: #00f2fe;
+    font-weight: 600;
+}
+
+/* --------------------------------------------------------------------------
+   8. Input Bar Footer
+   -------------------------------------------------------------------------- */
+.coach-input-bar,
+.coach-footer {
+    padding: 12px 14px;
+    background: rgba(8, 12, 20, 0.96);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.coach-input,
+.coach-input-field {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 12px;
+    padding: 10px 14px;
+    color: #ffffff;
+    font-size: 0.86rem;
+    outline: none;
+    transition: all 0.22s ease;
+    font-family: inherit;
+    box-sizing: border-box;
+}
+
+.coach-input:focus,
+.coach-input-field:focus {
+    background: rgba(255, 255, 255, 0.09);
+    border-color: #00e5ff;
+    box-shadow: 0 0 12px rgba(0, 229, 255, 0.3);
+}
+
+.coach-input::placeholder,
+.coach-input-field::placeholder {
+    color: #64748b;
+}
+
+.coach-send-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #00e5ff, #00e676);
+    border: none;
+    color: #030305;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.22s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    flex-shrink: 0;
+    outline: none;
+}
+
+.coach-send-btn:hover {
+    transform: scale(1.08);
+    box-shadow: 0 0 18px rgba(0, 229, 255, 0.65);
+}
+
+.coach-send-btn:active {
+    transform: scale(0.92);
+}
+
+/* --------------------------------------------------------------------------
+   9. Settings Modal Overlay (Biometrics & Cloud AI)
+   -------------------------------------------------------------------------- */
+.coach-settings-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(3, 4, 8, 0.92);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    border-radius: 20px;
+    animation: fadeInSettings 0.22s ease-out forwards;
+}
+
+@keyframes fadeInSettings {
+    from { opacity: 0; transform: scale(0.96); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.coach-settings-box {
+    background: #0d111a;
+    border: 1px solid rgba(0, 229, 255, 0.35);
+    border-radius: 16px;
+    padding: 18px;
+    width: 100%;
+    max-width: 360px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.85), 0 0 25px rgba(0, 229, 255, 0.2);
+    box-sizing: border-box;
+}
+
+.coach-settings-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.coach-settings-header h4 {
+    margin: 0;
+    color: #00f2fe;
+    font-size: 0.98rem;
+    font-weight: 800;
+    letter-spacing: 0.2px;
+}
+
+.coach-settings-close {
+    background: none;
+    border: none;
+    color: #8b9bb4;
+    cursor: pointer;
+    font-size: 1.15rem;
+    transition: color 0.2s;
+    outline: none;
+    padding: 2px 6px;
+}
+
+.coach-settings-close:hover {
+    color: #ff4081;
+}
+
+.coach-settings-desc {
+    font-size: 0.74rem;
+    color: #94a3b8;
+    margin: 0 0 10px 0;
+    line-height: 1.4;
+}
+
+.coach-settings-section {
+    margin-bottom: 10px;
+}
+
+.coach-settings-label {
+    display: block;
+    font-size: 0.72rem;
+    color: #38bdf8;
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    margin-bottom: 5px;
+}
+
+.coach-settings-input {
+    width: 100%;
+    background: #05070d;
+    border: 1px solid rgba(0, 229, 255, 0.25);
+    border-radius: 8px;
+    color: #ffffff;
+    padding: 8px 11px;
+    font-size: 0.82rem;
+    outline: none;
+    transition: all 0.2s;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+
+.coach-settings-input:focus {
+    border-color: #00e5ff;
+    box-shadow: 0 0 10px rgba(0, 229, 255, 0.35);
+}
+
+.coach-settings-buttons {
+    display: flex;
+    gap: 8px;
+    margin-top: 14px;
+}
+
+.coach-btn-primary {
+    flex: 1;
+    background: linear-gradient(135deg, #00e5ff, #00e676);
+    border: none;
+    color: #030305;
+    font-weight: 800;
+    padding: 9px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.82rem;
+    transition: all 0.2s;
+    outline: none;
+}
+
+.coach-btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(0, 229, 255, 0.45);
+}
+
+.coach-btn-secondary {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    color: #cbd5e0;
+    font-weight: 600;
+    padding: 7px 11px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.74rem;
+    transition: background 0.2s;
+    outline: none;
+}
+
+.coach-btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.16);
+    color: #ffffff;
+}
+
+/* --------------------------------------------------------------------------
+   10. Mobile Responsiveness (< 480px)
+   -------------------------------------------------------------------------- */
+@media (max-width: 480px) {
+    .chrono-coach-modal {
+        right: 10px;
+        left: 10px;
+        width: auto;
+        bottom: 76px;
+        height: calc(100vh - 145px);
+        border-radius: 16px;
+    }
+    .chrono-coach-fab {
+        bottom: 74px;
+        right: 14px;
+        width: 52px;
+        height: 52px;
+    }
+    .chrono-coach-fab .fab-icon {
+        font-size: 1.35rem;
+    }
+    .coach-msg-row {
+        max-width: 95%;
+    }
+}
+
+/* --- HUD Data Tables --- */
+.coach-table-container {
+    width: 100%;
+    overflow-x: auto;
+    margin: 10px 0;
+    border-radius: 10px;
+    border: 1px solid rgba(0, 242, 254, 0.22);
+    background: rgba(10, 14, 24, 0.7);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    -webkit-overflow-scrolling: touch;
+}
+
+.coach-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.78rem;
+    text-align: left;
+}
+
+.coach-table th {
+    background: rgba(0, 242, 254, 0.12);
+    color: #00f2fe;
+    font-weight: 700;
+    padding: 8px 10px;
+    border-bottom: 1px solid rgba(0, 242, 254, 0.25);
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+}
+
+.coach-table td {
+    padding: 7px 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    color: #e2e8f0;
+    line-height: 1.35;
+    vertical-align: middle;
+}
+
+.coach-table tr:last-child td {
+    border-bottom: none;
+}
+
+.coach-table tr:hover td {
+    background: rgba(0, 242, 254, 0.05);
+}
+
+
+/* ==========================================================================
+ * 🎛️ DUAL MODE SEGMENTED TOGGLE BAR ("Ask about app" vs "Other queries")
+ * ========================================================================== */
+.coach-mode-toggle-bar {
+    padding: 10px 14px 8px 14px;
+    background: rgba(10, 14, 24, 0.95);
+    border-bottom: 1px solid rgba(0, 242, 254, 0.12);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.coach-mode-segmented-control {
+    display: flex;
+    background: rgba(2, 4, 8, 0.85);
+    border-radius: 12px;
+    padding: 3px;
+    border: 1px solid rgba(0, 242, 254, 0.2);
+    gap: 4px;
+}
+
+.coach-mode-toggle-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 8px 10px;
+    border-radius: 9px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: #8b9bb4;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.coach-mode-toggle-btn i {
+    font-size: 0.88rem;
+}
+
+.coach-mode-toggle-btn:hover {
+    color: #e0f7fa;
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.coach-mode-toggle-btn.active[data-mode="app"] {
+    background: linear-gradient(135deg, rgba(0, 242, 254, 0.22) 0%, rgba(0, 114, 255, 0.22) 100%);
+    border-color: rgba(0, 242, 254, 0.55);
+    color: #00f2fe;
+    box-shadow: 0 0 14px rgba(0, 242, 254, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+.coach-mode-toggle-btn.active[data-mode="other"] {
+    background: linear-gradient(135deg, rgba(0, 230, 118, 0.22) 0%, rgba(213, 0, 249, 0.22) 100%);
+    border-color: rgba(0, 230, 118, 0.55);
+    color: #00e676;
+    box-shadow: 0 0 14px rgba(0, 230, 118, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+.coach-mode-subtext {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.72rem;
+    color: #8b9bb4;
+    padding-left: 4px;
+}
+
+.coach-mode-subtext .mode-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #00f2fe;
+    box-shadow: 0 0 6px #00f2fe;
+    transition: all 0.25s ease;
+}
+
+.coach-mode-subtext.mode-other .mode-dot {
+    background: #00e676;
+    box-shadow: 0 0 6px #00e676;
+}
