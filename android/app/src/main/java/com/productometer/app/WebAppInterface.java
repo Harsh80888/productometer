@@ -329,7 +329,8 @@ public class WebAppInterface {
 
     /**
      * Queries actual daily app screen time from Android UsageStatsManager (ground truth).
-     * Strictly matches Android Digital Wellbeing by reading OS kernel foreground aggregations.
+     * Replicates Android Digital Wellbeing & Parental Controls by executing an authoritative
+     * UsageEvents timeline simulation bounded by screen on/off intervals.
      */
     @JavascriptInterface
     public String getRealAppUsageStats() {
@@ -352,30 +353,74 @@ public class WebAppInterface {
             PackageManager pm = context.getPackageManager();
             Map<String, Long> foregroundTimeMap = new HashMap<>();
 
-            // 1. Authoritative ground truth from UsageStatsManager daily interval
-            List<UsageStats> statsList = usageStatsManager.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, startOfDay, now);
-            if (statsList != null) {
-                for (UsageStats u : statsList) {
-                    if (u == null) continue;
-                    // Filter out buckets that ended prior to startOfDay
-                    if (u.getLastTimeUsed() < startOfDay && u.getLastTimeStamp() < startOfDay) {
-                        continue;
+            // 1. Authoritative UsageEvents timeline simulation (Exact Digital Wellbeing parity)
+            UsageEvents usageEvents = usageStatsManager.queryEvents(startOfDay, now);
+            if (usageEvents != null) {
+                UsageEvents.Event event = new UsageEvents.Event();
+                String currentFgPkg = null;
+                long sessionStartTime = 0L;
+                boolean isScreenInteractive = true;
+
+                while (usageEvents.hasNextEvent()) {
+                    usageEvents.getNextEvent(event);
+                    int eventType = event.getEventType();
+                    long eventTime = event.getTimeStamp();
+                    String pkgName = event.getPackageName();
+
+                    // Android 9+ (API 28+) SCREEN_NON_INTERACTIVE (Screen lock / off)
+                    if (eventType == 16 /* SCREEN_NON_INTERACTIVE */ || eventType == 26 /* DEVICE_SHUTDOWN */) {
+                        if (currentFgPkg != null && sessionStartTime > 0 && eventTime > sessionStartTime) {
+                            long delta = eventTime - sessionStartTime;
+                            long prev = foregroundTimeMap.containsKey(currentFgPkg) ? foregroundTimeMap.get(currentFgPkg) : 0L;
+                            foregroundTimeMap.put(currentFgPkg, prev + delta);
+                        }
+                        currentFgPkg = null;
+                        sessionStartTime = 0L;
+                        isScreenInteractive = false;
                     }
-                    long fg = u.getTotalTimeInForeground();
-                    if (fg > 0) {
-                        long prev = foregroundTimeMap.containsKey(u.getPackageName()) ? foregroundTimeMap.get(u.getPackageName()) : 0L;
-                        foregroundTimeMap.put(u.getPackageName(), prev + fg);
+                    // Android 9+ SCREEN_INTERACTIVE (Screen turned on)
+                    else if (eventType == 15 /* SCREEN_INTERACTIVE */) {
+                        isScreenInteractive = true;
                     }
+                    // Activity Resumed / Move to Foreground (Event 1)
+                    else if (eventType == UsageEvents.Event.ACTIVITY_RESUMED || eventType == 1) {
+                        if (currentFgPkg != null && sessionStartTime > 0 && eventTime > sessionStartTime) {
+                            long delta = eventTime - sessionStartTime;
+                            long prev = foregroundTimeMap.containsKey(currentFgPkg) ? foregroundTimeMap.get(currentFgPkg) : 0L;
+                            foregroundTimeMap.put(currentFgPkg, prev + delta);
+                        }
+                        currentFgPkg = pkgName;
+                        sessionStartTime = isScreenInteractive ? eventTime : 0L;
+                    }
+                    // Activity Paused / Move to Background (Event 2)
+                    else if (eventType == UsageEvents.Event.ACTIVITY_PAUSED || eventType == 2 || eventType == 23 /* ACTIVITY_STOPPED */) {
+                        if (pkgName != null && pkgName.equals(currentFgPkg)) {
+                            if (sessionStartTime > 0 && eventTime > sessionStartTime) {
+                                long delta = eventTime - sessionStartTime;
+                                long prev = foregroundTimeMap.containsKey(currentFgPkg) ? foregroundTimeMap.get(currentFgPkg) : 0L;
+                                foregroundTimeMap.put(currentFgPkg, prev + delta);
+                            }
+                            currentFgPkg = null;
+                            sessionStartTime = 0L;
+                        }
+                    }
+                }
+
+                // If an application is actively in foreground right now and phone screen is ON:
+                if (currentFgPkg != null && sessionStartTime > 0 && now > sessionStartTime && isScreenInteractive) {
+                    long delta = now - sessionStartTime;
+                    long prev = foregroundTimeMap.containsKey(currentFgPkg) ? foregroundTimeMap.get(currentFgPkg) : 0L;
+                    foregroundTimeMap.put(currentFgPkg, prev + delta);
                 }
             }
 
-            // Fallback to queryAndAggregateUsageStats if queryUsageStats was empty
+            // Fallback: If UsageEvents was empty or restricted, fallback to queryAndAggregateUsageStats
             if (foregroundTimeMap.isEmpty()) {
                 Map<String, UsageStats> aggregated = usageStatsManager.queryAndAggregateUsageStats(startOfDay, now);
                 if (aggregated != null) {
                     for (Map.Entry<String, UsageStats> entry : aggregated.entrySet()) {
                         UsageStats u = entry.getValue();
-                        if (u.getLastTimeUsed() >= startOfDay || u.getLastTimeStamp() >= startOfDay) {
+                        if (u != null && (u.getLastTimeUsed() >= startOfDay || u.getLastTimeStamp() >= startOfDay)) {
                             long fg = u.getTotalTimeInForeground();
                             if (fg > 0) {
                                 foregroundTimeMap.put(entry.getKey(), fg);
@@ -686,6 +731,97 @@ public class WebAppInterface {
             Intent serviceIntent = new Intent(context, FocusService.class);
             context.stopService(serviceIntent);
         } catch (Exception ignored) {}
+    }
+
+    /**
+     * Pauses the active focus session timer and temporarily disables distraction blocking.
+     */
+    @JavascriptInterface
+    public void pauseFocusSession() {
+        try {
+            ShortsReelsBlockerService.isFocusSessionOngoing = false;
+            SharedPreferences prefs = context.getSharedPreferences(ShortsReelsBlockerService.PREFS_NAME, Context.MODE_PRIVATE);
+            prefs.edit().putBoolean(ShortsReelsBlockerService.KEY_FOCUS_ACTIVE, false).apply();
+
+            Intent serviceIntent = new Intent(context, FocusService.class);
+            serviceIntent.setAction(FocusService.ACTION_PAUSE);
+            context.startService(serviceIntent);
+        } catch (Exception e) {}
+    }
+
+    /**
+     * Puts active focus session on break: temporarily pauses distraction blocking and counts down break.
+     */
+    @JavascriptInterface
+    public void setFocusSessionBreak(long breakSeconds) {
+        try {
+            ShortsReelsBlockerService.isFocusSessionOngoing = false;
+            SharedPreferences prefs = context.getSharedPreferences(ShortsReelsBlockerService.PREFS_NAME, Context.MODE_PRIVATE);
+            prefs.edit().putBoolean(ShortsReelsBlockerService.KEY_FOCUS_ACTIVE, false).apply();
+
+            Intent serviceIntent = new Intent(context, FocusService.class);
+            serviceIntent.setAction(FocusService.ACTION_BREAK);
+            serviceIntent.putExtra("break_seconds", breakSeconds);
+            context.startService(serviceIntent);
+        } catch (Exception e) {}
+    }
+
+    /**
+     * Resumes the active focus session timer and re-enables distraction blocking.
+     */
+    @JavascriptInterface
+    public void resumeFocusSession(String title, long durationSeconds) {
+        try {
+            ShortsReelsBlockerService.isFocusSessionOngoing = true;
+            SharedPreferences prefs = context.getSharedPreferences(ShortsReelsBlockerService.PREFS_NAME, Context.MODE_PRIVATE);
+            prefs.edit()
+                    .putBoolean(ShortsReelsBlockerService.KEY_FOCUS_ACTIVE, true)
+                    .putString("focus_session_title", title != null ? title : "Focus Session")
+                    .putLong("focus_session_end_time", System.currentTimeMillis() + (durationSeconds * 1000L))
+                    .apply();
+
+            Intent serviceIntent = new Intent(context, FocusService.class);
+            serviceIntent.setAction(FocusService.ACTION_RESUME);
+            serviceIntent.putExtra("task_title", title);
+            serviceIntent.putExtra("duration_seconds", durationSeconds);
+            context.startService(serviceIntent);
+        } catch (Exception e) {}
+    }
+
+    /**
+     * Sets Bedtime Mode schedule in SharedPreferences.
+     */
+    @JavascriptInterface
+    public void setBedtimeSchedule(boolean enabled, String startStr, String endStr) {
+        try {
+            SharedPreferences prefs = context.getSharedPreferences(ShortsReelsBlockerService.PREFS_NAME, Context.MODE_PRIVATE);
+            prefs.edit()
+                    .putBoolean("productometer_bedtime_enabled", enabled)
+                    .putString("productometer_bedtime_start", startStr != null ? startStr : "22:30")
+                    .putString("productometer_bedtime_end", endStr != null ? endStr : "06:30")
+                    .apply();
+        } catch (Exception e) {}
+    }
+
+    /**
+     * Gets Bedtime Mode schedule from SharedPreferences as JSON.
+     */
+    @JavascriptInterface
+    public String getBedtimeSchedule() {
+        try {
+            SharedPreferences prefs = context.getSharedPreferences(ShortsReelsBlockerService.PREFS_NAME, Context.MODE_PRIVATE);
+            boolean enabled = prefs.getBoolean("productometer_bedtime_enabled", true);
+            String startStr = prefs.getString("productometer_bedtime_start", "22:30");
+            String endStr = prefs.getString("productometer_bedtime_end", "06:30");
+
+            JSONObject obj = new JSONObject();
+            obj.put("enabled", enabled);
+            obj.put("start", startStr);
+            obj.put("end", endStr);
+            return obj.toString();
+        } catch (Exception e) {
+            return "{\"enabled\":true,\"start\":\"22:30\",\"end\":\"06:30\"}";
+        }
     }
 
     /**

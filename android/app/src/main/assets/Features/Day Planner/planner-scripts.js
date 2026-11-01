@@ -11,25 +11,68 @@ let activeDurationHour = '01';
 let activeDurationMinute = '00';
 let selectedTaskIdForEdit = null;
 
-let plannerListData = [];
-try {
-    const saved = localStorage.getItem('productometer_chrono_planner_list');
-    if (saved) plannerListData = JSON.parse(saved);
-} catch (e) {
-    plannerListData = [];
+// --- 📅 DATE-AWARE PLANNER STORAGE ENGINE ---
+function getTodayDateKey() {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
 }
 
-// --- 🌙 AUTOMATIC MIDNIGHT RESET HANDLER ---
+const todayKey = getTodayDateKey();
+let currentSelectedDateKey = todayKey;
+let calViewMonth = new Date().getMonth();
+let calViewYear = new Date().getFullYear();
+
+function getTasksStorageKey(dateKey) {
+    return 'productometer_planner_tasks_' + dateKey;
+}
+
+function loadPlannerTasksForDate(dateKey) {
+    try {
+        const raw = localStorage.getItem(getTasksStorageKey(dateKey));
+        if (raw) return JSON.parse(raw);
+    } catch (e) {}
+
+    // Fallback for today: check legacy productometer_chrono_planner_list
+    if (dateKey === todayKey) {
+        try {
+            const leg = localStorage.getItem('productometer_chrono_planner_list');
+            if (leg) return JSON.parse(leg);
+        } catch (e) {}
+    }
+    return [];
+}
+
+function savePlannerTasksForDate(dateKey, tasks) {
+    try {
+        localStorage.setItem(getTasksStorageKey(dateKey), JSON.stringify(tasks));
+        if (dateKey === todayKey) {
+            localStorage.setItem('productometer_chrono_planner_list', JSON.stringify(tasks));
+        }
+        window.dispatchEvent(new Event('storage'));
+    } catch (e) {
+        console.error("Failed to save tasks for date:", e);
+    }
+}
+
+let plannerListData = loadPlannerTasksForDate(currentSelectedDateKey);
+
+// --- 🌙 AUTOMATIC MIDNIGHT CHECK HANDLER ---
 function checkAndResetPlannerForNewDay() {
     const lastActiveDateKey = 'productometer_last_active_date';
     const currentDateStr = new Date().toDateString();
     const lastSavedDate = localStorage.getItem(lastActiveDateKey);
 
     if (lastSavedDate && lastSavedDate !== currentDateStr) {
-        plannerListData = [];
-        localStorage.removeItem('productometer_chrono_planner_list');
-        synchronizeLegacyTimelineArray();
-        renderChronologicalMasterTimelineGrid();
+        // Date rolled over: if viewing today, refresh
+        if (currentSelectedDateKey === lastSavedDate) {
+            currentSelectedDateKey = getTodayDateKey();
+            plannerListData = loadPlannerTasksForDate(currentSelectedDateKey);
+            synchronizeLegacyTimelineArray();
+            renderChronologicalMasterTimelineGrid();
+        }
     }
     localStorage.setItem(lastActiveDateKey, currentDateStr);
 }
@@ -636,7 +679,7 @@ if (addToPlannerBtn) {
         }
 
         plannerListData.sort((a, b) => a.startMin - b.startMin);
-        localStorage.setItem('productometer_chrono_planner_list', JSON.stringify(plannerListData));
+        savePlannerTasksForDate(currentSelectedDateKey, plannerListData);
         try { window.dispatchEvent(new Event('storage')); } catch (e) {}
 
         synchronizeLegacyTimelineArray();
@@ -738,7 +781,7 @@ function renderChronologicalMasterTimelineGrid() {
                     if (window.NativeBridge.vibrate) window.NativeBridge.vibrate(30);
                 }
 
-                localStorage.setItem('productometer_chrono_planner_list', JSON.stringify(plannerListData));
+                savePlannerTasksForDate(currentSelectedDateKey, plannerListData);
                 try { window.dispatchEvent(new Event('storage')); } catch (err) {}
                 renderChronologicalMasterTimelineGrid();
             });
@@ -750,7 +793,7 @@ function renderChronologicalMasterTimelineGrid() {
             completeBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 task.completed = !task.completed;
-                localStorage.setItem('productometer_chrono_planner_list', JSON.stringify(plannerListData));
+                savePlannerTasksForDate(currentSelectedDateKey, plannerListData);
                 try { window.dispatchEvent(new Event('storage')); } catch (err) {}
 
                 // Play tactile completion chime
@@ -808,7 +851,7 @@ function renderChronologicalMasterTimelineGrid() {
                 window.NativeBridge.cancelAlarm(task.id);
                 window.NativeBridge.vibrate(25);
             }
-            localStorage.setItem('productometer_chrono_planner_list', JSON.stringify(plannerListData));
+            savePlannerTasksForDate(currentSelectedDateKey, plannerListData);
             try { window.dispatchEvent(new Event('storage')); } catch (e) {}
             synchronizeLegacyTimelineArray();
             renderChronologicalMasterTimelineGrid();
@@ -925,3 +968,227 @@ if (openEditTaskDialogBtn) {
         syncAllDrumWheels(false);
     });
 }
+
+
+// ========================================================
+// 📅 CALENDAR & FUTURE ROUTINE PLANNING CONTROLLER
+// ========================================================
+
+function formatFullDateDisplay(dateKey) {
+    const [y, m, d] = dateKey.split('-').map(Number);
+    const dateObj = new Date(y, m - 1, d);
+    const options = { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' };
+    return dateObj.toLocaleDateString('en-US', options);
+}
+
+function updateDateRibbonUI() {
+    const headlineEl = document.getElementById('plannerDisplayDateText');
+    const sublineEl = document.getElementById('plannerDisplayFullDate');
+    const builderTargetDateEl = document.getElementById('taskBuilderTargetDate');
+    const builderDateInput = document.getElementById('taskBuilderDateInput');
+
+    const [y, m, d] = currentSelectedDateKey.split('-').map(Number);
+    const targetDate = new Date(y, m - 1, d);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    targetDate.setHours(0, 0, 0, 0);
+
+    const diffDays = Math.round((targetDate - today) / (1000 * 60 * 60 * 24));
+
+    let headline = 'Today';
+    if (diffDays === 0) headline = 'Today';
+    else if (diffDays === 1) headline = 'Tomorrow';
+    else if (diffDays === -1) headline = 'Yesterday';
+    else if (diffDays > 1 && diffDays < 7) {
+        headline = targetDate.toLocaleDateString('en-US', { weekday: 'long' });
+    } else {
+        headline = targetDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+
+    if (headlineEl) headlineEl.textContent = headline;
+    if (sublineEl) sublineEl.textContent = formatFullDateDisplay(currentSelectedDateKey);
+    if (builderTargetDateEl) builderTargetDateEl.textContent = `${headline} (${currentSelectedDateKey})`;
+    if (builderDateInput) builderDateInput.value = currentSelectedDateKey;
+
+    // Highlight matching chip
+    document.querySelectorAll('.date-chip[data-offset]').forEach(chip => {
+        const offset = parseInt(chip.dataset.offset, 10);
+        if (offset === diffDays) chip.classList.add('active');
+        else chip.classList.remove('active');
+    });
+}
+
+function selectPlannerDate(dateKey) {
+    resetEditButtonState();
+    currentSelectedDateKey = dateKey;
+    plannerListData = loadPlannerTasksForDate(currentSelectedDateKey);
+    synchronizeLegacyTimelineArray();
+    renderChronologicalMasterTimelineGrid();
+    updateDateRibbonUI();
+
+    if (window.NativeBridge && window.NativeBridge.vibrate) {
+        window.NativeBridge.vibrate(25);
+    }
+}
+
+function offsetPlannerDate(days) {
+    const [y, m, d] = currentSelectedDateKey.split('-').map(Number);
+    const target = new Date(y, m - 1, d + days);
+    const ny = target.getFullYear();
+    const nm = String(target.getMonth() + 1).padStart(2, '0');
+    const nd = String(target.getDate()).padStart(2, '0');
+    selectPlannerDate(`${ny}-${nm}-${nd}`);
+}
+
+function renderCalendarMonthGrid() {
+    const monthTitle = document.getElementById('calMonthTitleText');
+    const grid = document.getElementById('calDaysGrid');
+    if (!monthTitle || !grid) return;
+
+    const monthNames = [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+    ];
+    monthTitle.textContent = `${monthNames[calViewMonth]} ${calViewYear}`;
+    grid.innerHTML = "";
+
+    const firstDayIndex = new Date(calViewYear, calViewMonth, 1).getDay();
+    const daysInMonth = new Date(calViewYear, calViewMonth + 1, 0).getDate();
+    const daysInPrevMonth = new Date(calViewYear, calViewMonth, 0).getDate();
+
+    // Days from prev month
+    for (let i = firstDayIndex - 1; i >= 0; i--) {
+        const dNum = daysInPrevMonth - i;
+        const cell = document.createElement('div');
+        cell.className = 'cal-day-cell other-month';
+        cell.textContent = dNum;
+        grid.appendChild(cell);
+    }
+
+    // Days in current month
+    const todayStr = getTodayDateKey();
+    for (let d = 1; d <= daysInMonth; d++) {
+        const cell = document.createElement('div');
+        const dayKey = `${calViewYear}-${String(calViewMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        cell.className = 'cal-day-cell';
+        cell.textContent = d;
+
+        if (dayKey === todayStr) cell.classList.add('today');
+        if (dayKey === currentSelectedDateKey) cell.classList.add('selected');
+
+        // Check if date has tasks scheduled
+        const tasksForDay = loadPlannerTasksForDate(dayKey);
+        if (tasksForDay && tasksForDay.length > 0) {
+            const dot = document.createElement('span');
+            dot.className = 'cal-day-dot';
+            cell.appendChild(dot);
+        }
+
+        cell.addEventListener('click', () => {
+            selectPlannerDate(dayKey);
+            const calModal = document.getElementById('plannerCalendarModal');
+            if (calModal) {
+                if (typeof calModal.close === 'function') calModal.close();
+                else calModal.removeAttribute('open');
+            }
+        });
+
+        grid.appendChild(cell);
+    }
+}
+
+function setupCalendarControls() {
+    const btnPrevDay = document.getElementById('btnPrevDay');
+    const btnNextDay = document.getElementById('btnNextDay');
+    const btnOpenModal = document.getElementById('btnOpenCalendarModal');
+    const btnQuickOpenCal = document.getElementById('btnQuickOpenCal');
+    const calModal = document.getElementById('plannerCalendarModal');
+    const btnCloseCal = document.getElementById('btnCloseCalModal');
+    const btnCalPrevMonth = document.getElementById('btnCalPrevMonth');
+    const btnCalNextMonth = document.getElementById('btnCalNextMonth');
+    const btnCalToday = document.getElementById('btnCalJumpToday');
+    const builderDateInput = document.getElementById('taskBuilderDateInput');
+
+    if (btnPrevDay) btnPrevDay.addEventListener('click', () => offsetPlannerDate(-1));
+    if (btnNextDay) btnNextDay.addEventListener('click', () => offsetPlannerDate(1));
+
+    const openCalHandler = () => {
+        const [y, m] = currentSelectedDateKey.split('-').map(Number);
+        calViewYear = y;
+        calViewMonth = m - 1;
+        renderCalendarMonthGrid();
+        if (calModal) {
+            if (typeof calModal.showModal === 'function') calModal.showModal();
+            else calModal.setAttribute('open', 'true');
+        }
+    };
+
+    if (btnOpenModal) btnOpenModal.addEventListener('click', openCalHandler);
+    if (btnQuickOpenCal) btnQuickOpenCal.addEventListener('click', openCalHandler);
+
+    if (btnCloseCal && calModal) {
+        btnCloseCal.addEventListener('click', () => {
+            if (typeof calModal.close === 'function') calModal.close();
+            else calModal.removeAttribute('open');
+        });
+    }
+
+    if (btnCalPrevMonth) {
+        btnCalPrevMonth.addEventListener('click', () => {
+            calViewMonth--;
+            if (calViewMonth < 0) {
+                calViewMonth = 11;
+                calViewYear--;
+            }
+            renderCalendarMonthGrid();
+        });
+    }
+
+    if (btnCalNextMonth) {
+        btnCalNextMonth.addEventListener('click', () => {
+            calViewMonth++;
+            if (calViewMonth > 11) {
+                calViewMonth = 0;
+                calViewYear++;
+            }
+            renderCalendarMonthGrid();
+        });
+    }
+
+    if (btnCalToday) {
+        btnCalToday.addEventListener('click', () => {
+            selectPlannerDate(getTodayDateKey());
+            if (calModal) {
+                if (typeof calModal.close === 'function') calModal.close();
+                else calModal.removeAttribute('open');
+            }
+        });
+    }
+
+    // Quick date offset chips
+    document.querySelectorAll('.date-chip[data-offset]').forEach(chip => {
+        chip.addEventListener('click', () => {
+            const offset = parseInt(chip.dataset.offset, 10);
+            const today = new Date();
+            const target = new Date(today.getFullYear(), today.getMonth(), today.getDate() + offset);
+            const ny = target.getFullYear();
+            const nm = String(target.getMonth() + 1).padStart(2, '0');
+            const nd = String(target.getDate()).padStart(2, '0');
+            selectPlannerDate(`${ny}-${nm}-${nd}`);
+        });
+    });
+
+    // Builder date change input
+    if (builderDateInput) {
+        builderDateInput.addEventListener('change', (e) => {
+            if (e.target.value) {
+                selectPlannerDate(e.target.value);
+            }
+        });
+    }
+
+    updateDateRibbonUI();
+}
+
+// Initialize calendar controls
+setupCalendarControls();

@@ -65,17 +65,28 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create v1.1.2 dist/Productometer.apk \
-            --title "Productometer v1.1.2 - Android Release APK" \
-            --notes "### 📱 Productometer Android Release v1.1.2
+          gh release create v1.1.3 dist/Productometer.apk \
+            --title "Productometer v1.1.3 - Android Release APK" \
+            --notes "### 📱 Productometer Android Release v1.1.3
 
-          Official release renaming app label to **Productometer** and delivering Screen Time fixes.
+          Comprehensive major update delivering Digital Wellbeing accuracy, interactive Bedtime Mode & App Limits, Day Planner Future Calendar, and Academics Focus & Break management.
 
-          #### 🚀 Highlights in v1.1.2:
-          - **🏷️ Official App Name:** Renamed Android app launcher label and system strings to **Productometer**.
-          - **🛠️ Screen Time Manager Fix:** Clean syntax compilation restoring full digital wellbeing analytics, app breakdown, and daily limit locks.
-          - **⚡ High Performance Icon Caching:** In-memory icon caching for instant app usage stats retrieval.
+          #### 🚀 Highlights in v1.1.3:
+          - **📚 Academics Monitoring:**
+            - Strict academic subject filtering excluding chores/fitness from academic tracking.
+            - Prominent **Skip Break / Resume Study** button with immediate countdown restoration.
+            - Distraction blocker dynamically paused during study breaks and manual pause.
+            - Pure cumulative study time tracking without artificial inflation or ticking on breaks.
+            - Dynamic notification: \`⏸️ Focus Paused\` and \`☕ Break Time: mm:ss remaining\`.
+          - **📅 Day Planner Future Calendar:**
+            - Added interactive Calendar ribbon, quick date chips (Today, Tomorrow, +2d, +1w), and full monthly calendar modal.
+            - Date-keyed task persistence (\`productometer_planner_tasks_YYYY-MM-DD\`) with glowing task dot indicators.
+            - Future alarm scheduling support.
+          - **📱 Screen Manager & Digital Wellbeing:**
+            - Inbuilt Digital Wellbeing replication using \`UsageEvents\` interactive screen-lock timeline simulation.
+            - Interactive **Bedtime Mode** card with start/end time pickers, active countdown, and native sync.
+            - Dedicated **App Daily Limits & Parental Controls** with \`+ Set App Limit\` picker, progress bars, grace periods, and freeze states.
 
           #### 📦 Direct Download:
           - Click **\`Productometer.apk\`** under Assets below to download and install." || \
-          gh release upload v1.1.2 dist/Productometer.apk --clobber
+          gh release upload v1.1.3 dist/Productometer.apk --clobber

@@ -148,12 +148,54 @@ const NativeBridge = {
         } catch (e) {}
     },
 
+    pauseFocusSession: () => {
+        try {
+            if (typeof window.AndroidBridge !== 'undefined' && window.AndroidBridge.pauseFocusSession) {
+                window.AndroidBridge.pauseFocusSession();
+            }
+        } catch (e) {}
+    },
+
+    setFocusSessionBreak: (breakSeconds) => {
+        try {
+            if (typeof window.AndroidBridge !== 'undefined' && window.AndroidBridge.setFocusSessionBreak) {
+                window.AndroidBridge.setFocusSessionBreak(breakSeconds);
+            }
+        } catch (e) {}
+    },
+
+    resumeFocusSession: (title, durationSeconds) => {
+        try {
+            if (typeof window.AndroidBridge !== 'undefined' && window.AndroidBridge.resumeFocusSession) {
+                window.AndroidBridge.resumeFocusSession(title, durationSeconds);
+            }
+        } catch (e) {}
+    },
+
     stopFocusSession: () => {
         try {
             if (typeof window.AndroidBridge !== 'undefined' && window.AndroidBridge.stopFocusSession) {
                 window.AndroidBridge.stopFocusSession();
             }
         } catch (e) {}
+    },
+
+    setBedtimeSchedule: (enabled, startStr, endStr) => {
+        try {
+            if (typeof window.AndroidBridge !== 'undefined' && window.AndroidBridge.setBedtimeSchedule) {
+                window.AndroidBridge.setBedtimeSchedule(enabled, startStr, endStr);
+            }
+        } catch (e) {}
+    },
+
+    getBedtimeSchedule: () => {
+        try {
+            if (typeof window.AndroidBridge !== 'undefined' && window.AndroidBridge.getBedtimeSchedule) {
+                const raw = window.AndroidBridge.getBedtimeSchedule();
+                if (raw) return JSON.parse(raw);
+            }
+        } catch (e) {}
+        return null;
     },
 
     setDistractionBlockerMasterEnabled: (enabled) => {

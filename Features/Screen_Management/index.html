@@ -127,23 +127,21 @@
                 </div>
             </section>
 
-            <!-- SECTION 3: DIGITAL WELLBEING CONTROLS (GOAL & BEDTIME CONFIG) -->
+            <!-- SECTION 3: DIGITAL WELLBEING CONTROLS (DAILY TARGET) -->
             <section class="sm-card wellbeing-tools-card">
                 <div class="sm-card-header">
                     <div class="sm-title">
-                        <i class="fa-solid fa-sliders"></i> Wellbeing Limits
+                        <i class="fa-solid fa-bullseye"></i> Daily Screen Time Target
                     </div>
                 </div>
-
-                <!-- Daily Limit Setting -->
                 <div class="wb-tool-row">
                     <div class="wb-tool-info">
                         <div class="wb-tool-icon">
                             <i class="fa-solid fa-stopwatch"></i>
                         </div>
                         <div class="wb-tool-text">
-                            <span class="wb-tool-title">Daily Screen Time Target</span>
-                            <span class="wb-tool-sub">Warning alerts activate when device screen time exceeds target.</span>
+                            <span class="wb-tool-title">Daily Device Allowance</span>
+                            <span class="wb-tool-sub">Visual warnings trigger when total phone usage exceeds target.</span>
                         </div>
                     </div>
                     <div class="wb-tool-action">
@@ -151,21 +149,63 @@
                         <span style="font-size: 0.75rem; font-weight: 700; color: #94a3b8;">hours</span>
                     </div>
                 </div>
+            </section>
 
-                <!-- Bedtime Wind Down Setting -->
-                <div class="wb-tool-row">
-                    <div class="wb-tool-info">
-                        <div class="wb-tool-icon" style="background: rgba(255, 179, 0, 0.12); color: #ffb300; border-color: rgba(255, 179, 0, 0.3);">
-                            <i class="fa-solid fa-bed"></i>
-                        </div>
-                        <div class="wb-tool-text">
-                            <span class="wb-tool-title">Bedtime Mode &amp; Wind Down</span>
-                            <span class="wb-tool-sub">Active 10:30 PM – 06:30 AM to safeguard night sleep.</span>
-                        </div>
+            <!-- SECTION 3.2: 🌙 INTERACTIVE BEDTIME MODE & SLEEP PROTECTION -->
+            <section class="sm-card bedtime-manager-card" id="bedtimeManagerCard">
+                <div class="sm-card-header">
+                    <div class="sm-title" style="color: #ffd600;">
+                        <i class="fa-solid fa-moon"></i> Bedtime Mode &amp; Sleep Schedule
                     </div>
-                    <div class="wb-tool-action">
-                        <span style="font-size: 0.75rem; font-weight: 800; color: #00e676;">Scheduled</span>
+                    <label class="switch-toggle" style="position: relative; display: inline-block; width: 44px; height: 24px; margin: 0;">
+                        <input type="checkbox" id="toggleBedtimeEnabled" checked style="opacity: 0; width: 0; height: 0;">
+                        <span class="slider round" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #00e676; transition: .3s; border-radius: 24px;"></span>
+                    </label>
+                </div>
+                <p style="font-size: 0.8rem; color: #94a3b8; margin: 4px 0 10px 0; line-height: 1.45;">
+                    Protects natural melatonin and deep sleep by discouraging nighttime phone usage during your designated rest hours.
+                </p>
+
+                <div class="bedtime-inputs-grid">
+                    <div class="bedtime-input-box">
+                        <span class="bedtime-input-label"><i class="fa-solid fa-bed"></i> Bedtime Start</span>
+                        <input type="time" id="inputBedtimeStart" class="bedtime-time-field" value="22:30">
                     </div>
+                    <div class="bedtime-input-box">
+                        <span class="bedtime-input-label"><i class="fa-solid fa-sun"></i> Wake Up End</span>
+                        <input type="time" id="inputBedtimeEnd" class="bedtime-time-field" value="06:30">
+                    </div>
+                </div>
+
+                <div id="bedtimeTimeRemainingBanner" style="display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: rgba(255, 214, 0, 0.08); border: 1px solid rgba(255, 214, 0, 0.25); border-radius: 12px;">
+                    <i class="fa-solid fa-clock" style="color: #ffd600;"></i>
+                    <span id="bedtimeRemainingText" style="font-size: 0.8rem; color: #cbd5e1; font-weight: 600;">Bedtime schedule active</span>
+                </div>
+            </section>
+
+            <!-- SECTION 3.3: ⏱️ APP DAILY LIMITS & PARENTAL CONTROLS -->
+            <section class="sm-card limits-manager-card" id="appLimitsManagerCard">
+                <div class="limits-card-header">
+                    <div>
+                        <div class="sm-title" style="color: #00e5ff;">
+                            <i class="fa-solid fa-stopwatch-20"></i> App Daily Limits &amp; Boundaries
+                        </div>
+                        <span style="font-size: 0.72rem; color: #94a3b8;">Enforce hard boundaries on addictive apps</span>
+                    </div>
+                    <button type="button" class="btn-add-app-limit" id="btnOpenAddLimitModal">
+                        <i class="fa-solid fa-plus"></i> Set App Limit
+                    </button>
+                </div>
+
+                <div class="limits-tab-row">
+                    <button type="button" class="limit-tab-btn active" data-tab="active">Active Limits</button>
+                    <button type="button" class="limit-tab-btn" data-tab="compulsory">Compulsory (FB/IG/Games)</button>
+                    <button type="button" class="limit-tab-btn" data-tab="all">All Apps</button>
+                </div>
+
+                <!-- Dynamic Active Limits Cards Container -->
+                <div class="active-limits-container" id="activeLimitsCardsContainer">
+                    <!-- Populated dynamically by screen-scripts.js -->
                 </div>
             </section>
 
@@ -328,6 +368,23 @@
     </div>
 
 
+
+        <!-- 📱 APP SELECTOR PICKER MODAL (FOR SETTING APP LIMITS) -->
+    <dialog id="appPickerModal" class="app-picker-dialog">
+        <div class="app-picker-card">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <i class="fa-solid fa-mobile-screen-button" style="color: #00e5ff; font-size: 1.2rem;"></i>
+                    <span style="font-size: 1.05rem; font-weight: 800; color: #fff;">Select App to Limit</span>
+                </div>
+                <button type="button" id="btnCloseAppPicker" style="background: transparent; border: none; color: #94a3b8; font-size: 1.3rem; cursor: pointer;">&times;</button>
+            </div>
+            <input type="text" id="appPickerSearch" class="app-picker-search" placeholder="Search applications...">
+            <div class="app-picker-list" id="appPickerList">
+                <!-- Populated dynamically -->
+            </div>
+        </div>
+    </dialog>
 
     <!-- ⏱️ APP DAILY TIME LIMIT CONFIGURATION MODAL -->
     <div id="appLimitModal" class="limit-modal-backdrop" style="display: none;">

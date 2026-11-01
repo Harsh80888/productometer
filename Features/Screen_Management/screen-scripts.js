@@ -536,29 +536,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // Tri-Metrics: Bedtime
-
-        const bedtimeStatusEl = document.getElementById('metricBedtimeStatus');
-
-        if (bedtimeStatusEl) {
-
-            const nowH = new Date().getHours();
-
-            if (nowH >= 22 || nowH < 6) {
-
-                bedtimeStatusEl.textContent = '🌙 Active';
-
-                bedtimeStatusEl.style.color = '#ffb300';
-
-            } else {
-
-                bedtimeStatusEl.textContent = 'Off (10:30 PM)';
-
-                bedtimeStatusEl.style.color = '#94a3b8';
-
-            }
-
-        }
+        // Dynamic Bedtime & App Limits Refresh
+        updateBedtimeUI();
+        renderActiveLimitsSection(apps);
 
         // Dedicated Productivity vs Others Bar
 
@@ -1118,6 +1098,322 @@ document.addEventListener('DOMContentLoaded', () => {
     refreshDigitalWellbeingDashboard();
 
     setInterval(refreshDigitalWellbeingDashboard, 10000);
+
+
+    // ==========================================================================
+    // 🌙 BEDTIME MODE & DIGITAL WIND-DOWN CONTROLLER
+    // ==========================================================================
+    const KEY_BEDTIME_ENABLED = 'productometer_bedtime_enabled';
+    const KEY_BEDTIME_START = 'productometer_bedtime_start';
+    const KEY_BEDTIME_END = 'productometer_bedtime_end';
+
+    let isBedtimeEnabled = localStorage.getItem(KEY_BEDTIME_ENABLED) !== 'false';
+    let bedtimeStartTime = localStorage.getItem(KEY_BEDTIME_START) || '22:30';
+    let bedtimeEndTime = localStorage.getItem(KEY_BEDTIME_END) || '06:30';
+
+    // Synchronize with Android SharedPreferences if available
+    if (window.NativeBridge && window.NativeBridge.getBedtimeSchedule) {
+        const sched = window.NativeBridge.getBedtimeSchedule();
+        if (sched) {
+            if (typeof sched.enabled === 'boolean') isBedtimeEnabled = sched.enabled;
+            if (sched.start) bedtimeStartTime = sched.start;
+            if (sched.end) bedtimeEndTime = sched.end;
+        }
+    }
+
+    function updateBedtimeUI() {
+        const toggleEl = document.getElementById('toggleBedtimeEnabled');
+        const startInput = document.getElementById('inputBedtimeStart');
+        const endInput = document.getElementById('inputBedtimeEnd');
+        const statusText = document.getElementById('bedtimeRemainingText');
+        const metricEl = document.getElementById('metricBedtimeStatus');
+
+        if (toggleEl) toggleEl.checked = isBedtimeEnabled;
+        if (startInput) startInput.value = bedtimeStartTime;
+        if (endInput) endInput.value = bedtimeEndTime;
+
+        const now = new Date();
+        const curMins = now.getHours() * 60 + now.getMinutes();
+        const [sh, sm] = bedtimeStartTime.split(':').map(Number);
+        const [eh, em] = bedtimeEndTime.split(':').map(Number);
+        const startMins = sh * 60 + sm;
+        const endMins = eh * 60 + em;
+
+        let isBedtimeActiveNow = false;
+        if (startMins > endMins) {
+            isBedtimeActiveNow = (curMins >= startMins || curMins < endMins);
+        } else {
+            isBedtimeActiveNow = (curMins >= startMins && curMins < endMins);
+        }
+
+        if (!isBedtimeEnabled) {
+            if (metricEl) {
+                metricEl.textContent = 'Disabled';
+                metricEl.style.color = '#64748b';
+            }
+            if (statusText) {
+                statusText.textContent = 'Bedtime schedule is currently turned off.';
+                statusText.style.color = '#94a3b8';
+            }
+            return;
+        }
+
+        if (isBedtimeActiveNow) {
+            if (metricEl) {
+                metricEl.textContent = `🌙 Active (Until ${bedtimeEndTime})`;
+                metricEl.style.color = '#ffd600';
+            }
+            if (statusText) {
+                statusText.textContent = `🌙 Bedtime Active until ${bedtimeEndTime}. Rest your eyes and disconnect.`;
+                statusText.style.color = '#ffd600';
+            }
+        } else {
+            let diffMins = startMins - curMins;
+            if (diffMins < 0) diffMins += 24 * 60;
+            const diffH = Math.floor(diffMins / 60);
+            const diffM = diffMins % 60;
+            const timeUntilStr = diffH > 0 ? `${diffH}h ${diffM}m` : `${diffM}m`;
+
+            if (metricEl) {
+                metricEl.textContent = `Off (${bedtimeStartTime})`;
+                metricEl.style.color = '#00e5ff';
+            }
+            if (statusText) {
+                statusText.textContent = `⏰ Bedtime begins at ${bedtimeStartTime} (in ${timeUntilStr}).`;
+                statusText.style.color = '#cbd5e1';
+            }
+        }
+    }
+
+    function saveBedtimeSettings() {
+        localStorage.setItem(KEY_BEDTIME_ENABLED, isBedtimeEnabled.toString());
+        localStorage.setItem(KEY_BEDTIME_START, bedtimeStartTime);
+        localStorage.setItem(KEY_BEDTIME_END, bedtimeEndTime);
+
+        if (window.NativeBridge && window.NativeBridge.setBedtimeSchedule) {
+            window.NativeBridge.setBedtimeSchedule(isBedtimeEnabled, bedtimeStartTime, bedtimeEndTime);
+        }
+
+        updateBedtimeUI();
+    }
+
+    const toggleBedtime = document.getElementById('toggleBedtimeEnabled');
+    if (toggleBedtime) {
+        toggleBedtime.addEventListener('change', (e) => {
+            isBedtimeEnabled = e.target.checked;
+            saveBedtimeSettings();
+            if (window.NativeBridge && window.NativeBridge.showToast) {
+                window.NativeBridge.showToast(isBedtimeEnabled ? `🌙 Bedtime scheduled (${bedtimeStartTime} - ${bedtimeEndTime})` : 'Bedtime mode disabled');
+            }
+        });
+    }
+
+    const inputBedStart = document.getElementById('inputBedtimeStart');
+    if (inputBedStart) {
+        inputBedStart.addEventListener('change', (e) => {
+            if (e.target.value) {
+                bedtimeStartTime = e.target.value;
+                saveBedtimeSettings();
+            }
+        });
+    }
+
+    const inputBedEnd = document.getElementById('inputBedtimeEnd');
+    if (inputBedEnd) {
+        inputBedEnd.addEventListener('change', (e) => {
+            if (e.target.value) {
+                bedtimeEndTime = e.target.value;
+                saveBedtimeSettings();
+            }
+        });
+    }
+
+    // ==========================================================================
+    // ⏱️ DEDICATED APP LIMITS & PARENTAL CONTROLS CONTROLLER
+    // ==========================================================================
+    let currentLimitsTab = 'active';
+
+    function renderActiveLimitsSection(apps) {
+        const container = document.getElementById('activeLimitsCardsContainer');
+        if (!container) return;
+
+        let filtered = [];
+        if (currentLimitsTab === 'active') {
+            filtered = apps.filter(a => (a.limitMinutes > 0));
+        } else if (currentLimitsTab === 'compulsory') {
+            filtered = apps.filter(a => a.isCompulsory);
+        } else {
+            filtered = apps;
+        }
+
+        if (filtered.length === 0) {
+            container.innerHTML = `
+                <div style="text-align: center; color: #64748b; padding: 20px 10px; font-size: 0.82rem; background: rgba(255,255,255,0.02); border-radius: 12px;">
+                    <i class="fa-solid fa-stopwatch" style="font-size: 1.5rem; color: #475569; margin-bottom: 8px; display: block;"></i>
+                    No app limits configured in this view.<br>
+                    <button type="button" class="btn-add-app-limit" style="margin: 10px auto 0 auto; display: inline-flex;" onclick="document.getElementById('btnOpenAddLimitModal').click()">
+                        <i class="fa-solid fa-plus"></i> Set Daily Limit
+                    </button>
+                </div>`;
+            return;
+        }
+
+        container.innerHTML = filtered.map(app => {
+            const limit = app.limitMinutes || (app.isCompulsory ? 30 : 0);
+            const usedMins = Math.round((app.seconds || 0) / 60);
+            const pct = limit > 0 ? Math.min(100, Math.round((usedMins / limit) * 100)) : 0;
+
+            let fillClass = 'safe';
+            let statusBadge = '';
+
+            if (app.isFrozen) {
+                fillClass = 'frozen';
+                statusBadge = '<span style="color: #00e5ff; font-weight: 800; font-size: 0.74rem;"><i class="fa-solid fa-snowflake"></i> Frozen (Until Midnight)</span>';
+            } else if (app.isGrace) {
+                fillClass = 'grace';
+                statusBadge = `<span style="color: #ff9100; font-weight: 800; font-size: 0.74rem;"><i class="fa-solid fa-hourglass-half"></i> 10m Grace (${app.graceRemaining || 1}m left)</span>`;
+            } else if (limit > 0) {
+                const rem = Math.max(0, limit - usedMins);
+                if (rem <= 5) fillClass = 'warning';
+                statusBadge = `<span style="color: #94a3b8; font-size: 0.74rem;">${rem}m remaining of ${limit}m</span>`;
+            } else {
+                statusBadge = '<span style="color: #64748b; font-size: 0.74rem;">No Limit Set</span>';
+            }
+
+            return `
+            <div class="active-limit-item-card" data-app-id="${app.id}">
+                <div class="limit-card-top">
+                    <div class="limit-card-left">
+                        ${app.iconBase64 ?
+                            `<img src="${app.iconBase64}" style="width: 32px; height: 32px; border-radius: 8px; object-fit: contain;">` :
+                            `<div style="width: 32px; height: 32px; border-radius: 8px; background: ${app.bg || '#334155'}; display: flex; align-items: center; justify-content: center; font-size: 0.95rem; color: #fff;">
+                                <i class="${getAppFallbackIcon(app.name, app.id)}"></i>
+                            </div>`
+                        }
+                        <div>
+                            <div style="font-size: 0.88rem; font-weight: 800; color: #fff;">
+                                ${escapeHTML(app.name)}
+                                ${app.isCompulsory ? '<span style="background: rgba(255,214,0,0.15); border: 1px solid rgba(255,214,0,0.4); color: #ffd600; font-size: 0.65rem; font-weight: 800; padding: 2px 6px; border-radius: 4px; margin-left: 5px;">MANDATORY</span>' : ''}
+                            </div>
+                            <div style="font-size: 0.74rem; color: #cbd5e1; margin-top: 1px;">Used ${usedMins}m today</div>
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        ${statusBadge}
+                        <button type="button" class="btn-adjust-limit" data-app-id="${app.id}" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #00e5ff; font-weight: 800; font-size: 0.74rem; padding: 5px 10px; border-radius: 8px; cursor: pointer;">
+                            ${limit > 0 ? `${limit}m Limit` : '+ Set'}
+                        </button>
+                    </div>
+                </div>
+                ${limit > 0 ? `
+                <div class="limit-progress-bar">
+                    <div class="limit-progress-fill ${fillClass}" style="width: ${pct}%;"></div>
+                </div>` : ''}
+            </div>`;
+        }).join('');
+
+        // Adjust limit button click
+        container.querySelectorAll('.btn-adjust-limit').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const appId = btn.dataset.appId;
+                const app = apps.find(a => a.id === appId);
+                if (app) {
+                    if (app.isUnchangeable) {
+                        if (window.NativeBridge && window.NativeBridge.vibrate) window.NativeBridge.vibrate(120);
+                        alert(`🔒 Limit is locked! "${app.name}" is in its grace period or frozen and cannot be changed until midnight.`);
+                        return;
+                    }
+                    openAppLimitModal(app);
+                }
+            });
+        });
+    }
+
+    // Limit Tab switching
+    document.querySelectorAll('.limit-tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.limit-tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentLimitsTab = btn.dataset.tab;
+            renderActiveLimitsSection(getRealScreenApps());
+        });
+    });
+
+    // App Picker Modal Setup
+    const btnOpenPicker = document.getElementById('btnOpenAddLimitModal');
+    const pickerModal = document.getElementById('appPickerModal');
+    const btnClosePicker = document.getElementById('btnCloseAppPicker');
+    const pickerSearch = document.getElementById('appPickerSearch');
+    const pickerList = document.getElementById('appPickerList');
+
+    function openAppPicker() {
+        const apps = getRealScreenApps();
+        renderPickerList(apps);
+        if (pickerModal) {
+            if (typeof pickerModal.showModal === 'function') pickerModal.showModal();
+            else pickerModal.setAttribute('open', 'true');
+        }
+    }
+
+    function renderPickerList(apps, query = '') {
+        if (!pickerList) return;
+        const q = query.toLowerCase().trim();
+        const filtered = apps.filter(a => {
+            if (!q) return true;
+            return (a.name || '').toLowerCase().includes(q) || (a.id || '').toLowerCase().includes(q);
+        });
+
+        if (filtered.length === 0) {
+            pickerList.innerHTML = '<div style="text-align: center; color: #64748b; padding: 20px;">No applications found matching search.</div>';
+            return;
+        }
+
+        pickerList.innerHTML = filtered.map(app => `
+            <div class="app-picker-item" data-app-id="${app.id}">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    ${app.iconBase64 ?
+                        `<img src="${app.iconBase64}" style="width: 28px; height: 28px; border-radius: 6px; object-fit: contain;">` :
+                        `<div style="width: 28px; height: 28px; border-radius: 6px; background: ${app.bg || '#334155'}; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; color: #fff;">
+                            <i class="${getAppFallbackIcon(app.name, app.id)}"></i>
+                        </div>`
+                    }
+                    <div>
+                        <div style="font-size: 0.84rem; font-weight: 700; color: #fff;">${escapeHTML(app.name)}</div>
+                        <div style="font-size: 0.7rem; color: #64748b;">${app.limitMinutes > 0 ? `Current: ${app.limitMinutes}m limit` : 'No limit set'}</div>
+                    </div>
+                </div>
+                <button type="button" style="background: rgba(0,229,255,0.12); border: 1px solid rgba(0,229,255,0.3); color: #00e5ff; padding: 4px 10px; border-radius: 6px; font-size: 0.74rem; font-weight: 800; cursor: pointer;">Select</button>
+            </div>
+        `).join('');
+
+        pickerList.querySelectorAll('.app-picker-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const appId = item.dataset.appId;
+                const target = apps.find(a => a.id === appId);
+                if (pickerModal) {
+                    if (typeof pickerModal.close === 'function') pickerModal.close();
+                    else pickerModal.removeAttribute('open');
+                }
+                if (target) {
+                    openAppLimitModal(target);
+                }
+            });
+        });
+    }
+
+    if (btnOpenPicker) btnOpenPicker.addEventListener('click', openAppPicker);
+    if (btnClosePicker && pickerModal) {
+        btnClosePicker.addEventListener('click', () => {
+            if (typeof pickerModal.close === 'function') pickerModal.close();
+            else pickerModal.removeAttribute('open');
+        });
+    }
+    if (pickerSearch) {
+        pickerSearch.addEventListener('input', (e) => {
+            renderPickerList(getRealScreenApps(), e.target.value);
+        });
+    }
 
 });
 

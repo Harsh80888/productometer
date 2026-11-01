@@ -311,20 +311,42 @@ function renderAcademicTasks() {
         } catch (e) {}
     }
 
+    const academicKeywords = [
+        'study', 'math', 'physic', 'chem', 'bio', 'read', 'code', 'exam', 'test',
+        'practice', 'revision', 'lecture', 'learn', 'class', 'homework', 'dsa',
+        'chapter', 'history', 'geography', 'english', 'science', 'computer',
+        'algebra', 'calculus', 'geometry', 'notes', 'assignment', 'paper', 'quiz',
+        'course', 'ai', 'ml', 'algorithm', 'syllabus', 'academics', 'tutorial',
+        'project', 'lab', 'research', 'solve', 'questions', 'formula'
+    ];
+
     const academicPlannerTasks = (Array.isArray(dayPlannerTasks) ? dayPlannerTasks : []).filter(task => {
         if (!task) return false;
-        const cat = (task.category || '').toLowerCase();
-        if (!cat || cat === 'academics' || cat === 'skills' || cat === 'study' || cat === 'academic' || cat === 'school' || cat === 'work' || cat === 'other' || cat === 'general' || cat === 'routine') return true;
-        if (cat === 'health' || cat === 'fitness' || cat === 'workout' || cat === 'running' || cat === 'hiit') {
-            const t = (task.title || '').toLowerCase();
-            return t.includes('study') || t.includes('math') || t.includes('physic') ||
-                   t.includes('chem') || t.includes('bio') || t.includes('read') ||
-                   t.includes('code') || t.includes('exam') || t.includes('test') ||
-                   t.includes('practice') || t.includes('revision') || t.includes('lecture') ||
-                   t.includes('learn') || t.includes('class') || t.includes('homework') ||
-                   t.includes('dsa') || t.includes('chapter');
+        const cat = (task.category || '').toLowerCase().trim();
+        const title = (task.title || task.name || '').toLowerCase().trim();
+
+        // 1. Explicitly exclude non-academic categories unless title mentions an academic subject
+        if (cat === 'health' || cat === 'fitness' || cat === 'workout' || cat === 'gym' ||
+            cat === 'meal' || cat === 'diet' || cat === 'sleep' || cat === 'personal' ||
+            cat === 'social' || cat === 'chore' || cat === 'leisure' || cat === 'entertainment') {
+            return academicKeywords.some(kw => title.includes(kw));
         }
-        return true;
+
+        // 2. Explicitly academic categories are always included
+        if (cat === 'academics' || cat === 'academic' || cat === 'study' || cat === 'school' || cat === 'homework') {
+            return true;
+        }
+
+        // 3. Skills category: only if educational / study related
+        if (cat === 'skills') {
+            if (title.includes('gym') || title.includes('run') || title.includes('walk') || title.includes('exercise')) {
+                return false;
+            }
+            return true;
+        }
+
+        // 4. Other or unspecified categories: ONLY included if matching academic subject keywords
+        return academicKeywords.some(kw => title.includes(kw));
     });
 
     const now = new Date();
@@ -622,6 +644,15 @@ window.toggleSessionPauseResume = function() {
             headerStatus.style.color = '#ffd600';
         }
         if (clockNode) clockNode.style.opacity = '0.6';
+
+        // 🛡️ Distraction blocker & notification: pause during session pause
+        if (window.NativeBridge && window.NativeBridge.isAvailable()) {
+            try {
+                if (window.NativeBridge.pauseFocusSession) {
+                    window.NativeBridge.pauseFocusSession();
+                }
+            } catch (e) {}
+        }
     } else {
         if (btn) btn.innerHTML = '<i class="fa-solid fa-pause"></i> Pause';
         if (headerStatus) {
@@ -629,6 +660,15 @@ window.toggleSessionPauseResume = function() {
             headerStatus.style.color = '#ffb300';
         }
         if (clockNode) clockNode.style.opacity = '1';
+
+        // 🛡️ Distraction blocker & notification: resume active focus countdown
+        if (window.NativeBridge && window.NativeBridge.isAvailable()) {
+            try {
+                if (window.NativeBridge.resumeFocusSession) {
+                    window.NativeBridge.resumeFocusSession(currentActiveTaskTitle, timeRemaining);
+                }
+            } catch (e) {}
+        }
     }
     syncSessionStateToStorage();
 };
@@ -639,14 +679,77 @@ window.triggerSessionBreak = function(breakMins = 5) {
     breakSecondsRemaining = breakMins * 60;
     const headerStatus = document.getElementById('activeSessionHeaderStatus');
     const clockNode = document.getElementById('liveCountdownClock');
+    const btnBreak = document.getElementById('btnSessionTakeBreak');
+
     if (headerStatus) {
         headerStatus.innerText = `☕ Taking a ${breakMins}m Break`;
         headerStatus.style.color = '#00e5ff';
     }
     if (clockNode) {
+        let bm = Math.floor(breakSecondsRemaining / 60).toString().padStart(2, '0');
+        let bs = (breakSecondsRemaining % 60).toString().padStart(2, '0');
+        clockNode.innerText = `${bm}:${bs}`;
         clockNode.style.color = '#00e5ff';
         clockNode.style.textShadow = '0 0 20px rgba(0, 229, 255, 0.4)';
     }
+    // Update button to Skip Break
+    if (btnBreak) {
+        btnBreak.innerHTML = '<i class="fa-solid fa-forward-step"></i> Skip Break';
+        btnBreak.setAttribute('onclick', 'skipSessionBreak()');
+        btnBreak.style.background = 'rgba(0, 230, 118, 0.15)';
+        btnBreak.style.borderColor = '#00e676';
+        btnBreak.style.color = '#00e676';
+    }
+
+    // 🛡️ Distraction blocker & notification: allow apps during break!
+    if (window.NativeBridge && window.NativeBridge.isAvailable()) {
+        try {
+            if (window.NativeBridge.setFocusSessionBreak) {
+                window.NativeBridge.setFocusSessionBreak(breakSecondsRemaining);
+            }
+        } catch (e) {}
+    }
+
+    syncSessionStateToStorage();
+};
+
+window.skipSessionBreak = function() {
+    if (!sessionActive || !sessionOnBreak) return;
+    sessionOnBreak = false;
+    breakSecondsRemaining = 0;
+
+    const headerStatus = document.getElementById('activeSessionHeaderStatus');
+    const clockNode = document.getElementById('liveCountdownClock');
+    const btnBreak = document.getElementById('btnSessionTakeBreak');
+
+    if (headerStatus) {
+        headerStatus.innerText = 'Active Session In Progress';
+        headerStatus.style.color = '#ffb300';
+    }
+    if (clockNode) {
+        let m = Math.floor(timeRemaining / 60).toString().padStart(2, '0');
+        let s = (timeRemaining % 60).toString().padStart(2, '0');
+        clockNode.innerText = `${m}:${s}`;
+        clockNode.style.color = '#ffb300';
+        clockNode.style.textShadow = '0 0 20px rgba(255, 179, 0, 0.4)';
+    }
+    if (btnBreak) {
+        btnBreak.innerHTML = '<i class="fa-solid fa-mug-hot"></i> Take a Break (5m)';
+        btnBreak.setAttribute('onclick', 'triggerSessionBreak(5)');
+        btnBreak.style.background = 'rgba(0, 229, 255, 0.15)';
+        btnBreak.style.borderColor = '#00e5ff';
+        btnBreak.style.color = '#00e5ff';
+    }
+
+    // 🛡️ Distraction blocker & notification: resume active study tracking
+    if (window.NativeBridge && window.NativeBridge.isAvailable()) {
+        try {
+            if (window.NativeBridge.resumeFocusSession) {
+                window.NativeBridge.resumeFocusSession(currentActiveTaskTitle, timeRemaining);
+            }
+        } catch (e) {}
+    }
+
     syncSessionStateToStorage();
 };
 
@@ -811,13 +914,32 @@ function beginActivePomodoroCountdown(title, customDurationMinutes = null, taskI
                 if (breakAlarm) breakAlarm.play().catch(() => {});
                 showCustomModal("☕ Break Finished!", "Hope you are refreshed! Resuming focus session now.", "info");
                 const headerStatus = document.getElementById('activeSessionHeaderStatus');
+                const btnBreak = document.getElementById('btnSessionTakeBreak');
                 if (headerStatus) {
                     headerStatus.innerText = 'Active Session In Progress';
                     headerStatus.style.color = '#ffb300';
                 }
                 if (clockNode) {
+                    let m = Math.floor(timeRemaining / 60).toString().padStart(2, '0');
+                    let s = (timeRemaining % 60).toString().padStart(2, '0');
+                    clockNode.innerText = `${m}:${s}`;
                     clockNode.style.color = '#ffb300';
                     clockNode.style.textShadow = '0 0 20px rgba(255, 179, 0, 0.4)';
+                }
+                if (btnBreak) {
+                    btnBreak.innerHTML = '<i class="fa-solid fa-mug-hot"></i> Take a Break (5m)';
+                    btnBreak.setAttribute('onclick', 'triggerSessionBreak(5)');
+                    btnBreak.style.background = 'rgba(0, 229, 255, 0.15)';
+                    btnBreak.style.borderColor = '#00e5ff';
+                    btnBreak.style.color = '#00e5ff';
+                }
+                // Re-enable blocker and study countdown
+                if (window.NativeBridge && window.NativeBridge.isAvailable()) {
+                    try {
+                        if (window.NativeBridge.resumeFocusSession) {
+                            window.NativeBridge.resumeFocusSession(currentActiveTaskTitle, timeRemaining);
+                        }
+                    } catch (e) {}
                 }
             }
             syncSessionStateToStorage();
@@ -890,27 +1012,7 @@ function getPersistentDailySeconds() {
         return 0;
     }
     
-    let saved = parseInt(localStorage.getItem('productometer_daily_study_seconds'), 10) || 0;
-    
-    // Also include completed study task hours from Day Planner
-    let completedPlannerSecs = 0;
-    try {
-        const raw = localStorage.getItem('productometer_chrono_planner_list');
-        if (raw) {
-            const list = JSON.parse(raw);
-            list.forEach(t => {
-                if (t && t.completed) {
-                    const cat = (t.category || '').toLowerCase();
-                    if (cat === 'academics' || cat === 'study' || cat === 'skills') {
-                        const dur = parseFloat(t.durationMin || t.durationMinutes || t.duration) || 25;
-                        completedPlannerSecs += Math.round(dur * 60);
-                    }
-                }
-            });
-        }
-    } catch (e) {}
-
-    return Math.max(saved, completedPlannerSecs);
+    return parseInt(localStorage.getItem('productometer_daily_study_seconds'), 10) || 0;
 }
 
 let totalSeconds = getPersistentDailySeconds();
@@ -937,7 +1039,8 @@ updateStudyTimeDisplay();
 
 // Real-time second-by-second study timer accumulation during active sessions
 setInterval(() => {
-    if (sessionActive && !sessionPausedForDistraction) { 
+    // Only accumulate actual active study seconds (do NOT count during pause, break, or distraction)
+    if (sessionActive && !sessionPausedForDistraction && !sessionPausedManual && !sessionOnBreak) { 
         totalSeconds++;
         localStorage.setItem('productometer_daily_study_seconds', totalSeconds.toString());
         updateStudyTimeDisplay();

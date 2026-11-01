@@ -1041,3 +1041,218 @@
 .btn-limit-save:hover {
     box-shadow: 0 0 25px rgba(0, 229, 255, 0.55);
 }
+
+
+/* --- 🌙 INTERACTIVE BEDTIME CARD --- */
+.bedtime-manager-card {
+    border: 1.5px solid rgba(255, 179, 0, 0.35);
+    background: linear-gradient(180deg, rgba(20, 24, 35, 0.95) 0%, rgba(10, 12, 18, 0.98) 100%);
+}
+
+.bedtime-inputs-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin: 14px 0;
+}
+
+.bedtime-input-box {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 10px 14px;
+}
+
+.bedtime-input-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #94a3b8;
+    text-transform: uppercase;
+}
+
+.bedtime-time-field {
+    background: transparent;
+    border: 1px solid rgba(255, 179, 0, 0.4);
+    color: #ffd600;
+    font-size: 1.1rem;
+    font-weight: 800;
+    padding: 4px 8px;
+    border-radius: 8px;
+    font-family: inherit;
+    color-scheme: dark;
+}
+
+/* --- ⏱️ DEDICATED APP LIMITS SECTION --- */
+.limits-manager-card {
+    border: 1.5px solid rgba(0, 229, 255, 0.35);
+}
+
+.limits-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.btn-add-app-limit {
+    background: linear-gradient(135deg, #00e5ff, #00e676);
+    color: #030305;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    font-weight: 800;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 0 12px rgba(0, 229, 255, 0.25);
+    transition: all 0.2s ease;
+}
+
+.btn-add-app-limit:hover {
+    transform: scale(1.03);
+    box-shadow: 0 0 18px rgba(0, 229, 255, 0.4);
+}
+
+.limits-tab-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.limit-tab-btn {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #94a3b8;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.74rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.limit-tab-btn.active {
+    background: rgba(0, 229, 255, 0.15);
+    border-color: #00e5ff;
+    color: #00e5ff;
+}
+
+.active-limit-item-card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 14px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    transition: all 0.2s ease;
+}
+
+.active-limit-item-card:hover {
+    border-color: rgba(0, 229, 255, 0.3);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.limit-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.limit-card-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.limit-progress-bar {
+    height: 6px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.limit-progress-fill {
+    height: 100%;
+    border-radius: 6px;
+    transition: width 0.3s ease;
+}
+
+.limit-progress-fill.safe { background: #00e676; }
+.limit-progress-fill.warning { background: #ffd600; }
+.limit-progress-fill.grace { background: #ff9100; box-shadow: 0 0 10px #ff9100; }
+.limit-progress-fill.frozen { background: #00e5ff; box-shadow: 0 0 10px #00e5ff; }
+
+/* --- APP PICKER DIALOG --- */
+.app-picker-dialog {
+    border: none;
+    background: transparent;
+    padding: 0;
+    max-width: 440px;
+    width: 90%;
+    margin: auto;
+}
+
+.app-picker-dialog::backdrop {
+    background: rgba(3, 3, 5, 0.85);
+    backdrop-filter: blur(10px);
+}
+
+.app-picker-card {
+    background: #0b0f19;
+    border: 1.5px solid rgba(0, 229, 255, 0.4);
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9), 0 0 35px rgba(0, 229, 255, 0.25);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    max-height: 80vh;
+}
+
+.app-picker-search {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #fff;
+    padding: 10px 14px;
+    border-radius: 12px;
+    font-size: 0.86rem;
+    font-family: inherit;
+    outline: none;
+}
+
+.app-picker-search:focus {
+    border-color: #00e5ff;
+    box-shadow: 0 0 12px rgba(0, 229, 255, 0.25);
+}
+
+.app-picker-list {
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 320px;
+}
+
+.app-picker-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.app-picker-item:hover {
+    background: rgba(0, 229, 255, 0.12);
+    border-color: rgba(0, 229, 255, 0.3);
+}

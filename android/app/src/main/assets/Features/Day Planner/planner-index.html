@@ -62,7 +62,34 @@
     </header>
 
     <!-- Main Content Workspace Area Frame -->
-    <main class="portal-main-content">
+        <main class="portal-main-content">
+
+        <!-- 📅 CALENDAR & DATE SELECTOR RIBBON -->
+        <section class="planner-calendar-ribbon">
+            <div class="date-navigator-bar">
+                <button type="button" class="date-nav-arrow" id="btnPrevDay" title="Previous Day">
+                    <i class="fa-solid fa-chevron-left"></i>
+                </button>
+                <div class="current-date-badge-box" id="btnOpenCalendarModal" title="Click to open calendar">
+                    <i class="fa-regular fa-calendar-days" style="color: #00e5ff; font-size: 1.15rem;"></i>
+                    <div class="date-text-group">
+                        <span class="date-headline" id="plannerDisplayDateText">Today</span>
+                        <span class="date-subline" id="plannerDisplayFullDate">Loading date...</span>
+                    </div>
+                    <i class="fa-solid fa-angle-down" style="color: #64748b; font-size: 0.8rem; margin-left: 4px;"></i>
+                </div>
+                <button type="button" class="date-nav-arrow" id="btnNextDay" title="Next Day">
+                    <i class="fa-solid fa-chevron-right"></i>
+                </button>
+            </div>
+            <div class="quick-date-chips" id="quickDateChips">
+                <button type="button" class="date-chip active" data-offset="0">Today</button>
+                <button type="button" class="date-chip" data-offset="1">Tomorrow</button>
+                <button type="button" class="date-chip" data-offset="2">In 2 Days</button>
+                <button type="button" class="date-chip" data-offset="7">Next Week</button>
+                <button type="button" class="date-chip" id="btnQuickOpenCal"><i class="fa-regular fa-calendar"></i> Month Grid</button>
+            </div>
+        </section>
 
         <!-- 1. 📊 THE MASTER STATUS BAR (BORDERLESS & NO DIVISIONS) -->
         <section class="master-timeline-bar-section">
@@ -97,6 +124,26 @@
             </button>
         </div>
 
+            <!-- 📅 FULL MONTHLY CALENDAR MODAL -->
+        <dialog id="plannerCalendarModal" class="planner-calendar-modal">
+            <div class="cal-modal-card">
+                <div class="cal-modal-header">
+                    <button type="button" class="cal-month-nav" id="btnCalPrevMonth">&lt;</button>
+                    <div class="cal-month-title" id="calMonthTitleText">November 2026</div>
+                    <button type="button" class="cal-month-nav" id="btnCalNextMonth">&gt;</button>
+                    <button type="button" class="cal-close-btn" id="btnCloseCalModal">&times;</button>
+                </div>
+                <div class="cal-weekdays-grid">
+                    <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+                </div>
+                <div class="cal-days-grid" id="calDaysGrid">
+                    <!-- Days dynamically rendered with task indicator dots -->
+                </div>
+                <div class="cal-modal-footer">
+                    <button type="button" class="btn-cal-today" id="btnCalJumpToday">Jump to Today</button>
+                </div>
+            </div>
+        </dialog>
     </main>
 
     <!-- Task Builder Dialog / Modal Wrapper -->
@@ -109,6 +156,17 @@
         <section class="task-builder-palette-deck neon-white-glow-backing">
             <span class="section-micro-label" id="taskBuilderDeckTitle">Configure Target Objective Parameters</span>
             
+                        <!-- Target Scheduled Date Banner -->
+            <div class="builder-target-date-row" style="display: flex; align-items: center; justify-content: space-between; padding: 8px 14px; background: rgba(0, 229, 255, 0.08); border: 1px solid rgba(0, 229, 255, 0.25); border-radius: 10px; margin-bottom: 12px;">
+                <div style="display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: #94a3b8; font-weight: 700;">
+                    <i class="fa-regular fa-calendar-check" style="color: #00e5ff;"></i> Scheduled Date:
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span id="taskBuilderTargetDate" style="font-size: 0.82rem; font-weight: 800; color: #00e5ff;">Today</span>
+                    <input type="date" id="taskBuilderDateInput" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(0,229,255,0.3); color: #fff; padding: 2px 6px; border-radius: 6px; font-size: 0.75rem; font-family: inherit; color-scheme: dark; cursor: pointer;">
+                </div>
+            </div>
+
             <!-- Category Select Tabs Row -->
             <div class="menu-tabs-row">
                 <button type="button" class="type-tab-btn active" data-type="academics">Academics</button>

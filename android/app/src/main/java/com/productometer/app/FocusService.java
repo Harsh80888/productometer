@@ -15,41 +15,106 @@ import androidx.core.app.NotificationCompat;
 
 public class FocusService extends Service {
 
+    public static final String ACTION_START = "ACTION_START";
+    public static final String ACTION_PAUSE = "ACTION_PAUSE";
+    public static final String ACTION_BREAK = "ACTION_BREAK";
+    public static final String ACTION_RESUME = "ACTION_RESUME";
+    public static final String ACTION_STOP = "ACTION_STOP";
+
     private static final int NOTIFICATION_ID = 2001;
     private CountDownTimer countDownTimer;
-    private String currentTaskTitle = "Study Block";
+    private CountDownTimer breakTimer;
+    private String currentTaskTitle = "Study Session";
+    private long currentRemainingSeconds = 25 * 60;
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent != null) {
+            String action = intent.getAction();
+            if (action == null) action = ACTION_START;
+
             String title = intent.getStringExtra("task_title");
             if (title != null && !title.isEmpty()) {
                 currentTaskTitle = title;
             }
-            long durationSeconds = intent.getLongExtra("duration_seconds", 25 * 60);
-            startCountdown(durationSeconds);
-        }
 
-        Notification initialNotification = buildNotification("Focus In Progress: " + currentTaskTitle, "Initializing timer...");
-        startForeground(NOTIFICATION_ID, initialNotification);
+            switch (action) {
+                case ACTION_PAUSE:
+                    handlePause();
+                    break;
+                case ACTION_BREAK:
+                    long breakSecs = intent.getLongExtra("break_seconds", 5 * 60);
+                    handleBreak(breakSecs);
+                    break;
+                case ACTION_RESUME:
+                    long resumeSecs = intent.getLongExtra("duration_seconds", currentRemainingSeconds);
+                    handleResume(resumeSecs);
+                    break;
+                case ACTION_STOP:
+                    handleStop();
+                    break;
+                case ACTION_START:
+                default:
+                    long durationSeconds = intent.getLongExtra("duration_seconds", 25 * 60);
+                    handleStart(durationSeconds);
+                    break;
+            }
+        }
 
         return START_NOT_STICKY;
     }
 
-    private void startCountdown(long totalSeconds) {
+    private void handleStart(long totalSeconds) {
+        currentRemainingSeconds = totalSeconds;
+        cancelAllTimers();
+        Notification notif = buildNotification("Focus: " + currentTaskTitle, "Starting focus session...");
+        startForeground(NOTIFICATION_ID, notif);
+        startStudyCountdown(totalSeconds);
+    }
+
+    private void handlePause() {
+        cancelAllTimers();
+        long m = currentRemainingSeconds / 60;
+        long s = currentRemainingSeconds % 60;
+        updateNotification("⏸️ Focus Paused: " + currentTaskTitle, String.format("Paused at %02d:%02d · Tap to return", m, s));
+    }
+
+    private void handleBreak(long breakSecs) {
+        cancelAllTimers();
+        startBreakCountdown(breakSecs);
+    }
+
+    private void handleResume(long resumeSecs) {
+        if (resumeSecs > 0) currentRemainingSeconds = resumeSecs;
+        cancelAllTimers();
+        startStudyCountdown(currentRemainingSeconds);
+    }
+
+    private void handleStop() {
+        cancelAllTimers();
+        stopForeground(true);
+        stopSelf();
+    }
+
+    private void cancelAllTimers() {
         if (countDownTimer != null) {
             countDownTimer.cancel();
+            countDownTimer = null;
         }
+        if (breakTimer != null) {
+            breakTimer.cancel();
+            breakTimer = null;
+        }
+    }
 
-        countDownTimer = new CountDownTimer(totalSeconds * 1000L, 1000L) {
+    private void startStudyCountdown(long seconds) {
+        countDownTimer = new CountDownTimer(seconds * 1000L, 1000L) {
             @Override
             public void onTick(long millisUntilFinished) {
-                long secondsLeft = millisUntilFinished / 1000L;
-                long minutes = secondsLeft / 60L;
-                long seconds = secondsLeft % 60L;
-                String timeFormatted = String.format("%02d:%02d", minutes, seconds);
-
-                updateNotification("Focus: " + currentTaskTitle, "⏳ " + timeFormatted + " remaining");
+                currentRemainingSeconds = millisUntilFinished / 1000L;
+                long minutes = currentRemainingSeconds / 60L;
+                long secs = currentRemainingSeconds % 60L;
+                updateNotification("Focus: " + currentTaskTitle, String.format("⏳ %02d:%02d remaining", minutes, secs));
             }
 
             @Override
@@ -57,6 +122,23 @@ public class FocusService extends Service {
                 updateNotification("🎯 " + currentTaskTitle + " Complete!", "Great job! Take a well-earned break.");
                 stopForeground(false);
                 stopSelf();
+            }
+        }.start();
+    }
+
+    private void startBreakCountdown(long seconds) {
+        breakTimer = new CountDownTimer(seconds * 1000L, 1000L) {
+            @Override
+            public void onTick(long millisUntilFinished) {
+                long rem = millisUntilFinished / 1000L;
+                long minutes = rem / 60L;
+                long secs = rem % 60L;
+                updateNotification("☕ Break Time (" + currentTaskTitle + ")", String.format("⏳ %02d:%02d break remaining", minutes, secs));
+            }
+
+            @Override
+            public void onFinish() {
+                updateNotification("☕ Break Finished!", "Ready to resume studying?");
             }
         }.start();
     }
@@ -91,9 +173,7 @@ public class FocusService extends Service {
 
     @Override
     public void onDestroy() {
-        if (countDownTimer != null) {
-            countDownTimer.cancel();
-        }
+        cancelAllTimers();
         super.onDestroy();
     }
 
