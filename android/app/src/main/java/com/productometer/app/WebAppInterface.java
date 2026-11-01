@@ -208,12 +208,17 @@ public class WebAppInterface {
     private String getAppIconBase64(PackageManager pm, String pkgName) {
         try {
             Drawable drawable = pm.getApplicationIcon(pkgName);
+            if (drawable == null) return null;
+
+            int w = drawable.getIntrinsicWidth() > 0 ? drawable.getIntrinsicWidth() : 96;
+            int h = drawable.getIntrinsicHeight() > 0 ? drawable.getIntrinsicHeight() : 96;
+            w = Math.min(Math.max(w, 48), 192);
+            h = Math.min(Math.max(h, 48), 192);
+
             Bitmap bitmap;
             if (drawable instanceof BitmapDrawable) {
                 bitmap = ((BitmapDrawable) drawable).getBitmap();
             } else {
-                int w = Math.max(1, drawable.getIntrinsicWidth());
-                int h = Math.max(1, drawable.getIntrinsicHeight());
                 bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
                 Canvas canvas = new Canvas(bitmap);
                 drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
@@ -221,10 +226,10 @@ public class WebAppInterface {
             }
             if (bitmap == null) return null;
 
-            // Scale to 56x56 for sharp mobile rendering with tiny memory footprint
-            Bitmap scaled = Bitmap.createScaledBitmap(bitmap, 56, 56, true);
+            // Scale to 64x64 for crystal-clear retina rendering
+            Bitmap scaled = Bitmap.createScaledBitmap(bitmap, 64, 64, true);
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            scaled.compress(Bitmap.CompressFormat.PNG, 85, baos);
+            scaled.compress(Bitmap.CompressFormat.PNG, 90, baos);
             byte[] bytes = baos.toByteArray();
             return "data:image/png;base64," + Base64.encodeToString(bytes, Base64.NO_WRAP);
         } catch (Exception ignored) {
@@ -234,7 +239,7 @@ public class WebAppInterface {
 
     /**
      * Queries actual daily app screen time from Android UsageStatsManager (ground truth).
-     * Returns a JSON array of real apps with clean label, native icon base64, package name, and foreground seconds.
+     * Accurately tracks multi-activity transitions, screen locks, and daily aggregations.
      */
     @JavascriptInterface
     public String getRealAppUsageStats() {
@@ -257,10 +262,14 @@ public class WebAppInterface {
             PackageManager pm = context.getPackageManager();
             Map<String, Long> foregroundTimeMap = new HashMap<>();
 
-            // 1. Primary Ground Truth: UsageEvents
+            // 1. Primary Engine: UsageEvents stream with activity ref-counting & screen state awareness
             try {
-                UsageEvents events = usageStatsManager.queryEvents(startOfDay, now);
-                Map<String, Long> openAppTimestamps = new HashMap<>();
+                // Look back 2 hours before midnight to capture ongoing sessions starting yesterday
+                long queryStart = startOfDay - (2 * 3600 * 1000L);
+                UsageEvents events = usageStatsManager.queryEvents(queryStart, now);
+                
+                Map<String, Integer> activeActivityCounts = new HashMap<>();
+                Map<String, Long> packageFirstResumedTimes = new HashMap<>();
                 UsageEvents.Event event = new UsageEvents.Event();
 
                 while (events != null && events.hasNextEvent()) {
@@ -270,20 +279,47 @@ public class WebAppInterface {
                     long time = event.getTimeStamp();
 
                     if (type == UsageEvents.Event.ACTIVITY_RESUMED || type == UsageEvents.Event.MOVE_TO_FOREGROUND) {
-                        openAppTimestamps.put(pkg, time);
-                    } else if (type == UsageEvents.Event.ACTIVITY_PAUSED || type == UsageEvents.Event.ACTIVITY_STOPPED || type == UsageEvents.Event.MOVE_TO_BACKGROUND) {
-                        Long openTime = openAppTimestamps.remove(pkg);
-                        if (openTime != null && time > openTime) {
-                            long delta = time - openTime;
-                            long current = foregroundTimeMap.containsKey(pkg) ? foregroundTimeMap.get(pkg) : 0L;
-                            foregroundTimeMap.put(pkg, current + delta);
+                        int count = activeActivityCounts.containsKey(pkg) ? activeActivityCounts.get(pkg) : 0;
+                        if (count == 0) {
+                            packageFirstResumedTimes.put(pkg, Math.max(time, startOfDay));
                         }
+                        activeActivityCounts.put(pkg, count + 1);
+                    } else if (type == UsageEvents.Event.ACTIVITY_PAUSED || type == UsageEvents.Event.ACTIVITY_STOPPED || type == UsageEvents.Event.MOVE_TO_BACKGROUND) {
+                        int count = activeActivityCounts.containsKey(pkg) ? activeActivityCounts.get(pkg) : 0;
+                        count = Math.max(0, count - 1);
+                        if (count == 0) {
+                            activeActivityCounts.remove(pkg);
+                            Long openTime = packageFirstResumedTimes.remove(pkg);
+                            if (openTime != null && time > openTime) {
+                                long effectiveStart = Math.max(openTime, startOfDay);
+                                if (time > effectiveStart) {
+                                    long delta = time - effectiveStart;
+                                    long current = foregroundTimeMap.containsKey(pkg) ? foregroundTimeMap.get(pkg) : 0L;
+                                    foregroundTimeMap.put(pkg, current + delta);
+                                }
+                            }
+                        } else {
+                            activeActivityCounts.put(pkg, count);
+                        }
+                    } else if (type == UsageEvents.Event.SCREEN_NON_INTERACTIVE || type == UsageEvents.Event.KEYGUARD_SHOWN) {
+                        // Phone screen locked or turned off: commit any open foreground session
+                        for (Map.Entry<String, Long> entry : packageFirstResumedTimes.entrySet()) {
+                            long effectiveStart = Math.max(entry.getValue(), startOfDay);
+                            if (time > effectiveStart) {
+                                long delta = time - effectiveStart;
+                                long current = foregroundTimeMap.containsKey(entry.getKey()) ? foregroundTimeMap.get(entry.getKey()) : 0L;
+                                foregroundTimeMap.put(entry.getKey(), current + delta);
+                            }
+                        }
+                        packageFirstResumedTimes.clear();
+                        activeActivityCounts.clear();
                     }
                 }
 
                 // Add time for any app currently active in foreground right now
-                for (Map.Entry<String, Long> entry : openAppTimestamps.entrySet()) {
-                    long delta = now - entry.getValue();
+                for (Map.Entry<String, Long> entry : packageFirstResumedTimes.entrySet()) {
+                    long effectiveStart = Math.max(entry.getValue(), startOfDay);
+                    long delta = now - effectiveStart;
                     if (delta > 0 && delta < 12 * 3600 * 1000L) {
                         long current = foregroundTimeMap.containsKey(entry.getKey()) ? foregroundTimeMap.get(entry.getKey()) : 0L;
                         foregroundTimeMap.put(entry.getKey(), current + delta);
@@ -293,8 +329,8 @@ public class WebAppInterface {
                 e.printStackTrace();
             }
 
-            // 2. Secondary Strategy: queryUsageStats fallback if events map is empty
-            if (foregroundTimeMap.isEmpty()) {
+            // 2. Secondary Engine: Merge with UsageStatsManager daily totals (take Math.max to prevent undercounting)
+            try {
                 List<UsageStats> statsList = usageStatsManager.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, startOfDay, now);
                 if (statsList == null || statsList.isEmpty()) {
                     statsList = usageStatsManager.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, now - 86400000L, now);
@@ -308,20 +344,20 @@ public class WebAppInterface {
                         }
                     }
                 }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
 
-            // 3. Tertiary Strategy: queryAndAggregateUsageStats
-            if (foregroundTimeMap.isEmpty()) {
-                Map<String, UsageStats> aggregated = usageStatsManager.queryAndAggregateUsageStats(startOfDay, now);
-                if (aggregated != null) {
-                    for (Map.Entry<String, UsageStats> entry : aggregated.entrySet()) {
-                        long fg = entry.getValue().getTotalTimeInForeground();
-                        if (fg > 0) {
-                            foregroundTimeMap.put(entry.getKey(), fg);
-                        }
-                    }
+            // Determine default home launcher to filter out home screen wallpaper time
+            String defaultLauncherPkg = "";
+            try {
+                Intent homeIntent = new Intent(Intent.ACTION_MAIN);
+                homeIntent.addCategory(Intent.CATEGORY_HOME);
+                ResolveInfo defaultLauncher = pm.resolveActivity(homeIntent, PackageManager.MATCH_DEFAULT_ONLY);
+                if (defaultLauncher != null && defaultLauncher.activityInfo != null) {
+                    defaultLauncherPkg = defaultLauncher.activityInfo.packageName;
                 }
-            }
+            } catch (Exception ignored) {}
 
             JSONArray jsonArray = new JSONArray();
 
@@ -329,9 +365,11 @@ public class WebAppInterface {
                 String pkgName = entry.getKey();
                 long totalForegroundMs = entry.getValue();
 
-                // Skip system internal daemons, keep all real user apps
+                // Skip system internal daemons, default launcher, and productometer itself
                 if (totalForegroundMs < 1000L) continue;
                 if (pkgName.equals("com.android.systemui") || pkgName.equals("android")) continue;
+                if (pkgName.equals(context.getPackageName())) continue;
+                if (!defaultLauncherPkg.isEmpty() && pkgName.equals(defaultLauncherPkg)) continue;
 
                 String appLabel = getFriendlyAppName(pm, pkgName);
                 String iconBase64 = getAppIconBase64(pm, pkgName);
@@ -350,7 +388,8 @@ public class WebAppInterface {
                 boolean isProd = lower.contains("study") || lower.contains("learn") || lower.contains("doc") || 
                                  lower.contains("pdf") || lower.contains("book") || lower.contains("productivity") ||
                                  lower.contains("school") || lower.contains("calculator") || lower.contains("notes") ||
-                                 lower.contains("productometer") || lower.contains("drive") || lower.contains("classroom");
+                                 lower.contains("productometer") || lower.contains("drive") || lower.contains("classroom") ||
+                                 lower.contains("code") || lower.contains("term") || lower.contains("sheet");
                 obj.put("category", isProd ? "productivity" : "others");
 
                 jsonArray.put(obj);
@@ -363,9 +402,6 @@ public class WebAppInterface {
         }
     }
 
-    /**
-     * Returns all user-launchable apps installed on the device with clean names.
-     */
     @JavascriptInterface
     public String getInstalledApps() {
         try {

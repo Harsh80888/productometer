@@ -255,26 +255,30 @@ if (saveWeeklyTaskBtn) {
 loadAndRenderWeeklyTasks();
 
 
-function markPlannerTaskCompleted(taskTitle) {
-    if (!taskTitle) return;
+let currentActiveTaskId = null;
+
+function markPlannerTaskCompleted(taskTitle, taskId = null) {
+    if (!taskTitle && !taskId) return;
     try {
         const raw = localStorage.getItem('productometer_chrono_planner_list');
         if (raw) {
             let list = JSON.parse(raw);
             let matched = false;
             list.forEach(item => {
-                if (item && item.title && (
+                if (!item) return;
+                const matchById = taskId && item.id === taskId;
+                const matchByTitle = item.title && taskTitle && (
                     item.title.toUpperCase() === taskTitle.toUpperCase() ||
                     item.title.toUpperCase().includes(taskTitle.toUpperCase()) ||
                     taskTitle.toUpperCase().includes(item.title.toUpperCase())
-                )) {
+                );
+                if (matchById || matchByTitle) {
                     item.completed = true;
                     matched = true;
                 }
             });
             if (matched) {
                 localStorage.setItem('productometer_chrono_planner_list', JSON.stringify(list));
-                // Dispatch storage event so other open pages update live
                 try {
                     window.dispatchEvent(new Event('storage'));
                 } catch (e) {}
@@ -342,7 +346,7 @@ function renderAcademicTasks() {
         const windowCloseMins = taskStartMins + Math.floor(duration / 2); 
 
         const isAvailable = currentTotalMins >= windowOpenMins && currentTotalMins <= windowCloseMins;
-        const taskObj = { title: taskTitle, startH, startM, duration, isAvailable, completed: !!task.completed };
+        const taskObj = { id: task.id, title: taskTitle, startH, startM, duration, isAvailable, completed: !!task.completed };
 
         if (isAvailable) availableTasks.push(taskObj);
         else lockedTasks.push(taskObj);
@@ -434,7 +438,7 @@ function renderAcademicTasks() {
 
             taskDiv.addEventListener('click', () => {
                 if (!sessionActive) {
-                    beginActivePomodoroCountdown(t.title, t.duration);
+                    beginActivePomodoroCountdown(t.title, t.duration, t.id);
                 }
             });
 
@@ -496,7 +500,8 @@ window.adjustSessionDuration = function(mins) {
     }
 };
 
-function beginActivePomodoroCountdown(title, customDurationMinutes = null) {
+function beginActivePomodoroCountdown(title, customDurationMinutes = null, taskId = null) {
+    currentActiveTaskId = taskId;
     sessionActive = true;
     sessionPausedForDistraction = false;
     currentActiveTaskTitle = title;
@@ -583,14 +588,13 @@ Please take a 5-minute break. Marked as completed in your Day Planner!`,
             );
 
             // Automatically mark task as completed in Day Planner!
-            markPlannerTaskCompleted(currentActiveTaskTitle);
+            markPlannerTaskCompleted(currentActiveTaskTitle, currentActiveTaskId);
             
             const boxContainer = document.getElementById('activeSessionBoxContainer');
             if (boxContainer) boxContainer.innerHTML = "";
             renderAcademicTasks();
         }
     }, 1000);
-}, 1000);
 }
 
 /* --- 5. STRICT DISTRACTION DETECTOR --- */
@@ -723,4 +727,11 @@ window.addEventListener('storage', (e) => {
 });
 window.addEventListener('focus', () => {
     renderAcademicTasks();
+});
+
+document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) {
+        renderAcademicTasks();
+        updateStudyTimeDisplay();
+    }
 });

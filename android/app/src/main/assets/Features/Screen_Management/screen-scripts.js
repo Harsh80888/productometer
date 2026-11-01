@@ -123,6 +123,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
     };
 
+        function getAppFallbackIcon(appName, pkgName) {
+        const combined = ((appName || '') + ' ' + (pkgName || '')).toLowerCase();
+        if (combined.includes('youtube')) return 'fa-brands fa-youtube';
+        if (combined.includes('whatsapp')) return 'fa-brands fa-whatsapp';
+        if (combined.includes('chrome')) return 'fa-brands fa-chrome';
+        if (combined.includes('instagram')) return 'fa-brands fa-instagram';
+        if (combined.includes('facebook') || combined.includes('meta')) return 'fa-brands fa-facebook';
+        if (combined.includes('twitter') || combined.includes('x.com')) return 'fa-brands fa-x-twitter';
+        if (combined.includes('telegram')) return 'fa-brands fa-telegram';
+        if (combined.includes('spotify')) return 'fa-brands fa-spotify';
+        if (combined.includes('github')) return 'fa-brands fa-github';
+        if (combined.includes('camera')) return 'fa-solid fa-camera';
+        if (combined.includes('gallery') || combined.includes('photo')) return 'fa-solid fa-images';
+        if (combined.includes('map')) return 'fa-solid fa-map-location-dot';
+        if (combined.includes('mail') || combined.includes('gmail')) return 'fa-solid fa-envelope';
+        if (combined.includes('drive') || combined.includes('doc')) return 'fa-solid fa-file-lines';
+        if (combined.includes('clock') || combined.includes('alarm')) return 'fa-solid fa-clock';
+        if (combined.includes('calc')) return 'fa-solid fa-calculator';
+        if (combined.includes('code') || combined.includes('term')) return 'fa-solid fa-terminal';
+        if (combined.includes('game')) return 'fa-solid fa-gamepad';
+        return 'fa-solid fa-mobile-screen-button';
+    }
+
     function formatCleanAppName(rawName, pkgName) {
 
         if (pkgName && KNOWN_APP_NAMES[pkgName]) return KNOWN_APP_NAMES[pkgName];
@@ -558,18 +581,20 @@ document.addEventListener('DOMContentLoaded', () => {
         container.innerHTML = filtered.map(app => {
 
             const s = app.seconds || 0;
-
             const m = Math.round(s / 60);
-
             const h = Math.floor(m / 60);
-
             const remM = m % 60;
-
-            const timeStr = h > 0 ? `${h}h ${remM}m` : `${remM}m`;
-
+            let timeStr = '0m';
+            if (h > 0) {
+                timeStr = `${h}h ${remM}m`;
+            } else if (m > 0) {
+                timeStr = `${m}m`;
+            } else if (s > 0) {
+                timeStr = `${s}s`;
+            }
             const appPct = totalSecs > 0 ? Math.round((s / totalSecs) * 100) : 0;
-
             const isProd = app.category === 'productivity';
+            const isExcessiveApp = !isProd && (s > 3600);
 
             return `
 
@@ -580,8 +605,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="app-brand">
                         ${app.iconBase64 ? 
                             `<img src="${app.iconBase64}" class="app-native-logo" alt="" style="width: 38px; height: 38px; border-radius: 9px; object-fit: contain; flex-shrink: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.4); margin-right: 10px;">` :
-                            `<div class="app-avatar" style="background: ${app.bg || '#334155'}; color: ${app.color || '#fff'};">
-                                <i class="${app.icon || 'fa-solid fa-cube'}"></i>
+                            `<div class="app-avatar" style="background: ${app.bg || '#334155'}; color: ${app.color || '#fff'}; font-size: 1.15rem; display: flex; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 9px; margin-right: 10px; flex-shrink: 0;">
+                                <i class="${getAppFallbackIcon(app.name, app.id)}"></i>
                             </div>`
                         }
 

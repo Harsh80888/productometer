@@ -139,15 +139,52 @@ document.addEventListener('DOMContentLoaded', () => {
         let prodSecs = 0;
         let nonProdSecs = 0;
 
-        try {
-            const screenData = JSON.parse(localStorage.getItem('productometer_screen_data'));
-            if (screenData && typeof screenData.totalScreenSecondsToday === 'number') {
-                totalSecs = screenData.totalScreenSecondsToday;
-                prodSecs = screenData.productiveSeconds || 0;
-                nonProdSecs = typeof screenData.othersSeconds === 'number' ? 
-                    screenData.othersSeconds : Math.max(0, totalSecs - prodSecs);
+        // 1. Direct Ground Truth Query from NativeBridge if available
+        if (window.NativeBridge && window.NativeBridge.isAvailable && window.NativeBridge.isAvailable()) {
+            try {
+                if (window.NativeBridge.hasUsageStatsPermission && window.NativeBridge.hasUsageStatsPermission()) {
+                    const realStats = window.NativeBridge.getRealAppUsageStats();
+                    if (realStats && Array.isArray(realStats) && realStats.length > 0) {
+                        let savedOverrides = {};
+                        try {
+                            const rawOverrides = localStorage.getItem('productometer_screentime_apps_v2');
+                            if (rawOverrides) JSON.parse(rawOverrides).forEach(a => { if (a && a.id) savedOverrides[a.id] = a.category; });
+                        } catch (e) {}
+
+                        realStats.forEach(app => {
+                            const s = app.totalSeconds || (app.minutes * 60) || 0;
+                            totalSecs += s;
+                            const cat = savedOverrides[app.packageName] || app.category || 'others';
+                            if (cat === 'productivity') prodSecs += s;
+                            else nonProdSecs += s;
+                        });
+
+                        try {
+                            localStorage.setItem('productometer_screen_data', JSON.stringify({
+                                totalScreenSecondsToday: totalSecs,
+                                productiveSeconds: prodSecs,
+                                othersSeconds: nonProdSecs,
+                                date: new Date().toDateString()
+                            }));
+                        } catch (e) {}
+                    }
+                }
+            } catch (e) {
+                console.warn('[Home] Live screen stats notice:', e);
             }
-        } catch (e) {}
+        }
+
+        if (!totalSecs) {
+            try {
+                const screenData = JSON.parse(localStorage.getItem('productometer_screen_data'));
+                if (screenData && typeof screenData.totalScreenSecondsToday === 'number') {
+                    totalSecs = screenData.totalScreenSecondsToday;
+                    prodSecs = screenData.productiveSeconds || 0;
+                    nonProdSecs = typeof screenData.othersSeconds === 'number' ? 
+                        screenData.othersSeconds : Math.max(0, totalSecs - prodSecs);
+                }
+            } catch (e) {}
+        }
 
         // Fallback to app list
         if (!totalSecs) {

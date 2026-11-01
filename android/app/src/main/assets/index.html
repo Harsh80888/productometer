@@ -28,7 +28,25 @@
 
     <!-- Main Content Workspace Area Frame -->
     <main class="portal-main-content">
-        <!-- 1. 🌟 TOTAL PRODUCTIVITY SCORE & CHRONOLOGICAL DAILY TREND GRAPH (AT TOP) -->
+        <!-- 1. 📋 UPCOMING SESSIONS (FROM DAY PLANNER) - VISIBLE AT FIRST SIGHT -->
+        <section class="home-upcoming-section" style="margin-top: 0; margin-bottom: 20px;">
+            <div class="tasks-section-header">
+                <div class="upcoming-header-left">
+                    <div class="tasks-section-title"><i class="fa-solid fa-clock text-cyan"></i> Upcoming Sessions</div>
+                    <span class="upcoming-count-badge" id="upcomingCountBadge">0 Sessions</span>
+                </div>
+                <a href="./Features/Day Planner/planner-index.html" class="corner-edit-btn">
+                    <i class="fa-solid fa-plus"></i> Day Planner
+                </a>
+            </div>
+
+            <!-- Dynamic Reflected Upcoming Sessions Container -->
+            <div class="home-tasks-bucket" id="homeTasksBucket">
+                <!-- Javascript dynamically populates upcoming sessions -->
+            </div>
+        </section>
+
+        <!-- 2. 🌟 TOTAL PRODUCTIVITY SCORE & CHRONOLOGICAL DAILY TREND GRAPH (AT TOP) -->
         <section class="home-score-card">
             <div class="score-card-header">
                 <div class="score-title-stack">
@@ -142,24 +160,6 @@
                     <div class="metric-progress-fill screentime" id="homeScreenBar" style="width: 0%;"></div>
                 </div>
             </a>
-        </section>
-
-        <!-- 3. 📋 UPCOMING SESSIONS (FROM DAY PLANNER) -->
-        <section class="home-upcoming-section">
-            <div class="tasks-section-header">
-                <div class="upcoming-header-left">
-                    <div class="tasks-section-title"><i class="fa-solid fa-clock text-cyan"></i> Upcoming Sessions</div>
-                    <span class="upcoming-count-badge" id="upcomingCountBadge">0 Sessions</span>
-                </div>
-                <a href="./Features/Day Planner/planner-index.html" class="corner-edit-btn">
-                    <i class="fa-solid fa-plus"></i> Day Planner
-                </a>
-            </div>
-
-            <!-- Dynamic Reflected Upcoming Sessions Container -->
-            <div class="home-tasks-bucket" id="homeTasksBucket">
-                <!-- Javascript dynamically populates upcoming sessions -->
-            </div>
         </section>
 
         <!-- 🌟 4. WEEKLY COMPARISON PERFORMANCE (AT BOTTOM) -->
