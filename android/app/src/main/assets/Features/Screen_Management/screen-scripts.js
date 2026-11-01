@@ -883,8 +883,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    }
-
     function toggleAppCategory(appId) {
 
         const apps = getRealScreenApps();

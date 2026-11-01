@@ -36,9 +36,11 @@ import java.util.List;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class WebAppInterface {
 
+    private static final Map<String, String> ICON_CACHE = new ConcurrentHashMap<>();
     private final Context context;
 
     public WebAppInterface(Context context) {
@@ -208,6 +210,10 @@ public class WebAppInterface {
      * Extracts an application's native icon as a compact Base64 PNG data URL.
      */
     private String getAppIconBase64(PackageManager pm, String pkgName) {
+        if (pkgName == null || pkgName.isEmpty()) return null;
+        if (ICON_CACHE.containsKey(pkgName)) {
+            return ICON_CACHE.get(pkgName);
+        }
         try {
             Drawable drawable = pm.getApplicationIcon(pkgName);
             if (drawable == null) return null;
@@ -233,7 +239,9 @@ public class WebAppInterface {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             scaled.compress(Bitmap.CompressFormat.PNG, 90, baos);
             byte[] bytes = baos.toByteArray();
-            return "data:image/png;base64," + Base64.encodeToString(bytes, Base64.NO_WRAP);
+            String base64Result = "data:image/png;base64," + Base64.encodeToString(bytes, Base64.NO_WRAP);
+            ICON_CACHE.put(pkgName, base64Result);
+            return base64Result;
         } catch (Exception ignored) {
             return null;
         }

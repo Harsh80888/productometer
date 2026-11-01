@@ -65,39 +65,17 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create v1.1.0 dist/Productometer.apk \
-            --title "Productometer v1.1.0 - Android Release APK" \
-            --notes "### 📱 Productometer Android Release v1.1.0
+          gh release create v1.1.1 dist/Productometer.apk \
+            --title "Productometer v1.1.1 - Android Release APK" \
+            --notes "### 📱 Productometer Android Release v1.1.1
 
-          Major release featuring the new in-app AI Coach chatbot integration, exact Digital Wellbeing screen time parity, compulsory daily app limits with 10-minute grace window and freezing, pure Veg Mode in the Diet & Nutrition calculator, and Day Planner reminder badges.
+          Maintenance release fixing Screen Time Manager execution.
 
-          #### 🚀 Key Features & Enhancements in v1.1.0:
-          - **🤖 In-App AI Coach & Chatbot Integration:**
-            - Integrated AI Coach assistant across all main modules with edge AI integration via Cloudflare Workers AI.
-            - Fast, intelligent context-aware coaching for habits, academics, diet, and productivity.
-
-          - **📱 Exact Screen Time Parity (Digital Wellbeing):**
-            - Replaced queryEvents with native Android OS kernel foreground aggregations (UsageStats.getTotalTimeInForeground()).
-            - Eliminates phantom phone-lock screen hours, matching Android Digital Wellbeing values precisely.
-
-          - **⏱️ App Daily Time Limits, 10m Grace & Freezing:**
-            - Added customizable daily limits per app in Screen Time Manager.
-            - Enforced **compulsory limits** for Facebook, Instagram, and all games (detected automatically).
-            - **10-minute grace period** with audible chime \`2.mp3\` and live countdown notices before freezing.
-            - **App Freezing Overlay** intercepts frozen apps with Return to Home (no bypass).
-            - **Strict Immutability:** limits cannot be increased, changed, or disabled during grace period or after freezing.
-
-          - **🥗 Pure Veg Mode in Diet Section:**
-            - Added dedicated Pure Veg Mode toggle to filter out eggs, chicken, and non-veg foods from the food catalog and regular meals tray.
-            - Iconic FSSAI vegetarian (🟢) and non-vegetarian (🔺) indicator symbols on all food cards and logs.
-            - Support for custom food diet classification.
-
-          - **📅 Day Planner Reminder Badges:**
-            - Interactive Reminder ON/OFF badge in the Add Task dialog.
-
-          - **100% Offline Capability:**
-            - Core tracking, study timers, distraction blocking, and wellbeing analytics remain 100% functional offline.
+          #### 🚀 Fixes in v1.1.1:
+          - **🛠️ Screen Time Manager Fix:** Resolved syntax error in \`screen-scripts.js\` that prevented the Screen Time section from initializing and displaying app stats.
+          - **⚡ Icon Caching Optimization:** Added in-memory concurrent icon cache in \`WebAppInterface.java\` to eliminate lag during usage stats queries.
+          - **📱 Digital Wellbeing Screen Time:** Full foreground usage synchronization restored.
 
           #### 📦 Direct Download:
           - Click **\`Productometer.apk\`** under Assets below to download and install." || \
-          gh release upload v1.1.0 dist/Productometer.apk --clobber
+          gh release upload v1.1.1 dist/Productometer.apk --clobber
