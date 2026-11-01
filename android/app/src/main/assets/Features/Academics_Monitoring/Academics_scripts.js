@@ -264,9 +264,6 @@ if (saveWeeklyTaskBtn) {
 
 loadAndRenderWeeklyTasks();
 
-
-let currentActiveTaskId = null;
-
 function markPlannerTaskCompleted(taskTitle, taskId = null) {
     if (!taskTitle && !taskId) return;
     try {
@@ -307,18 +304,27 @@ function renderAcademicTasks() {
         if (rawData) dayPlannerTasks = JSON.parse(rawData);
     } catch (err) { console.log("Error parsing storage:", err); }
 
-    const academicPlannerTasks = dayPlannerTasks.filter(task => {
+    if (!Array.isArray(dayPlannerTasks) || dayPlannerTasks.length === 0) {
+        try {
+            const fallbackRaw = localStorage.getItem('productometer_slider_free_todolist');
+            if (fallbackRaw) dayPlannerTasks = JSON.parse(fallbackRaw);
+        } catch (e) {}
+    }
+
+    const academicPlannerTasks = (Array.isArray(dayPlannerTasks) ? dayPlannerTasks : []).filter(task => {
         if (!task) return false;
         const cat = (task.category || '').toLowerCase();
-        if (cat === 'academics' || cat === 'skills' || cat === 'study' || cat === 'academic' || cat === 'school' || cat === 'work' || cat === 'other' || cat === 'general') return true;
-        if (cat !== 'health' && cat !== 'fitness' && cat !== 'workout' && cat !== 'running' && cat !== 'hiit') return true;
-        const t = (task.title || '').toLowerCase();
-        return t.includes('study') || t.includes('math') || t.includes('physic') ||
-               t.includes('chem') || t.includes('bio') || t.includes('read') ||
-               t.includes('code') || t.includes('exam') || t.includes('test') ||
-               t.includes('practice') || t.includes('revision') || t.includes('lecture') ||
-               t.includes('learn') || t.includes('class') || t.includes('homework') ||
-               t.includes('dsa') || t.includes('chapter');
+        if (!cat || cat === 'academics' || cat === 'skills' || cat === 'study' || cat === 'academic' || cat === 'school' || cat === 'work' || cat === 'other' || cat === 'general' || cat === 'routine') return true;
+        if (cat === 'health' || cat === 'fitness' || cat === 'workout' || cat === 'running' || cat === 'hiit') {
+            const t = (task.title || '').toLowerCase();
+            return t.includes('study') || t.includes('math') || t.includes('physic') ||
+                   t.includes('chem') || t.includes('bio') || t.includes('read') ||
+                   t.includes('code') || t.includes('exam') || t.includes('test') ||
+                   t.includes('practice') || t.includes('revision') || t.includes('lecture') ||
+                   t.includes('learn') || t.includes('class') || t.includes('homework') ||
+                   t.includes('dsa') || t.includes('chapter');
+        }
+        return true;
     });
 
     const now = new Date();
@@ -328,29 +334,32 @@ function renderAcademicTasks() {
     let lockedTasks = [];
 
     academicPlannerTasks.forEach(task => {
-        const taskTitle = task.title || task.name || "Scheduled Session";
+        const taskTitle = task.title || task.name || task.description || "Scheduled Session";
         let startH = 9, startM = 0;
         let timeFound = false;
 
-        const timeStr = task.timeDisplayStr || task.time || '';
-        if (typeof timeStr === 'string' && timeStr.trim().length > 0) {
-            const tm = timeStr.match(/(\d{1,2}):(\d{2})(?:\s*([APap][Mm]))?/);
-            if (tm) {
-                startH = parseInt(tm[1], 10);
-                startM = parseInt(tm[2], 10);
-                const ampm = (tm[3] || '').toUpperCase();
-                if (ampm === 'PM' && startH < 12) startH += 12;
-                if (ampm === 'AM' && startH === 12) startH = 0;
-                timeFound = true;
-            }
-        }
-        if (!timeFound && task.startMin !== undefined && task.startMin !== null) {
+        if (task.startMin !== undefined && task.startMin !== null && !isNaN(task.startMin)) {
             startH = Math.floor(task.startMin / 60);
             startM = task.startMin % 60;
             timeFound = true;
         }
 
-        let duration = task.durationMinutes || task.duration || 60;
+        if (!timeFound) {
+            const timeStr = task.timeDisplayStr || task.time || '';
+            if (typeof timeStr === 'string' && timeStr.trim().length > 0) {
+                const tm = timeStr.match(/(\d{1,2}):(\d{2})(?:\s*([APap][Mm]))?/);
+                if (tm) {
+                    startH = parseInt(tm[1], 10);
+                    startM = parseInt(tm[2], 10);
+                    const ampm = (tm[3] || '').toUpperCase();
+                    if (ampm === 'PM' && startH < 12) startH += 12;
+                    if (ampm === 'AM' && startH === 12) startH = 0;
+                    timeFound = true;
+                }
+            }
+        }
+
+        let duration = parseFloat(task.durationMinutes || task.durationMin || task.duration) || 60;
         const taskStartMins = startH * 60 + startM;
         const windowOpenMins = taskStartMins - 10; 
         const windowCloseMins = taskStartMins + Math.floor(duration / 2); 
@@ -410,60 +419,74 @@ function renderAcademicTasks() {
     const container = document.getElementById('academicTasksBucket');
     if (!container) return;
 
+    container.innerHTML = '';
+    const allSortedTasks = [...availableTasks, ...lockedTasks];
+
+    if (allSortedTasks.length === 0) {
+        container.innerHTML = `<div style="color: #64748b; padding: 14px 10px; font-size: 0.88rem; text-align: center;">No academic tasks synced from Day Planner.<br><a href="../Day Planner/planner-index.html" style="color: #00e5ff; text-decoration: none; font-weight: 700; margin-top: 6px; display: inline-block;">+ Add your first task in Day Planner</a></div>`;
+        if (!sessionActive) clearIndependentStartBox();
+        return;
+    }
+
     if (!sessionActive) {
-        container.innerHTML = '';
-        const allSortedTasks = [...availableTasks, ...lockedTasks];
-
-        if (allSortedTasks.length === 0) {
-            container.innerHTML = `<div style="color: #64748b; padding: 10px; font-size: 0.88rem;">No academic tasks synced from Day Planner.</div>`;
-            clearIndependentStartBox();
-            return;
-        }
-
         const firstPending = allSortedTasks.find(t => !t.completed);
         if (firstPending) {
             showIndependentStartBox(firstPending.title, firstPending.duration, firstPending.id);
         } else {
             clearIndependentStartBox();
         }
+    }
 
-        allSortedTasks.forEach(t => {
-            const taskDiv = document.createElement('div');
-            const safeTitleClass = 'task-row-' + t.title.replace(/[^a-zA-Z0-9]/g, '-');
-            taskDiv.className = `task-row-item ${safeTitleClass}`;
-            taskDiv.style.cursor = 'pointer';
-            taskDiv.style.transition = 'all 0.2s ease';
-            taskDiv.style.marginBottom = '8px';
+    allSortedTasks.forEach(t => {
+        const taskDiv = document.createElement('div');
+        const safeTitleClass = 'task-row-' + t.title.replace(/[^a-zA-Z0-9]/g, '-');
+        taskDiv.className = `task-row-item ${safeTitleClass}`;
+        taskDiv.style.cursor = 'pointer';
+        taskDiv.style.transition = 'all 0.2s ease';
+        taskDiv.style.marginBottom = '8px';
 
-            const fHour = t.startH.toString().padStart(2, '0');
-            const fMin = t.startM.toString().padStart(2, '0');
+        const fHour = t.startH.toString().padStart(2, '0');
+        const fMin = t.startM.toString().padStart(2, '0');
 
-            let badgeHtml = '';
-            if (t.completed) {
-                badgeHtml = '<span style="color: #00e676; font-weight: bold; font-size: 0.85em;"><i class="fa-solid fa-circle-check"></i> Done</span>';
-            } else {
-                badgeHtml = `<button type="button" class="btn-row-start" data-task-id="${t.id}" style="background: #00e676; color: #000; border: none; padding: 6px 14px; border-radius: 6px; font-weight: 800; font-size: 0.78rem; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;"><i class="fa-solid fa-play"></i> Start Session</button>`;
+        let badgeHtml = '';
+        const isCurrentActive = sessionActive && (currentActiveTaskId === t.id || currentActiveTaskTitle === t.title);
+
+        if (t.completed) {
+            badgeHtml = '<span style="color: #00e676; font-weight: bold; font-size: 0.85em;"><i class="fa-solid fa-circle-check"></i> Done</span>';
+        } else if (isCurrentActive) {
+            badgeHtml = '<span style="color: #ffd600; font-weight: bold; font-size: 0.85em; display: inline-flex; align-items: center; gap: 4px;"><i class="fa-solid fa-spinner fa-spin"></i> Active Now</span>';
+        } else {
+            badgeHtml = `<button type="button" class="btn-row-start" data-task-id="${t.id}" style="background: #00e676; color: #000; border: none; padding: 6px 14px; border-radius: 6px; font-weight: 800; font-size: 0.78rem; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;"><i class="fa-solid fa-play"></i> Start Session</button>`;
+        }
+        
+        taskDiv.innerHTML = `
+            <div style="flex: 1;">
+                <div class="task-title" style="${t.completed ? 'text-decoration: line-through; opacity: 0.7;' : (isCurrentActive ? 'color: #ffd600; font-weight: 800;' : 'color: #fff; font-weight: 700;')}">${t.title}</div>
+                <div class="task-meta" style="color: #94a3b8; font-size: 0.8rem; margin-top: 2px;"><i class="fa-regular fa-clock"></i> Scheduled: ${fHour}:${fMin} (${t.duration}m)</div>
+            </div>
+            <div class="task-status-badge">
+                ${badgeHtml}
+            </div>
+        `;
+
+        taskDiv.addEventListener('click', (e) => {
+            if (!sessionActive && !t.completed) {
+                beginActivePomodoroCountdown(t.title, t.duration, t.id);
             }
-            
-            taskDiv.innerHTML = `
-                <div style="flex: 1;">
-                    <div class="task-title" style="${t.completed ? 'text-decoration: line-through; opacity: 0.7;' : 'color: #fff; font-weight: 700;'}">${t.title}</div>
-                    <div class="task-meta" style="color: #94a3b8; font-size: 0.8rem; margin-top: 2px;"><i class="fa-regular fa-clock"></i> Scheduled: ${fHour}:${fMin} (${t.duration}m)</div>
-                </div>
-                <div class="task-status-badge">
-                    ${badgeHtml}
-                </div>
-            `;
+        });
 
-            taskDiv.addEventListener('click', (e) => {
+        const btnRow = taskDiv.querySelector('.btn-row-start');
+        if (btnRow) {
+            btnRow.addEventListener('click', (e) => {
+                e.stopPropagation();
                 if (!sessionActive && !t.completed) {
                     beginActivePomodoroCountdown(t.title, t.duration, t.id);
                 }
             });
+        }
 
-            container.appendChild(taskDiv);
-        });
-    }
+        container.appendChild(taskDiv);
+    });
 }
 
 // Auto sync when returning from Day Planner or switching apps
@@ -478,6 +501,42 @@ window.addEventListener('focus', () => {
 
 setInterval(renderAcademicTasks, 15000);
 renderAcademicTasks();
+
+function restoreActiveSessionIfAny() {
+    try {
+        const raw = localStorage.getItem('productometer_active_session_state');
+        if (!raw) return;
+        const state = JSON.parse(raw);
+        if (!state || !state.active) return;
+
+        const now = Date.now();
+        const elapsedSecs = state.isPaused ? 0 : Math.floor((now - (state.timestamp || now)) / 1000);
+        const rem = Math.max(0, (state.timeRemaining || 0) - elapsedSecs);
+
+        if (rem > 0) {
+            beginActivePomodoroCountdown(state.title || 'Study Session', Math.ceil(rem / 60), state.taskId || null, rem);
+            if (state.isPaused) {
+                sessionPausedManual = true;
+                const headerStatus = document.getElementById('activeSessionHeaderStatus');
+                if (headerStatus) {
+                    headerStatus.innerText = 'Session Paused (Manual)';
+                    headerStatus.style.color = '#ffd600';
+                }
+                const btn = document.getElementById('btnSessionPauseResume');
+                if (btn) {
+                    btn.innerHTML = '<i class="fa-solid fa-play"></i> Resume';
+                    btn.style.color = '#00e676';
+                    btn.style.borderColor = '#00e676';
+                }
+            }
+        } else {
+            localStorage.removeItem('productometer_active_session_state');
+        }
+    } catch (e) {
+        console.warn("Error restoring session:", e);
+    }
+}
+restoreActiveSessionIfAny();
 
 // Auto-start session if requested from Home screen link (?autoStart=true)
 try {
@@ -655,7 +714,7 @@ function completeActiveSession(manualCompletion = false) {
     renderAcademicTasks();
 }
 
-function beginActivePomodoroCountdown(title, customDurationMinutes = null, taskId = null) {
+function beginActivePomodoroCountdown(title, customDurationMinutes = null, taskId = null, exactRemainingSeconds = null) {
     currentActiveTaskId = taskId;
     sessionActive = true;
     sessionPausedForDistraction = false;
@@ -680,7 +739,11 @@ function beginActivePomodoroCountdown(title, customDurationMinutes = null, taskI
         } catch (e) {}
     }
 
-    timeRemaining = Math.round(targetMins * 60);
+    if (exactRemainingSeconds !== null && exactRemainingSeconds !== undefined && exactRemainingSeconds > 0) {
+        timeRemaining = Math.round(exactRemainingSeconds);
+    } else {
+        timeRemaining = Math.round(targetMins * 60);
+    }
     syncSessionStateToStorage();
 
     if (window.NativeBridge && window.NativeBridge.isAvailable()) {
