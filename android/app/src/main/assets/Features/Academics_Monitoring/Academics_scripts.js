@@ -11,7 +11,7 @@ const startAlarm = document.getElementById('startAlarm');
 const distractionAlarm = document.getElementById('distractionAlarm');
 const breakAlarm = document.getElementById('breakAlarm');
 
-[startAlarm, distractionAlarm, breakAlarm].forEach(audio => {
+[distractionAlarm, breakAlarm].forEach(audio => {
     if (audio) {
         audio.load();
         audio.volume = 1.0;
@@ -21,7 +21,7 @@ const breakAlarm = document.getElementById('breakAlarm');
 
 // Unlock audio context on first user click anywhere on the page
 document.addEventListener('click', () => {
-    [startAlarm, distractionAlarm, breakAlarm].forEach(audio => {
+    [distractionAlarm, breakAlarm].forEach(audio => {
         if (audio) {
             audio.play().then(() => { audio.pause(); audio.currentTime = 0; }).catch(() => {});
         }
@@ -318,22 +318,22 @@ function renderAcademicTasks() {
         let startH = 9, startM = 0;
         let timeFound = false;
 
-        for (const key in task) {
-            const val = task[key];
-            if (typeof val === 'string' && /^\d{1,2}:\d{2}$/.test(val)) {
-                const parts = val.split(':');
-                startH = parseInt(parts[0], 10);
-                startM = parseInt(parts[1], 10);
-                timeFound = true; break;
+        const timeStr = task.timeDisplayStr || task.time || '';
+        if (typeof timeStr === 'string' && timeStr.trim().length > 0) {
+            const tm = timeStr.match(/(\d{1,2}):(\d{2})(?:\s*([APap][Mm]))?/);
+            if (tm) {
+                startH = parseInt(tm[1], 10);
+                startM = parseInt(tm[2], 10);
+                const ampm = (tm[3] || '').toUpperCase();
+                if (ampm === 'PM' && startH < 12) startH += 12;
+                if (ampm === 'AM' && startH === 12) startH = 0;
+                timeFound = true;
             }
         }
-        if (!timeFound) {
-            if (task.timeDisplayStr) {
-                const p = task.timeDisplayStr.split(':');
-                startH = parseInt(p[0], 10); startM = parseInt(p[1], 10);
-            } else if (task.startMin) {
-                startH = Math.floor(task.startMin / 60); startM = task.startMin % 60;
-            }
+        if (!timeFound && task.startMin !== undefined && task.startMin !== null) {
+            startH = Math.floor(task.startMin / 60);
+            startM = task.startMin % 60;
+            timeFound = true;
         }
 
         let duration = task.durationMinutes || task.duration || 60;
@@ -359,24 +359,25 @@ function renderAcademicTasks() {
         }
     });
 
-    if (shouldRingStartAlarm && startAlarm && !sessionActive) {
-        startAlarm.currentTime = 0;
-        startAlarm.play().catch(e => {
-            setTimeout(() => { startAlarm.play().catch(err => console.log("Retry failed:", err)); }, 1000);
-        });
+    if (shouldRingStartAlarm && !sessionActive) {
+        if (window.NativeBridge && window.NativeBridge.vibrate) {
+            window.NativeBridge.vibrate(250);
+        }
         
-        const readyTaskTitle = availableTasks[0]?.title || 'Study Session';
+        const readyTask = availableTasks[0];
+        const readyTaskTitle = readyTask?.title || 'Study Session';
+        const readyDuration = readyTask?.duration || 60;
+        
         showCustomModal(
             "⏰ SESSION UNLOCKED!", 
-            `Your scheduled task "${readyTaskTitle}" is ready to begin! Tap "I am ready" to start your 25-minute Pomodoro focus session.`, 
+            `Your scheduled task "${readyTaskTitle}" (${readyDuration}m) is ready to begin! Tap "I am ready" to start your focus session.`, 
             "info",
             (confirmed) => {
                 if (confirmed) {
-                    if (startAlarm) { startAlarm.pause(); startAlarm.currentTime = 0; }
                     if (window.NativeBridge && window.NativeBridge.stopAlarm) {
                         window.NativeBridge.stopAlarm();
                     }
-                    beginActivePomodoroCountdown(readyTaskTitle);
+                    beginActivePomodoroCountdown(readyTaskTitle, readyDuration);
                 }
             },
             "✅ I am ready"
@@ -433,7 +434,7 @@ function renderAcademicTasks() {
 
             taskDiv.addEventListener('click', () => {
                 if (!sessionActive) {
-                    beginActivePomodoroCountdown(t.title);
+                    beginActivePomodoroCountdown(t.title, t.duration);
                 }
             });
 
@@ -465,7 +466,7 @@ function showIndependentStartBox(title) {
     const startBtn = document.getElementById('independentStartActionBtn');
     if (startBtn) {
         startBtn.addEventListener('click', function() {
-            [startAlarm, distractionAlarm, breakAlarm].forEach(a => {
+            [distractionAlarm, breakAlarm].forEach(a => {
                 if (a) { a.play().then(() => { a.pause(); a.currentTime = 0; }).catch(() => {}); }
             });
             beginActivePomodoroCountdown(title);
@@ -478,16 +479,46 @@ function clearIndependentStartBox() {
     if (boxContainer && !sessionActive) boxContainer.innerHTML = "";
 }
 
-function beginActivePomodoroCountdown(title) {
+window.adjustSessionDuration = function(mins) {
+    if (!sessionActive) return;
+    timeRemaining = mins * 60;
+    const clockNode = document.getElementById('liveCountdownClock');
+    if (clockNode) {
+        let m = Math.floor(timeRemaining / 60).toString().padStart(2, '0');
+        let s = (timeRemaining % 60).toString().padStart(2, '0');
+        clockNode.innerText = `${m}:${s}`;
+    }
+    if (window.NativeBridge && window.NativeBridge.startFocusSession) {
+        window.NativeBridge.startFocusSession(currentActiveTaskTitle, timeRemaining);
+    }
+    if (window.NativeBridge && window.NativeBridge.vibrate) {
+        window.NativeBridge.vibrate(40);
+    }
+};
+
+function beginActivePomodoroCountdown(title, customDurationMinutes = null) {
     sessionActive = true;
     sessionPausedForDistraction = false;
     currentActiveTaskTitle = title;
-    timeRemaining = 25 * 60; 
-
-    if (startAlarm) {
-        startAlarm.pause();
-        startAlarm.currentTime = 0;
+    
+    let targetMins = 25;
+    if (customDurationMinutes && customDurationMinutes > 0) {
+        targetMins = customDurationMinutes;
+    } else {
+        try {
+            const raw = localStorage.getItem('productometer_chrono_planner_list');
+            if (raw) {
+                const list = JSON.parse(raw);
+                const found = list.find(t => (t.title === title || t.name === title));
+                if (found) {
+                    const d = parseFloat(found.durationMinutes || found.durationMin || found.duration);
+                    if (d > 0) targetMins = d;
+                }
+            }
+        } catch (e) {}
     }
+
+    timeRemaining = Math.round(targetMins * 60);
 
     if (window.NativeBridge && window.NativeBridge.isAvailable()) {
         try {
@@ -499,18 +530,30 @@ function beginActivePomodoroCountdown(title) {
         }
     }
 
+    const initialM = Math.floor(timeRemaining / 60).toString().padStart(2, '0');
+    const initialS = (timeRemaining % 60).toString().padStart(2, '0');
+
     const boxContainer = document.getElementById('activeSessionBoxContainer');
     if (boxContainer) {
         boxContainer.innerHTML = `
             <div class="glow-card" style="border: 1.5px solid #ffb300; margin-bottom: 24px; text-align: center;">
                 <div class="soft-heading" id="activeSessionHeaderStatus" style="color: #ffb300; margin-bottom: 4px;">Active Session In Progress</div>
-                <div style="font-size: 1.1rem; font-weight: 800; color: #fff; margin-bottom: 12px;">${title}</div>
-                <div id="liveCountdownClock" class="study-timer-display" style="color: #ffb300; text-shadow: 0 0 20px rgba(255, 179, 0, 0.4);">25:00</div>
+                <div style="font-size: 1.15rem; font-weight: 800; color: #fff; margin-bottom: 8px;">${title}</div>
+                <div id="liveCountdownClock" class="study-timer-display" style="color: #ffb300; text-shadow: 0 0 20px rgba(255, 179, 0, 0.4); margin-bottom: 12px;">${initialM}:${initialS}</div>
+                
+                <div style="display: flex; justify-content: center; gap: 8px; flex-wrap: wrap;">
+                    <button type="button" onclick="adjustSessionDuration(25)" style="background: rgba(255,179,0,0.15); border: 1px solid #ffb300; color: #ffb300; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; cursor: pointer;">25m Pomodoro</button>
+                    <button type="button" onclick="adjustSessionDuration(45)" style="background: rgba(255,179,0,0.15); border: 1px solid #ffb300; color: #ffb300; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; cursor: pointer;">45m Deep</button>
+                    <button type="button" onclick="adjustSessionDuration(60)" style="background: rgba(255,179,0,0.15); border: 1px solid #ffb300; color: #ffb300; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; cursor: pointer;">60m Hour</button>
+                    <button type="button" onclick="adjustSessionDuration(90)" style="background: rgba(255,179,0,0.15); border: 1px solid #ffb300; color: #ffb300; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; cursor: pointer;">90m Intensive</button>
+                </div>
             </div>
         `;
     }
 
     const clockNode = document.getElementById('liveCountdownClock');
+
+    if (currentSessionInterval) clearInterval(currentSessionInterval);
 
     currentSessionInterval = setInterval(() => {
         if (sessionPausedForDistraction) return; 
@@ -533,17 +576,21 @@ function beginActivePomodoroCountdown(title) {
             
             showCustomModal(
                 "Session Completed!", 
-                `Great focus! You completed 25 minutes of ${currentActiveTaskTitle}.\n\nPlease take a 5-minute break. Marked as completed in your Day Planner!`, 
+                `Great focus! You completed your study session for "${currentActiveTaskTitle}".
+
+Please take a 5-minute break. Marked as completed in your Day Planner!`, 
                 "break"
             );
 
-            // Synchronize with Day Planner
+            // Automatically mark task as completed in Day Planner!
             markPlannerTaskCompleted(currentActiveTaskTitle);
-
-            clearIndependentStartBox();
-            renderAcademicTasks(); 
+            
+            const boxContainer = document.getElementById('activeSessionBoxContainer');
+            if (boxContainer) boxContainer.innerHTML = "";
+            renderAcademicTasks();
         }
     }, 1000);
+}, 1000);
 }
 
 /* --- 5. STRICT DISTRACTION DETECTOR --- */
@@ -599,8 +646,27 @@ function getPersistentDailySeconds() {
         return 0;
     }
     
-    const saved = localStorage.getItem('productometer_daily_study_seconds');
-    return saved ? parseInt(saved, 10) : 0;
+    let saved = parseInt(localStorage.getItem('productometer_daily_study_seconds'), 10) || 0;
+    
+    // Also include completed study task hours from Day Planner
+    let completedPlannerSecs = 0;
+    try {
+        const raw = localStorage.getItem('productometer_chrono_planner_list');
+        if (raw) {
+            const list = JSON.parse(raw);
+            list.forEach(t => {
+                if (t && t.completed) {
+                    const cat = (t.category || '').toLowerCase();
+                    if (cat === 'academics' || cat === 'study' || cat === 'skills') {
+                        const dur = parseFloat(t.durationMin || t.durationMinutes || t.duration) || 25;
+                        completedPlannerSecs += Math.round(dur * 60);
+                    }
+                }
+            });
+        }
+    } catch (e) {}
+
+    return Math.max(saved, completedPlannerSecs);
 }
 
 let totalSeconds = getPersistentDailySeconds();
@@ -619,18 +685,20 @@ function formatStudyTime(seconds) {
 }
 
 function updateStudyTimeDisplay() {
+    totalSeconds = getPersistentDailySeconds();
     const timerDisplay = document.getElementById('studyTimerDisplay');
     if (timerDisplay) { timerDisplay.innerText = formatStudyTime(totalSeconds); }
 }
 updateStudyTimeDisplay();
 
+// Real-time second-by-second study timer accumulation during active sessions
 setInterval(() => {
-    if (document.hasFocus() && sessionActive && !sessionPausedForDistraction) { 
-        totalSeconds += 60; 
+    if (sessionActive && !sessionPausedForDistraction) { 
+        totalSeconds++;
         localStorage.setItem('productometer_daily_study_seconds', totalSeconds.toString());
         updateStudyTimeDisplay();
     }
-}, 60000);
+}, 1000);
 
 /* --- 7. AUTOMATIC MIDNIGHT RESET HANDLER --- */
 function checkAndResetPlannerForNewDay() {

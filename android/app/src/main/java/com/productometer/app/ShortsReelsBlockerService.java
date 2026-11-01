@@ -3,6 +3,7 @@ package com.productometer.app;
 import android.accessibilityservice.AccessibilityService;
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.PixelFormat;
@@ -22,16 +23,18 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
- * Productometer Doomscroll Guardian (Accessibility Service)
+ * Productometer Distraction Guardian & Doomscroll Blocker
  *
  * Rules:
- * 1. Allows the 1st Reel / Short freely (grace rule).
- * 2. On the 2nd Reel / Short, displays a 5-second countdown popup overlay.
- * 3. Triggers GLOBAL_ACTION_BACK only once when countdown completes, returning the user
- *    to the exact screen from where they were distracted.
+ * 1. 1st Short / Reel / Casual Video -> Grace period (allowed).
+ * 2. 2nd consecutive Short / Reel / Casual Video or Distracting App -> 5-second countdown alert.
+ * 3. Safely returns user to their previous screen/application (compatible with Gesture Navigation).
  */
 public class ShortsReelsBlockerService extends AccessibilityService {
 
@@ -44,10 +47,24 @@ public class ShortsReelsBlockerService extends AccessibilityService {
     private static final String PKG_YOUTUBE = "com.google.android.youtube";
     private static final String PKG_INSTAGRAM = "com.instagram.android";
 
+    private static final Set<String> DISTRACTING_APPS = new HashSet<>(Arrays.asList(
+            "com.instagram.android",
+            "com.facebook.katana",
+            "com.facebook.orca",
+            "com.twitter.android",
+            "com.snapchat.android",
+            "com.zhiliaoapp.musically",
+            "com.ss.android.ugc.trill",
+            "com.reddit.frontpage",
+            "com.netflix.mediaclient",
+            "com.amazon.avod.thirdpartyclient"
+    ));
+
     // Session tracking variables
-    private int reelCount = 0;
-    private String lastReelSignature = "";
-    private long lastReelDetectedTimestamp = 0;
+    private int distractionCount = 0;
+    private String lastDistractionSignature = "";
+    private long lastDistractionTimestamp = 0;
+    private String previousNonDistractingPackage = null;
     private boolean isOverlayActive = false;
     private boolean isCoolingDown = false;
 
@@ -85,18 +102,16 @@ public class ShortsReelsBlockerService extends AccessibilityService {
         if (packageNameChar == null) return;
         String packageName = packageNameChar.toString();
 
-        if (!PKG_YOUTUBE.equals(packageName) && !PKG_INSTAGRAM.equals(packageName)) {
-            // User switched to another app - reset reel counter
-            resetReelSession();
+        // Track user's productive / previous app
+        if (!DISTRACTING_APPS.contains(packageName) && !PKG_YOUTUBE.equals(packageName) && !packageName.equals(getPackageName())) {
+            previousNonDistractingPackage = packageName;
+            resetDistractionSession();
             return;
         }
 
         SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         boolean isShortsBlocked = prefs.getBoolean(KEY_SHORTS_ENABLED, true);
         boolean isReelsBlocked = prefs.getBoolean(KEY_REELS_ENABLED, true);
-
-        if (PKG_YOUTUBE.equals(packageName) && !isShortsBlocked) return;
-        if (PKG_INSTAGRAM.equals(packageName) && !isReelsBlocked) return;
 
         // Skip detection while overlay or back-cooldown is active
         if (isOverlayActive || isCoolingDown) return;
@@ -105,24 +120,46 @@ public class ShortsReelsBlockerService extends AccessibilityService {
         if (rootNode == null) return;
 
         try {
-            boolean isReelActive = false;
-            String reelSignature = "";
+            boolean isDistractionActive = false;
+            String signature = "";
+            String distractionLabel = "Distraction";
 
             if (PKG_YOUTUBE.equals(packageName)) {
-                reelSignature = detectYouTubeShort(rootNode, event);
-                isReelActive = (reelSignature != null && !reelSignature.isEmpty());
+                if (isShortsBlocked) {
+                    signature = detectYouTubeShort(rootNode, event);
+                    if (signature != null && !signature.isEmpty()) {
+                        isDistractionActive = true;
+                        distractionLabel = "YouTube Shorts";
+                    }
+                }
+                if (!isDistractionActive) {
+                    // Check for casual non-educational videos
+                    signature = detectYouTubeCasualVideo(rootNode, event);
+                    if (signature != null && !signature.isEmpty()) {
+                        isDistractionActive = true;
+                        distractionLabel = "Casual YouTube Video";
+                    }
+                }
             } else if (PKG_INSTAGRAM.equals(packageName)) {
-                reelSignature = detectInstagramReel(rootNode, event);
-                isReelActive = (reelSignature != null && !reelSignature.isEmpty());
+                if (isReelsBlocked) {
+                    signature = detectInstagramReel(rootNode, event);
+                    if (signature != null && !signature.isEmpty()) {
+                        isDistractionActive = true;
+                        distractionLabel = "Instagram Reels";
+                    }
+                }
+            } else if (DISTRACTING_APPS.contains(packageName)) {
+                signature = "app_" + packageName;
+                isDistractionActive = true;
+                distractionLabel = getFriendlyName(packageName);
             }
 
-            if (isReelActive) {
-                handleReelDetected(reelSignature);
+            if (isDistractionActive) {
+                handleDistractionDetected(signature, distractionLabel);
             } else {
-                // If user is in YouTube or Instagram but NOT in Reels/Shorts (e.g. search, channel, feed)
                 long now = System.currentTimeMillis();
-                if (now - lastReelDetectedTimestamp > 8000) {
-                    resetReelSession();
+                if (now - lastDistractionTimestamp > 8000) {
+                    resetDistractionSession();
                 }
             }
         } finally {
@@ -130,11 +167,7 @@ public class ShortsReelsBlockerService extends AccessibilityService {
         }
     }
 
-    /**
-     * Inspects YouTube UI nodes to detect if a Short is currently on screen.
-     */
     private String detectYouTubeShort(AccessibilityNodeInfo root, AccessibilityEvent event) {
-        // 1. Look for reel player resource identifiers
         List<AccessibilityNodeInfo> reelNodes = root.findAccessibilityNodeInfosByViewId("com.google.android.youtube:id/reel_recycler");
         if (reelNodes == null || reelNodes.isEmpty()) {
             reelNodes = root.findAccessibilityNodeInfosByViewId("com.google.android.youtube:id/reel_player_page_container");
@@ -148,13 +181,11 @@ public class ShortsReelsBlockerService extends AccessibilityService {
             for (AccessibilityNodeInfo n : reelNodes) n.recycle();
         }
 
-        // 2. Also inspect content descriptions or active titles
         CharSequence className = event.getClassName();
         String classStr = className != null ? className.toString() : "";
         boolean isReelScroll = event.getEventType() == AccessibilityEvent.TYPE_VIEW_SCROLLED && hasReelNode;
 
         if (hasReelNode || classStr.contains("Reel") || isReelScroll) {
-            // Generate a signature using current visible text / time to distinguish consecutive shorts
             String textDump = extractVisibleTextSignature(root);
             return "yt_short_" + (textDump.isEmpty() ? String.valueOf(System.currentTimeMillis() / 3000) : textDump);
         }
@@ -162,9 +193,38 @@ public class ShortsReelsBlockerService extends AccessibilityService {
         return null;
     }
 
-    /**
-     * Inspects Instagram UI nodes to detect if a Reel is currently on screen.
-     */
+    private String detectYouTubeCasualVideo(AccessibilityNodeInfo root, AccessibilityEvent event) {
+        List<AccessibilityNodeInfo> playerNodes = root.findAccessibilityNodeInfosByViewId("com.google.android.youtube:id/player_view");
+        if (playerNodes == null || playerNodes.isEmpty()) {
+            playerNodes = root.findAccessibilityNodeInfosByViewId("com.google.android.youtube:id/watch_while_layout");
+        }
+        if (playerNodes == null || playerNodes.isEmpty()) {
+            playerNodes = root.findAccessibilityNodeInfosByViewId("com.google.android.youtube:id/inline_player");
+        }
+
+        boolean hasPlayer = (playerNodes != null && !playerNodes.isEmpty());
+        if (playerNodes != null) {
+            for (AccessibilityNodeInfo n : playerNodes) n.recycle();
+        }
+
+        if (!hasPlayer) return null;
+
+        String textDump = extractVisibleTextSignature(root).toLowerCase();
+        boolean isEducational = textDump.contains("lecture") || textDump.contains("tutorial") ||
+                textDump.contains("class") || textDump.contains("course") ||
+                textDump.contains("physics") || textDump.contains("math") ||
+                textDump.contains("chemistry") || textDump.contains("study") ||
+                textDump.contains("programming") || textDump.contains("coding") ||
+                textDump.contains("exam") || textDump.contains("dsa") ||
+                textDump.contains("chapter");
+
+        if (isEducational) {
+            return null; // Allowed! Educational content
+        }
+
+        return "yt_casual_" + (textDump.isEmpty() ? String.valueOf(System.currentTimeMillis() / 5000) : textDump);
+    }
+
     private String detectInstagramReel(AccessibilityNodeInfo root, AccessibilityEvent event) {
         List<AccessibilityNodeInfo> clipsNodes = root.findAccessibilityNodeInfosByViewId("com.instagram.android:id/clips_video_container");
         if (clipsNodes == null || clipsNodes.isEmpty()) {
@@ -220,46 +280,35 @@ public class ShortsReelsBlockerService extends AccessibilityService {
         }
     }
 
-    /**
-     * State Engine:
-     * - 1st Reel -> Allowed! (Grace reel).
-     * - 2nd Reel -> Trigger 5-second countdown popup & return once.
-     */
-    private synchronized void handleReelDetected(String signature) {
+    private synchronized void handleDistractionDetected(String signature, String label) {
         long now = System.currentTimeMillis();
-        lastReelDetectedTimestamp = now;
+        lastDistractionTimestamp = now;
 
-        // Debounce repeated events for the exact same reel
-        if (signature.equals(lastReelSignature)) {
+        if (signature.equals(lastDistractionSignature)) {
             return;
         }
 
-        lastReelSignature = signature;
-        reelCount++;
+        lastDistractionSignature = signature;
+        distractionCount++;
 
-        if (reelCount == 1) {
-            // First reel is allowed freely
+        if (distractionCount == 1) {
             mainHandler.post(() -> Toast.makeText(
                     getApplicationContext(),
-                    "🛡️ Productometer: 1st Reel allowed. 2nd Reel will be blocked.",
+                    "🛡️ Productometer: 1st " + label + " allowed (grace). Next will trigger guardian alert.",
                     Toast.LENGTH_SHORT
             ).show());
-        } else if (reelCount >= 2) {
-            // Second reel detected: Launch 5-second countdown popup!
-            mainHandler.post(this::showCountdownOverlay);
+        } else if (distractionCount >= 2) {
+            mainHandler.post(() -> showCountdownOverlay(label));
         }
     }
 
-    private void resetReelSession() {
-        reelCount = 0;
-        lastReelSignature = "";
+    private void resetDistractionSession() {
+        distractionCount = 0;
+        lastDistractionSignature = "";
     }
 
-    /**
-     * Builds and attaches the floating 5-second countdown dialog over the screen.
-     */
     @SuppressLint("SetTextI18n")
-    private void showCountdownOverlay() {
+    private void showCountdownOverlay(String label) {
         if (isOverlayActive) return;
         isOverlayActive = true;
 
@@ -281,7 +330,6 @@ public class ShortsReelsBlockerService extends AccessibilityService {
         );
         params.gravity = Gravity.CENTER;
 
-        // Root container with dark cyberpunk frosted aesthetic
         LinearLayout rootLayout = new LinearLayout(this);
         rootLayout.setOrientation(LinearLayout.VERTICAL);
         rootLayout.setGravity(Gravity.CENTER);
@@ -289,12 +337,11 @@ public class ShortsReelsBlockerService extends AccessibilityService {
         rootLayout.setPadding(pad, pad, pad, pad);
 
         GradientDrawable bgShape = new GradientDrawable();
-        bgShape.setColor(Color.parseColor("#EE0B0D17")); // 93% opacity obsidian
+        bgShape.setColor(Color.parseColor("#EE0B0D17"));
         bgShape.setCornerRadius(dpToPx(20));
-        bgShape.setStroke(dpToPx(2), Color.parseColor("#FF1744")); // Cyberpunk crimson border
+        bgShape.setStroke(dpToPx(2), Color.parseColor("#FF1744"));
         rootLayout.setBackground(bgShape);
 
-        // Header Title
         TextView titleView = new TextView(this);
         titleView.setText("🛡️ DOOMSCROLL GUARDIAN");
         titleView.setTextSize(16);
@@ -303,9 +350,8 @@ public class ShortsReelsBlockerService extends AccessibilityService {
         titleView.setGravity(Gravity.CENTER);
         rootLayout.addView(titleView);
 
-        // Subtitle Alert
         TextView subtitleView = new TextView(this);
-        subtitleView.setText("Second Reel Detected!");
+        subtitleView.setText(label + " Detected!");
         subtitleView.setTextSize(18);
         subtitleView.setTypeface(Typeface.DEFAULT_BOLD);
         subtitleView.setTextColor(Color.WHITE);
@@ -313,7 +359,6 @@ public class ShortsReelsBlockerService extends AccessibilityService {
         subtitleView.setPadding(0, dpToPx(6), 0, 0);
         rootLayout.addView(subtitleView);
 
-        // Notice Message
         TextView descView = new TextView(this);
         descView.setText("Returning to your previous screen to protect your focus.");
         descView.setTextSize(13);
@@ -322,7 +367,6 @@ public class ShortsReelsBlockerService extends AccessibilityService {
         descView.setPadding(0, dpToPx(4), 0, dpToPx(14));
         rootLayout.addView(descView);
 
-        // Big Countdown Number Circle
         final TextView countdownNumberView = new TextView(this);
         countdownNumberView.setText("5");
         countdownNumberView.setTextSize(36);
@@ -341,7 +385,6 @@ public class ShortsReelsBlockerService extends AccessibilityService {
         circleParams.gravity = Gravity.CENTER;
         rootLayout.addView(countdownNumberView, circleParams);
 
-        // Action Button: "Return Now"
         Button returnBtn = new Button(this);
         returnBtn.setText("↩️ Return Now");
         returnBtn.setTextSize(14);
@@ -373,7 +416,6 @@ public class ShortsReelsBlockerService extends AccessibilityService {
             return;
         }
 
-        // 5-second countdown timer
         countdownTimer = new CountDownTimer(5000L, 1000L) {
             @Override
             public void onTick(long millisUntilFinished) {
@@ -389,8 +431,8 @@ public class ShortsReelsBlockerService extends AccessibilityService {
     }
 
     /**
-     * Dismisses the popup and triggers GLOBAL_ACTION_BACK only once.
-     * Takes the user right back to the screen from where they got distracted.
+     * Dismisses popup and executes BACK action with a 250ms delay for Gesture Navigation.
+     * Also brings previous non-distracting application back to front.
      */
     private synchronized void performBackActionOnce() {
         dismissOverlay();
@@ -398,19 +440,39 @@ public class ShortsReelsBlockerService extends AccessibilityService {
         if (isCoolingDown) return;
         isCoolingDown = true;
 
-        // Perform system BACK only once
-        boolean success = performGlobalAction(AccessibilityService.GLOBAL_ACTION_BACK);
+        final String targetPkg = previousNonDistractingPackage;
 
-        if (success) {
-            Toast.makeText(
-                    getApplicationContext(),
-                    "🛡️ Productometer: Returned to your previous screen",
-                    Toast.LENGTH_SHORT
-            ).show();
-        }
+        // CRITICAL FOR GESTURE NAVIGATION:
+        // Wait 250ms for Android WindowManager to restore input focus to the target app window!
+        mainHandler.postDelayed(() -> {
+            boolean success = performGlobalAction(AccessibilityService.GLOBAL_ACTION_BACK);
 
-        // Reset counters and allow safety cooldown
-        resetReelSession();
+            // Double back after 350ms to collapse YouTube video players or exit nested screens
+            mainHandler.postDelayed(() -> {
+                performGlobalAction(AccessibilityService.GLOBAL_ACTION_BACK);
+
+                // Fallback Intent directly to previous app
+                if (targetPkg != null && !targetPkg.equals(getPackageName())) {
+                    mainHandler.postDelayed(() -> {
+                        try {
+                            Intent intent = getPackageManager().getLaunchIntentForPackage(targetPkg);
+                            if (intent != null) {
+                                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
+                                startActivity(intent);
+                            }
+                        } catch (Exception ignored) {}
+                    }, 300L);
+                }
+            }, 350L);
+        }, 250L);
+
+        Toast.makeText(
+                getApplicationContext(),
+                "🛡️ Productometer: Returned to protect your focus",
+                Toast.LENGTH_SHORT
+        ).show();
+
+        resetDistractionSession();
 
         mainHandler.postDelayed(() -> {
             isCoolingDown = false;
@@ -429,6 +491,17 @@ public class ShortsReelsBlockerService extends AccessibilityService {
             overlayView = null;
         }
         isOverlayActive = false;
+    }
+
+    private String getFriendlyName(String pkg) {
+        if (pkg.contains("facebook")) return "Facebook";
+        if (pkg.contains("instagram")) return "Instagram";
+        if (pkg.contains("twitter")) return "X (Twitter)";
+        if (pkg.contains("snapchat")) return "Snapchat";
+        if (pkg.contains("reddit")) return "Reddit";
+        if (pkg.contains("netflix")) return "Netflix";
+        if (pkg.contains("tiktok") || pkg.contains("musically")) return "TikTok";
+        return "Distracting App";
     }
 
     private int dpToPx(int dp) {

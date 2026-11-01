@@ -197,6 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             name: cleanTitle,
                             category: assignedCategory,
                             seconds: item.totalSeconds || (item.minutes * 60) || 0,
+                            iconBase64: item.iconBase64 || null,
                             icon: 'fa-solid fa-mobile-screen',
                             bg: assignedCategory === 'productivity' ? '#00e5ff' : '#334155',
                             color: '#fff',
@@ -577,12 +578,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="app-top-info">
 
                     <div class="app-brand">
-
-                        <div class="app-avatar" style="background: ${app.bg || '#334155'}; color: ${app.color || '#fff'};">
-
-                            <i class="${app.icon || 'fa-solid fa-cube'}"></i>
-
-                        </div>
+                        ${app.iconBase64 ? 
+                            `<img src="${app.iconBase64}" class="app-native-logo" alt="" style="width: 38px; height: 38px; border-radius: 9px; object-fit: contain; flex-shrink: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.4); margin-right: 10px;">` :
+                            `<div class="app-avatar" style="background: ${app.bg || '#334155'}; color: ${app.color || '#fff'};">
+                                <i class="${app.icon || 'fa-solid fa-cube'}"></i>
+                            </div>`
+                        }
 
                         <div class="app-meta-box">
 

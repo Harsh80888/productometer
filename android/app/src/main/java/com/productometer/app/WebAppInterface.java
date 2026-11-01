@@ -3,6 +3,7 @@ package com.productometer.app;
 import android.app.AlarmManager;
 import android.app.AppOpsManager;
 import android.app.PendingIntent;
+import android.app.usage.UsageEvents;
 import android.app.usage.UsageStats;
 import android.app.usage.UsageStatsManager;
 import android.content.Context;
@@ -11,19 +12,26 @@ import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Process;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.provider.Settings;
+import android.util.Base64;
 import android.webkit.JavascriptInterface;
 import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -101,9 +109,24 @@ public class WebAppInterface {
     public boolean hasUsageStatsPermission() {
         try {
             AppOpsManager appOps = (AppOpsManager) context.getSystemService(Context.APP_OPS_SERVICE);
-            if (appOps == null) return false;
-            int mode = appOps.checkOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS, Process.myUid(), context.getPackageName());
-            return mode == AppOpsManager.MODE_ALLOWED;
+            if (appOps != null) {
+                int mode;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    mode = appOps.unsafeCheckOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS, Process.myUid(), context.getPackageName());
+                } else {
+                    mode = appOps.checkOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS, Process.myUid(), context.getPackageName());
+                }
+                if (mode == AppOpsManager.MODE_ALLOWED) return true;
+            }
+
+            // Secondary check: query small slice to see if system permits usage stats
+            UsageStatsManager usm = (UsageStatsManager) context.getSystemService(Context.USAGE_STATS_SERVICE);
+            if (usm != null) {
+                long now = System.currentTimeMillis();
+                List<UsageStats> list = usm.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, now - 60000L, now);
+                if (list != null && !list.isEmpty()) return true;
+            }
+            return false;
         } catch (Exception e) {
             return false;
         }
@@ -179,15 +202,49 @@ public class WebAppInterface {
      * Queries actual daily app screen time from Android UsageStatsManager (from 00:00 midnight to now).
      * Returns a JSON array of real apps with clean label, package name, and foreground seconds.
      */
+    /**
+     * Extracts an application's native icon as a compact Base64 PNG data URL.
+     */
+    private String getAppIconBase64(PackageManager pm, String pkgName) {
+        try {
+            Drawable drawable = pm.getApplicationIcon(pkgName);
+            Bitmap bitmap;
+            if (drawable instanceof BitmapDrawable) {
+                bitmap = ((BitmapDrawable) drawable).getBitmap();
+            } else {
+                int w = Math.max(1, drawable.getIntrinsicWidth());
+                int h = Math.max(1, drawable.getIntrinsicHeight());
+                bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
+                Canvas canvas = new Canvas(bitmap);
+                drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
+                drawable.draw(canvas);
+            }
+            if (bitmap == null) return null;
+
+            // Scale to 56x56 for sharp mobile rendering with tiny memory footprint
+            Bitmap scaled = Bitmap.createScaledBitmap(bitmap, 56, 56, true);
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            scaled.compress(Bitmap.CompressFormat.PNG, 85, baos);
+            byte[] bytes = baos.toByteArray();
+            return "data:image/png;base64," + Base64.encodeToString(bytes, Base64.NO_WRAP);
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
+    /**
+     * Queries actual daily app screen time from Android UsageStatsManager (ground truth).
+     * Returns a JSON array of real apps with clean label, native icon base64, package name, and foreground seconds.
+     */
     @JavascriptInterface
     public String getRealAppUsageStats() {
         try {
             if (!hasUsageStatsPermission()) {
-                return null;
+                return "[]";
             }
 
             UsageStatsManager usageStatsManager = (UsageStatsManager) context.getSystemService(Context.USAGE_STATS_SERVICE);
-            if (usageStatsManager == null) return null;
+            if (usageStatsManager == null) return "[]";
 
             Calendar calendar = Calendar.getInstance();
             calendar.set(Calendar.HOUR_OF_DAY, 0);
@@ -197,32 +254,103 @@ public class WebAppInterface {
             long startOfDay = calendar.getTimeInMillis();
             long now = System.currentTimeMillis();
 
-            Map<String, UsageStats> statsMap = usageStatsManager.queryAndAggregateUsageStats(startOfDay, now);
-            if (statsMap == null || statsMap.isEmpty()) return null;
-
             PackageManager pm = context.getPackageManager();
+            Map<String, Long> foregroundTimeMap = new HashMap<>();
+
+            // 1. Primary Ground Truth: UsageEvents
+            try {
+                UsageEvents events = usageStatsManager.queryEvents(startOfDay, now);
+                Map<String, Long> openAppTimestamps = new HashMap<>();
+                UsageEvents.Event event = new UsageEvents.Event();
+
+                while (events != null && events.hasNextEvent()) {
+                    events.getNextEvent(event);
+                    String pkg = event.getPackageName();
+                    int type = event.getEventType();
+                    long time = event.getTimeStamp();
+
+                    if (type == UsageEvents.Event.ACTIVITY_RESUMED || type == UsageEvents.Event.MOVE_TO_FOREGROUND) {
+                        openAppTimestamps.put(pkg, time);
+                    } else if (type == UsageEvents.Event.ACTIVITY_PAUSED || type == UsageEvents.Event.ACTIVITY_STOPPED || type == UsageEvents.Event.MOVE_TO_BACKGROUND) {
+                        Long openTime = openAppTimestamps.remove(pkg);
+                        if (openTime != null && time > openTime) {
+                            long delta = time - openTime;
+                            long current = foregroundTimeMap.containsKey(pkg) ? foregroundTimeMap.get(pkg) : 0L;
+                            foregroundTimeMap.put(pkg, current + delta);
+                        }
+                    }
+                }
+
+                // Add time for any app currently active in foreground right now
+                for (Map.Entry<String, Long> entry : openAppTimestamps.entrySet()) {
+                    long delta = now - entry.getValue();
+                    if (delta > 0 && delta < 12 * 3600 * 1000L) {
+                        long current = foregroundTimeMap.containsKey(entry.getKey()) ? foregroundTimeMap.get(entry.getKey()) : 0L;
+                        foregroundTimeMap.put(entry.getKey(), current + delta);
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            // 2. Secondary Strategy: queryUsageStats fallback if events map is empty
+            if (foregroundTimeMap.isEmpty()) {
+                List<UsageStats> statsList = usageStatsManager.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, startOfDay, now);
+                if (statsList == null || statsList.isEmpty()) {
+                    statsList = usageStatsManager.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, now - 86400000L, now);
+                }
+                if (statsList != null) {
+                    for (UsageStats stat : statsList) {
+                        long fg = stat.getTotalTimeInForeground();
+                        if (fg > 0) {
+                            long current = foregroundTimeMap.containsKey(stat.getPackageName()) ? foregroundTimeMap.get(stat.getPackageName()) : 0L;
+                            foregroundTimeMap.put(stat.getPackageName(), Math.max(current, fg));
+                        }
+                    }
+                }
+            }
+
+            // 3. Tertiary Strategy: queryAndAggregateUsageStats
+            if (foregroundTimeMap.isEmpty()) {
+                Map<String, UsageStats> aggregated = usageStatsManager.queryAndAggregateUsageStats(startOfDay, now);
+                if (aggregated != null) {
+                    for (Map.Entry<String, UsageStats> entry : aggregated.entrySet()) {
+                        long fg = entry.getValue().getTotalTimeInForeground();
+                        if (fg > 0) {
+                            foregroundTimeMap.put(entry.getKey(), fg);
+                        }
+                    }
+                }
+            }
+
             JSONArray jsonArray = new JSONArray();
 
-            for (Map.Entry<String, UsageStats> entry : statsMap.entrySet()) {
-                UsageStats stats = entry.getValue();
-                long totalForegroundMs = stats.getTotalTimeInForeground();
-                if (totalForegroundMs < 60000) continue; // Skip apps with less than 1 minute usage
-
+            for (Map.Entry<String, Long> entry : foregroundTimeMap.entrySet()) {
                 String pkgName = entry.getKey();
+                long totalForegroundMs = entry.getValue();
+
+                // Skip system internal daemons, keep all real user apps
+                if (totalForegroundMs < 1000L) continue;
+                if (pkgName.equals("com.android.systemui") || pkgName.equals("android")) continue;
+
                 String appLabel = getFriendlyAppName(pm, pkgName);
+                String iconBase64 = getAppIconBase64(pm, pkgName);
 
                 JSONObject obj = new JSONObject();
                 obj.put("packageName", pkgName);
                 obj.put("appName", appLabel);
-                obj.put("totalSeconds", totalForegroundMs / 1000);
+                obj.put("totalSeconds", totalForegroundMs / 1000L);
                 obj.put("minutes", Math.round(totalForegroundMs / 60000f));
-                
+                if (iconBase64 != null) {
+                    obj.put("iconBase64", iconBase64);
+                }
+
                 // Smart default category tagging
                 String lower = (pkgName + " " + appLabel).toLowerCase();
                 boolean isProd = lower.contains("study") || lower.contains("learn") || lower.contains("doc") || 
                                  lower.contains("pdf") || lower.contains("book") || lower.contains("productivity") ||
                                  lower.contains("school") || lower.contains("calculator") || lower.contains("notes") ||
-                                 lower.contains("productometer");
+                                 lower.contains("productometer") || lower.contains("drive") || lower.contains("classroom");
                 obj.put("category", isProd ? "productivity" : "others");
 
                 jsonArray.put(obj);
@@ -231,7 +359,7 @@ public class WebAppInterface {
             return jsonArray.toString();
         } catch (Exception e) {
             e.printStackTrace();
-            return null;
+            return "[]";
         }
     }
 

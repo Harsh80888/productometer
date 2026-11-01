@@ -51,17 +51,17 @@ public class AlarmReceiver extends BroadcastReceiver {
             wakeLock.acquire(10 * 1000L); // 10 seconds
         }
 
-        // Play system alarm sound on ALARM audio stream
+        // Play system notification chime (gentle chime instead of endless looping song)
         try {
-            Uri alarmUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
+            Uri alarmUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
             if (alarmUri == null) {
-                alarmUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+                alarmUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
             }
             Ringtone ringtone = RingtoneManager.getRingtone(context, alarmUri);
             if (ringtone != null) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                     ringtone.setAudioAttributes(new AudioAttributes.Builder()
-                            .setUsage(AudioAttributes.USAGE_ALARM)
+                            .setUsage(AudioAttributes.USAGE_NOTIFICATION)
                             .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                             .build());
                 }

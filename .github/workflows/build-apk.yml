@@ -65,35 +65,35 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create v1.0.4 dist/Productometer.apk \
-            --title "Productometer v1.0.4 - Android Release APK" \
-            --notes "### 📱 Productometer Android Release v1.0.4
+          gh release create v1.0.5 dist/Productometer.apk \
+            --title "Productometer v1.0.5 - Android Release APK" \
+            --notes "### 📱 Productometer Android Release v1.0.5
 
-          Major stability & feature update: Academics task list rendering fix, Alarm \"I am ready\" instant start & dismiss, Screen Management proactive permission prompt & syntax resolution, verified Home productivity score engine, and anti-drift GPS.
+          Major update featuring ground-truth Android Screen Time tracking with authentic app logos, complete alarm song silencing, accurate real-time study time counter, dynamic session duration selector, system-wide Distraction Guardian with Gesture Navigation support, and cleaned Features grid.
 
-          #### 🚀 Key Fixes & Features in v1.0.4:
-          - **Academics Monitoring Task Rendering Fix:**
-            - Resolved JavaScript ReferenceError that was halting script execution; tasks from Day Planner now reliably render into the Academics Monitoring bucket.
-            - Broadened categorization so all non-health study, skill, and custom objectives appear in the task bucket with interactive \"Start\" and \"Start Early\" triggers.
-            - Completing a 25-minute Pomodoro study block marks the task completed in Day Planner.
+          #### 🚀 Key Fixes & Features in v1.0.5:
+          - **Screen Monitoring — Ground-Truth Device Screen Time & Real App Logos:**
+            - Upgraded to dual-engine \`UsageEvents\` + \`queryUsageStats\` aggregator in Java; accurately captures all real application screen time directly from Android OS without open-interval aggregation drops.
+            - Serializes native high-resolution app icons into Base64 PNG data URLs directly from Android's \`PackageManager\`, rendering original authentic logos for YouTube, WhatsApp, Instagram, Chrome, Camera, Games, etc.
+            - Purged dummy mock data fallback when Usage Access permission is granted.
 
-          - **Task Alarm \"I am ready\" Option:**
-            - Replaced generic dismiss buttons with a prominent **\"✅ I am ready\"** option on both the on-screen alert modal and the native Android notification.
-            - Tapping **\"I am ready\"** instantly silences both the native Android alarm ringtone and web audio, closes the alert, and starts the Pomodoro focus countdown session.
+          - **Academics Monitoring — Audio, Time & Duration Overhaul:**
+            - **Disabled Background Alarm Song:** Eliminated background audio song track completely; notifications use clean, gentle system notification chimes and vibration only.
+            - **Accurate Real-Time Study Time at Bottom:** Fixed \`studyTimerDisplay\` to accumulate active study seconds in real time, immediately crediting completed sessions and Day Planner study hours.
+            - **12-Hour AM/PM Time Parser:** Fixed regex parsing so afternoon/evening scheduled times (e.g., \"02:30 PM\") are accurately parsed and displayed.
+            - **Dynamic Session Duration:** Countdown timer now dynamically reads your scheduled task duration, plus interactive duration selector chips (25m Pomodoro, 45m Deep Work, 60m Standard, 90m Intensive).
 
-          - **Screen Management Proactive Permission Prompt & Syntax Resolution:**
-            - Resolved duplicate variable syntax error that was preventing Screen Management scripts from compiling.
-            - Added a proactive top-level **Special Permission Card** that asks for Android Usage Access immediately upon opening Screen Management if not already granted.
-            - Direct one-tap buttons to **Enable Usage Access** and **Unlock Restricted Settings** for Android 13/14/15.
-            - Auto-refreshes and loads live application statistics immediately upon returning from system settings.
+          - **Distraction Guardian — System-Wide Blocking & Gesture Navigation Fix:**
+            - Removed package name restrictions from \`accessibility_service_config.xml\` so distracting social, streaming, and gaming apps are monitored system-wide.
+            - Added detection for casual entertainment videos on YouTube while preserving educational lectures and tutorials.
+            - Fixed Gesture Navigation back action by adding a 250ms WindowManager post-dismissal delay before executing \`GLOBAL_ACTION_BACK\`, paired with double-back player collapse and direct previous-app intent return.
 
-          - **Verified Home Productivity Score Formulation:**
-            - Refined score formulation to accurately reward completed task hours and tracked live sessions, preventing uncompleted future tasks from prematurely inflating the score.
-            - Guaranteed non-negative health workout scores and reset initial dummy screen time so fresh installs start cleanly at a baseline.
+          - **Cleaned Features Grid:**
+            - Removed the unimplemented Skill Manager tile from the Features hub for a clean, balanced 2x2 grid layout.
 
           - **100% Offline Capability:**
-            - Fully offline-functional without requiring an active internet connection.
+            - Fully functional offline without requiring an active internet connection.
 
           #### 📦 Direct Download:
           - Click **\`Productometer.apk\`** under Assets below to download and install." || \
-          gh release upload v1.0.4 dist/Productometer.apk --clobber
+          gh release upload v1.0.5 dist/Productometer.apk --clobber

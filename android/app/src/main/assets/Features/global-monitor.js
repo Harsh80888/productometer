@@ -100,11 +100,7 @@
         });
 
         if (shouldRing) {
-            const alarm = document.getElementById('globalStartAlarm');
-            if (alarm) {
-                alarm.currentTime = 0;
-                alarm.play().catch(e => console.log("Global audio blocked:", e));
-            }
+            if (window.NativeBridge && window.NativeBridge.vibrate) window.NativeBridge.vibrate(200);
             showGlobalModal(
                 "SESSION UNLOCKED!", 
                 `Your scheduled task "${availableTasks[0] || 'Study Session'}" is now ready to begin! Check your Academics hub.`
