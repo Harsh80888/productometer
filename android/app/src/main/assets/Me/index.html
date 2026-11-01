@@ -48,7 +48,7 @@
                     </div>
                 </section>
 
-                <!-- DEDICATED LAUNCHER: DISTRACTION BLOCKER BUTTON -->
+                <!-- DEDICATED LAUNCHER: THE DISTRACTION BLOCKER BUTTON -->
                 <div class="me-action-cards-grid">
                     <button class="btn-open-blocker" id="btnOpenBlocker">
                         <div class="action-card-content">
@@ -56,8 +56,8 @@
                                 <i class="fa-solid fa-shield-virus"></i>
                             </div>
                             <div class="action-card-text">
-                                <div class="action-card-title">Distraction blocker</div>
-                                <div class="action-card-desc">Configure which apps &amp; content run during sessions</div>
+                                <div class="action-card-title">The Distraction Blocker</div>
+                                <div class="action-card-desc">Guard focus sessions · Block shorts, reels &amp; distracting apps</div>
                                 <span class="action-card-badge badge-active-shield" id="hubGuardianBadge">
                                     <i class="fa-solid fa-shield-halved"></i> Schedule Aware
                                 </span>
@@ -161,7 +161,7 @@
             </div>
 
             <!-- ========================================================
-                 VIEW 2: DISTRACTION BLOCKER (REVEALED BEHIND BUTTON)
+                 VIEW 2: THE DISTRACTION BLOCKER (REVEALED BEHIND BUTTON)
                  ======================================================== -->
             <div id="distractionBlockerView">
 
@@ -171,8 +171,26 @@
                         <i class="fa-solid fa-arrow-left"></i> Me Profile
                     </button>
                     <span class="blocker-header-chip">
-                        <i class="fa-solid fa-shield-virus"></i> Distraction Blocker
+                        <i class="fa-solid fa-shield-virus"></i> The Distraction Blocker
                     </span>
+                </div>
+
+                <!-- MASTER ON/OFF SWITCH FOR THE DISTRACTION BLOCKER -->
+                <div class="me-card" style="border: 1.5px solid #00e5ff; background: rgba(0, 229, 255, 0.06); margin-bottom: 14px; padding: 16px 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 14px;">
+                        <div>
+                            <div style="font-size: 1.05rem; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 8px;">
+                                <i class="fa-solid fa-shield-halved" style="color: #00e5ff;"></i> The Distraction Blocker
+                            </div>
+                            <div id="masterBlockerSubtitle" style="font-size: 0.74rem; color: #94a3b8; margin-top: 3px; line-height: 1.35;">
+                                Auto-active during study sessions · Toggle ON to block distractions 24/7
+                            </div>
+                        </div>
+                        <label class="cyber-switch" style="transform: scale(1.15);">
+                            <input type="checkbox" id="masterBlockerToggle">
+                            <span class="switch-slider"></span>
+                        </label>
+                    </div>
                 </div>
 
                 <!-- Live Schedule Guardian Banner (Real-time Day Planner Link) -->

@@ -65,13 +65,13 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create v1.0.7 dist/Productometer.apk \
-            --title "Productometer v1.0.7 - Android Release APK" \
-            --notes "### 📱 Productometer Android Release v1.0.7
+          gh release create v1.0.8 dist/Productometer.apk \
+            --title "Productometer v1.0.8 - Android Release APK" \
+            --notes "### 📱 Productometer Android Release v1.0.8
 
-          Major update featuring session controls (Pause, Take a Break), live ongoing session card on top of the Home tab, audible alarm sounds on the system Alarm stream, exact Digital Wellbeing screen time aggregation, and upgraded Distraction Blocker with 15s casual video delay warning & native Emergency Pass popup.
+          Major stability & accuracy update featuring exact Digital Wellbeing screen time parity, dedicated Master ON/OFF Switch for The Distraction Blocker, and seamless two-way synchronization between Day Planner and Academics Monitoring with instant session starting. (Pause, Take a Break), live ongoing session card on top of the Home tab, audible alarm sounds on the system Alarm stream, exact Digital Wellbeing screen time aggregation, and upgraded Distraction Blocker with 15s casual video delay warning & native Emergency Pass popup.
 
-          #### 🚀 Key Fixes & Enhancements in v1.0.7:
+          #### 🚀 Key Fixes & Enhancements in v1.0.8:
           - **Academics Monitoring — Session Controls & Clear UI:**
             - Added **Pause / Resume** button to temporarily freeze study timer and study seconds accumulator.
             - Added **Take a Break (5m)** button to relax without losing focus progress.
@@ -100,4 +100,4 @@ jobs:
 
           #### 📦 Direct Download:
           - Click **\`Productometer.apk\`** under Assets below to download and install." || \
-          gh release upload v1.0.7 dist/Productometer.apk --clobber
+          gh release upload v1.0.8 dist/Productometer.apk --clobber

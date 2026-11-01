@@ -133,6 +133,32 @@ const NativeBridge = {
         } catch (e) {}
     },
 
+    setDistractionBlockerMasterEnabled: (enabled) => {
+        try {
+            if (typeof window.AndroidBridge !== 'undefined' && window.AndroidBridge.setDistractionBlockerMasterEnabled) {
+                window.AndroidBridge.setDistractionBlockerMasterEnabled(enabled);
+            }
+        } catch (e) {}
+    },
+
+    isDistractionBlockerMasterEnabled: () => {
+        try {
+            if (typeof window.AndroidBridge !== 'undefined' && window.AndroidBridge.isDistractionBlockerMasterEnabled) {
+                return window.AndroidBridge.isDistractionBlockerMasterEnabled();
+            }
+        } catch (e) {}
+        return false;
+    },
+
+    isFocusSessionOngoing: () => {
+        try {
+            if (typeof window.AndroidBridge !== 'undefined' && window.AndroidBridge.isFocusSessionOngoing) {
+                return window.AndroidBridge.isFocusSessionOngoing();
+            }
+        } catch (e) {}
+        return false;
+    },
+
     // --- 🛡️ DOOMSCROLL GUARDIAN (REELS & SHORTS) ---
     isAccessibilityServiceEnabled: () => {
         try {

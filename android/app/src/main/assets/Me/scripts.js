@@ -254,29 +254,50 @@ document.addEventListener('DOMContentLoaded', () => {
                 hubBadge.className = 'action-card-badge badge-active-shield';
                 hubBadge.innerHTML = `<i class="fa-solid fa-shield-halved"></i> Active: ${escapeHTML(activeTask.title || 'Session')}`;
             }
-        } else if (nextTask) {
-            if (statusPill) {
-                statusPill.className = 'guardian-status-pill status-standby';
-                statusPill.innerHTML = '<i class="fa-solid fa-bolt"></i> STANDBY · SCHEDULE AWARE';
-            }
-            if (taskDetail) {
-                taskDetail.innerHTML = `<i class="fa-regular fa-clock"></i> Next Session: <strong>${escapeHTML(nextTask.title || nextTask.name || 'Upcoming Task')}</strong> at ${formatMins(nextTask.startMins)}`;
-            }
-            if (hubBadge) {
-                hubBadge.className = 'action-card-badge badge-standby-shield';
-                hubBadge.innerHTML = `<i class="fa-solid fa-clock"></i> Next at ${formatMins(nextTask.startMins)}`;
-            }
         } else {
-            if (statusPill) {
-                statusPill.className = 'guardian-status-pill status-standby';
-                statusPill.innerHTML = '<i class="fa-solid fa-check-double"></i> STANDBY · ALL CLEAR';
+            let isMasterOn = false;
+            if (window.NativeBridge && window.NativeBridge.isDistractionBlockerMasterEnabled) {
+                isMasterOn = window.NativeBridge.isDistractionBlockerMasterEnabled();
+            } else {
+                isMasterOn = localStorage.getItem('productometer_master_blocker_enabled') === 'true';
             }
-            if (taskDetail) {
-                taskDetail.innerHTML = '<i class="fa-regular fa-calendar-check"></i> No active or upcoming Day Planner sessions today.';
-            }
-            if (hubBadge) {
-                hubBadge.className = 'action-card-badge badge-standby-shield';
-                hubBadge.innerHTML = '<i class="fa-solid fa-check-double"></i> All Tasks Clear';
+
+            if (isMasterOn) {
+                if (statusPill) {
+                    statusPill.className = 'guardian-status-pill status-active-academics';
+                    statusPill.innerHTML = '<i class="fa-solid fa-shield-halved"></i> THE DISTRACTION BLOCKER · DEFENSE ON';
+                }
+                if (taskDetail) {
+                    taskDetail.innerHTML = '<i class="fa-solid fa-lock" style="color: #00e5ff;"></i> Master Switch is ON · Distractions are actively blocked 24/7.';
+                }
+                if (hubBadge) {
+                    hubBadge.className = 'action-card-badge badge-active-shield';
+                    hubBadge.innerHTML = '<i class="fa-solid fa-shield-halved"></i> Blocker: ON';
+                }
+            } else if (nextTask) {
+                if (statusPill) {
+                    statusPill.className = 'guardian-status-pill status-standby';
+                    statusPill.innerHTML = '<i class="fa-solid fa-bolt"></i> STANDBY · SCHEDULE AWARE';
+                }
+                if (taskDetail) {
+                    taskDetail.innerHTML = `<i class="fa-regular fa-clock"></i> Next Session: <strong>${escapeHTML(nextTask.title || nextTask.name || 'Upcoming Task')}</strong> at ${formatMins(nextTask.startMins)}`;
+                }
+                if (hubBadge) {
+                    hubBadge.className = 'action-card-badge badge-standby-shield';
+                    hubBadge.innerHTML = `<i class="fa-solid fa-shield-halved"></i> Blocker: Standby`;
+                }
+            } else {
+                if (statusPill) {
+                    statusPill.className = 'guardian-status-pill status-standby';
+                    statusPill.innerHTML = '<i class="fa-solid fa-check-double"></i> STANDBY · ALL CLEAR';
+                }
+                if (taskDetail) {
+                    taskDetail.innerHTML = '<i class="fa-regular fa-calendar-check"></i> No active or upcoming Day Planner sessions today.';
+                }
+                if (hubBadge) {
+                    hubBadge.className = 'action-card-badge badge-standby-shield';
+                    hubBadge.innerHTML = '<i class="fa-solid fa-shield-halved"></i> Blocker: Standby';
+                }
             }
         }
     }
@@ -564,6 +585,7 @@ document.addEventListener('DOMContentLoaded', () => {
             distractionBlockerView.style.display = 'flex';
             renderSessionAppRules();
             syncContentToggles();
+            syncMasterBlockerSwitch();
             checkScheduleGuardian();
             checkAccessibilityServiceStatus();
             if (window.NativeBridge && window.NativeBridge.vibrate) window.NativeBridge.vibrate(30);
@@ -670,9 +692,51 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // --- 8.5 THE DISTRACTION BLOCKER: MASTER ON/OFF SWITCH CONTROLLER ---
+    const masterBlockerToggle = document.getElementById('masterBlockerToggle');
+    const masterBlockerSubtitle = document.getElementById('masterBlockerSubtitle');
+
+    function syncMasterBlockerSwitch() {
+        let isMasterOn = false;
+        if (window.NativeBridge && window.NativeBridge.isDistractionBlockerMasterEnabled) {
+            isMasterOn = window.NativeBridge.isDistractionBlockerMasterEnabled();
+        } else {
+            isMasterOn = localStorage.getItem('productometer_master_blocker_enabled') === 'true';
+        }
+
+        if (masterBlockerToggle) {
+            masterBlockerToggle.checked = isMasterOn;
+        }
+
+        if (masterBlockerSubtitle) {
+            if (isMasterOn) {
+                masterBlockerSubtitle.innerHTML = '<span style="color: #00e676; font-weight: bold;"><i class="fa-solid fa-shield-check"></i> Master Defense ON: Distractions are actively blocked 24/7</span>';
+            } else {
+                masterBlockerSubtitle.innerHTML = 'Standby mode · Automatically blocks distractions during scheduled focus sessions';
+            }
+        }
+    }
+
+    if (masterBlockerToggle) {
+        masterBlockerToggle.addEventListener('change', () => {
+            const isChecked = masterBlockerToggle.checked;
+            localStorage.setItem('productometer_master_blocker_enabled', isChecked ? 'true' : 'false');
+            if (window.NativeBridge && window.NativeBridge.setDistractionBlockerMasterEnabled) {
+                window.NativeBridge.setDistractionBlockerMasterEnabled(isChecked);
+            }
+            if (window.NativeBridge && window.NativeBridge.showToast) {
+                window.NativeBridge.showToast(isChecked ? '🛡️ The Distraction Blocker: ON (Blocking Active)' : '🛡️ The Distraction Blocker: Standby (Active during sessions)');
+            }
+            if (window.NativeBridge && window.NativeBridge.vibrate) window.NativeBridge.vibrate(35);
+            syncMasterBlockerSwitch();
+            checkScheduleGuardian();
+        });
+    }
+
     // --- 9. INITIALIZE ---
     renderSessionAppRules();
     syncContentToggles();
+    syncMasterBlockerSwitch();
     checkScheduleGuardian();
     checkAccessibilityServiceStatus();
     renderInterceptionsCount();

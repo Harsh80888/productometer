@@ -12,7 +12,7 @@
                     <div id="customModalTitle" style="font-size: 1.3em; font-weight: 800; color: #fff; margin-bottom: 10px; letter-spacing: 0.5px;">Alert Title</div>
                     <div id="customModalMessage" style="font-size: 0.95em; color: #94a3b8; margin-bottom: 25px; line-height: 1.5;">Alert message goes here.</div>
                     <div id="customModalButtons" style="display: flex; gap: 12px; justify-content: center;">
-                        <button id="customModalConfirmBtn" style="background-color: #00e676; color: #000; border: none; padding: 10px 24px; font-weight: bold; border-radius: 8px; cursor: pointer; transition: all 0.2s;">OK</button>
+                        <button id="customModalConfirmBtn" style="background-color: #00e676; color: #000; border: none; padding: 10px 24px; font-weight: bold; border-radius: 8px; cursor: pointer; transition: all 0.2s;">Start Session Now</button>
                     </div>
                 </div>
             </div>`;
@@ -20,6 +20,9 @@
 
             document.getElementById('customModalConfirmBtn').addEventListener('click', () => {
                 document.getElementById('customModalOverlay').style.display = 'none';
+                const isSubdir = window.location.pathname.includes('/Features/') || window.location.pathname.includes('/Me/');
+                const targetUrl = isSubdir ? '../Features/Academics_Monitoring/index.html?autoStart=true' : './Features/Academics_Monitoring/index.html?autoStart=true';
+                window.location.href = targetUrl;
             });
         }
 

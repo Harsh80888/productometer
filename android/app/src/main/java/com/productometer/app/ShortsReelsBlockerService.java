@@ -82,8 +82,12 @@ public class ShortsReelsBlockerService extends AccessibilityService {
     public static final String PREFS_NAME = "productometer_blocker_prefs";
     public static final String KEY_SHORTS_ENABLED = "blocker_shorts_enabled";
     public static final String KEY_REELS_ENABLED = "blocker_reels_enabled";
+    public static final String KEY_MASTER_ENABLED = "master_blocker_enabled";
+    public static final String KEY_FOCUS_ACTIVE = "focus_session_active";
 
     public static boolean isServiceRunning = false;
+    public static boolean isFocusSessionOngoing = false;
+    public static boolean isMasterBlockerEnabled = false;
 
     private static final String PKG_YOUTUBE = "com.google.android.youtube";
     private static final String PKG_INSTAGRAM = "com.instagram.android";
@@ -159,6 +163,14 @@ public class ShortsReelsBlockerService extends AccessibilityService {
         }
 
         SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        boolean masterEnabled = isMasterBlockerEnabled || prefs.getBoolean(KEY_MASTER_ENABLED, false);
+        boolean sessionOngoing = isFocusSessionOngoing || prefs.getBoolean(KEY_FOCUS_ACTIVE, false);
+
+        // The Distraction Blocker is ONLY active when a focus session is ongoing OR master switch is ON!
+        if (!masterEnabled && !sessionOngoing) {
+            return;
+        }
+
         boolean isShortsBlocked = prefs.getBoolean(KEY_SHORTS_ENABLED, true);
         boolean isReelsBlocked = prefs.getBoolean(KEY_REELS_ENABLED, true);
 

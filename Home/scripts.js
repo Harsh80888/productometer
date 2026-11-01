@@ -335,8 +335,8 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
             homeTasksBucket.appendChild(activeCard);
         } else {
-            // Check for triggered / unlocked session (starting within current time window)
-            const triggeredTask = plannerList.find(t => {
+            // Check for triggered / unlocked session (starting around current time or next pending session)
+            let triggeredTask = plannerList.find(t => {
                 if (t.completed) return false;
                 const dur = parseFloat(t.durationMin || t.durationMinutes || t.duration) || 60;
                 let sH = 9, sM = 0;
@@ -347,8 +347,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     sH = Math.floor(t.startMin / 60); sM = t.startMin % 60;
                 }
                 const taskStartMins = sH * 60 + sM;
-                return (currentMins >= taskStartMins - 10 && currentMins <= taskStartMins + Math.floor(dur / 2));
+                return (currentMins >= taskStartMins - 15 && currentMins <= taskStartMins + dur);
             });
+
+            if (!triggeredTask) {
+                triggeredTask = plannerList.find(t => !t.completed);
+            }
 
             if (triggeredTask) {
                 const triggeredCard = document.createElement('div');
@@ -361,7 +365,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                         <div style="font-size: 1rem; font-weight: 800; color: #fff;">${triggeredTask.title}</div>
                     </div>
-                    <a href="${acadHref}" style="display: inline-flex; align-items: center; gap: 6px; background: #00e676; color: #000; font-weight: 800; font-size: 0.78rem; padding: 7px 14px; border-radius: 7px; text-decoration: none; cursor: pointer;">
+                    <a href="${acadHref}?autoStart=true" style="display: inline-flex; align-items: center; gap: 6px; background: #00e676; color: #000; font-weight: 800; font-size: 0.78rem; padding: 7px 14px; border-radius: 7px; text-decoration: none; cursor: pointer;">
                         <i class="fa-solid fa-play"></i> Start Now
                     </a>
                 `;

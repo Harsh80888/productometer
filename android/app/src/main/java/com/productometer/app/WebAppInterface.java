@@ -243,6 +243,11 @@ public class WebAppInterface {
      * Queries actual daily app screen time from Android UsageStatsManager (ground truth).
      * Accurately tracks multi-activity transitions, screen locks, and daily aggregations.
      */
+    /**
+     * Queries actual daily app screen time from Android UsageStatsManager (ground truth).
+     * Computes foreground app visibility strictly from 00:00 midnight today to now
+     * using the pure UsageEvents stream — exactly matching Android Digital Wellbeing.
+     */
     @JavascriptInterface
     public String getRealAppUsageStats() {
         try {
@@ -264,109 +269,6 @@ public class WebAppInterface {
             PackageManager pm = context.getPackageManager();
             Map<String, Long> foregroundTimeMap = new HashMap<>();
 
-            // 1. Primary Engine: UsageEvents stream with activity ref-counting & screen state awareness
-            try {
-                // Look back 2 hours before midnight to capture ongoing sessions starting yesterday
-                long queryStart = startOfDay - (2 * 3600 * 1000L);
-                UsageEvents events = usageStatsManager.queryEvents(queryStart, now);
-                
-                Map<String, Integer> activeActivityCounts = new HashMap<>();
-                Map<String, Long> packageFirstResumedTimes = new HashMap<>();
-                UsageEvents.Event event = new UsageEvents.Event();
-
-                while (events != null && events.hasNextEvent()) {
-                    events.getNextEvent(event);
-                    String pkg = event.getPackageName();
-                    int type = event.getEventType();
-                    long time = event.getTimeStamp();
-
-                    if (type == UsageEvents.Event.ACTIVITY_RESUMED || type == UsageEvents.Event.MOVE_TO_FOREGROUND) {
-                        int count = activeActivityCounts.containsKey(pkg) ? activeActivityCounts.get(pkg) : 0;
-                        if (count == 0) {
-                            packageFirstResumedTimes.put(pkg, Math.max(time, startOfDay));
-                        }
-                        activeActivityCounts.put(pkg, count + 1);
-                    } else if (type == UsageEvents.Event.ACTIVITY_PAUSED || type == UsageEvents.Event.ACTIVITY_STOPPED || type == UsageEvents.Event.MOVE_TO_BACKGROUND) {
-                        int count = activeActivityCounts.containsKey(pkg) ? activeActivityCounts.get(pkg) : 0;
-                        count = Math.max(0, count - 1);
-                        if (count == 0) {
-                            activeActivityCounts.remove(pkg);
-                            Long openTime = packageFirstResumedTimes.remove(pkg);
-                            if (openTime != null && time > openTime) {
-                                long effectiveStart = Math.max(openTime, startOfDay);
-                                if (time > effectiveStart) {
-                                    long delta = time - effectiveStart;
-                                    long current = foregroundTimeMap.containsKey(pkg) ? foregroundTimeMap.get(pkg) : 0L;
-                                    foregroundTimeMap.put(pkg, current + delta);
-                                }
-                            }
-                        } else {
-                            activeActivityCounts.put(pkg, count);
-                        }
-                    } else if (type == UsageEvents.Event.SCREEN_NON_INTERACTIVE || type == UsageEvents.Event.KEYGUARD_SHOWN) {
-                        // Phone screen locked or turned off: commit any open foreground session
-                        for (Map.Entry<String, Long> entry : packageFirstResumedTimes.entrySet()) {
-                            long effectiveStart = Math.max(entry.getValue(), startOfDay);
-                            if (time > effectiveStart) {
-                                long delta = time - effectiveStart;
-                                long current = foregroundTimeMap.containsKey(entry.getKey()) ? foregroundTimeMap.get(entry.getKey()) : 0L;
-                                foregroundTimeMap.put(entry.getKey(), current + delta);
-                            }
-                        }
-                        packageFirstResumedTimes.clear();
-                        activeActivityCounts.clear();
-                    }
-                }
-
-                // Add time for any app currently active in foreground right now
-                for (Map.Entry<String, Long> entry : packageFirstResumedTimes.entrySet()) {
-                    long effectiveStart = Math.max(entry.getValue(), startOfDay);
-                    long delta = now - effectiveStart;
-                    if (delta > 0 && delta < 12 * 3600 * 1000L) {
-                        long current = foregroundTimeMap.containsKey(entry.getKey()) ? foregroundTimeMap.get(entry.getKey()) : 0L;
-                        foregroundTimeMap.put(entry.getKey(), current + delta);
-                    }
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-            // 2. Official Android Daily Aggregator Baseline:
-            try {
-                Map<String, UsageStats> aggregated = usageStatsManager.queryAndAggregateUsageStats(startOfDay, now);
-                if (aggregated != null && !aggregated.isEmpty()) {
-                    for (Map.Entry<String, UsageStats> entry : aggregated.entrySet()) {
-                        long fg = entry.getValue().getTotalTimeInForeground();
-                        if (fg > 0) {
-                            long current = foregroundTimeMap.containsKey(entry.getKey()) ? foregroundTimeMap.get(entry.getKey()) : 0L;
-                            foregroundTimeMap.put(entry.getKey(), Math.max(current, fg));
-                        }
-                    }
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-            // 3. Multi-slice sum aggregation over queryUsageStats (handles device reboots):
-            try {
-                List<UsageStats> statsList = usageStatsManager.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, startOfDay, now);
-                if (statsList != null && !statsList.isEmpty()) {
-                    Map<String, Long> summedSlices = new HashMap<>();
-                    for (UsageStats stat : statsList) {
-                        long fg = stat.getTotalTimeInForeground();
-                        if (fg > 0) {
-                            summedSlices.put(stat.getPackageName(), (summedSlices.containsKey(stat.getPackageName()) ? summedSlices.get(stat.getPackageName()) : 0L) + fg);
-                        }
-                    }
-                    for (Map.Entry<String, Long> entry : summedSlices.entrySet()) {
-                        long current = foregroundTimeMap.containsKey(entry.getKey()) ? foregroundTimeMap.get(entry.getKey()) : 0L;
-                        foregroundTimeMap.put(entry.getKey(), Math.max(current, entry.getValue()));
-                    }
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
             // Determine default home launcher to filter out home screen wallpaper time
             String defaultLauncherPkg = "";
             try {
@@ -377,6 +279,74 @@ public class WebAppInterface {
                     defaultLauncherPkg = defaultLauncher.activityInfo.packageName;
                 }
             } catch (Exception ignored) {}
+
+            // Ground Truth Engine: Pure UsageEvents timeline from midnight (00:00:00) to now
+            try {
+                UsageEvents events = usageStatsManager.queryEvents(startOfDay, now);
+                UsageEvents.Event event = new UsageEvents.Event();
+
+                String currentForegroundPkg = null;
+                long currentSessionStart = startOfDay;
+                boolean isScreenInteractive = true;
+
+                while (events != null && events.hasNextEvent()) {
+                    events.getNextEvent(event);
+                    int type = event.getEventType();
+                    long time = event.getTimeStamp();
+                    String pkg = event.getPackageName();
+
+                    if (type == UsageEvents.Event.SCREEN_NON_INTERACTIVE || type == UsageEvents.Event.KEYGUARD_SHOWN) {
+                        // Phone locked or display turned off: commit active app session
+                        if (currentForegroundPkg != null && isScreenInteractive) {
+                            long duration = time - Math.max(currentSessionStart, startOfDay);
+                            if (duration > 0 && duration < 12 * 3600 * 1000L) {
+                                long current = foregroundTimeMap.containsKey(currentForegroundPkg) ? foregroundTimeMap.get(currentForegroundPkg) : 0L;
+                                foregroundTimeMap.put(currentForegroundPkg, current + duration);
+                            }
+                        }
+                        currentForegroundPkg = null;
+                        isScreenInteractive = false;
+                    } else if (type == UsageEvents.Event.SCREEN_INTERACTIVE || type == UsageEvents.Event.KEYGUARD_HIDDEN) {
+                        isScreenInteractive = true;
+                        currentSessionStart = time;
+                    } else if (type == UsageEvents.Event.ACTIVITY_RESUMED || type == UsageEvents.Event.MOVE_TO_FOREGROUND) {
+                        isScreenInteractive = true;
+                        if (currentForegroundPkg != null && !currentForegroundPkg.equals(pkg)) {
+                            // User switched to a different application
+                            long duration = time - Math.max(currentSessionStart, startOfDay);
+                            if (duration > 0 && duration < 12 * 3600 * 1000L) {
+                                long current = foregroundTimeMap.containsKey(currentForegroundPkg) ? foregroundTimeMap.get(currentForegroundPkg) : 0L;
+                                foregroundTimeMap.put(currentForegroundPkg, current + duration);
+                            }
+                            currentForegroundPkg = pkg;
+                            currentSessionStart = time;
+                        } else if (currentForegroundPkg == null) {
+                            currentForegroundPkg = pkg;
+                            currentSessionStart = time;
+                        }
+                    } else if (type == UsageEvents.Event.ACTIVITY_PAUSED || type == UsageEvents.Event.MOVE_TO_BACKGROUND) {
+                        if (pkg != null && pkg.equals(currentForegroundPkg)) {
+                            long duration = time - Math.max(currentSessionStart, startOfDay);
+                            if (duration > 0 && duration < 12 * 3600 * 1000L) {
+                                long current = foregroundTimeMap.containsKey(currentForegroundPkg) ? foregroundTimeMap.get(currentForegroundPkg) : 0L;
+                                foregroundTimeMap.put(currentForegroundPkg, current + duration);
+                            }
+                            currentForegroundPkg = null;
+                        }
+                    }
+                }
+
+                // If an app is active in foreground right now, add its elapsed running time
+                if (currentForegroundPkg != null && isScreenInteractive) {
+                    long duration = now - Math.max(currentSessionStart, startOfDay);
+                    if (duration > 0 && duration < 4 * 3600 * 1000L) {
+                        long current = foregroundTimeMap.containsKey(currentForegroundPkg) ? foregroundTimeMap.get(currentForegroundPkg) : 0L;
+                        foregroundTimeMap.put(currentForegroundPkg, current + duration);
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
 
             JSONArray jsonArray = new JSONArray();
 
@@ -669,6 +639,83 @@ public class WebAppInterface {
             }
         } catch (Exception e) {
             showToast("Please allow Display over other apps in Settings");
+        }
+    }
+
+    /**
+     * Bridges focus session start from Academics Monitoring to Android Guardian Blocker.
+     */
+    @JavascriptInterface
+    public void startFocusSession(String title, long durationSeconds) {
+        try {
+            ShortsReelsBlockerService.isFocusSessionOngoing = true;
+            SharedPreferences prefs = context.getSharedPreferences(ShortsReelsBlockerService.PREFS_NAME, Context.MODE_PRIVATE);
+            prefs.edit()
+                    .putBoolean(ShortsReelsBlockerService.KEY_FOCUS_ACTIVE, true)
+                    .putString("focus_session_title", title != null ? title : "Focus Session")
+                    .putLong("focus_session_end_time", System.currentTimeMillis() + (durationSeconds * 1000L))
+                    .apply();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Bridges focus session end from Academics Monitoring to Android Guardian Blocker.
+     */
+    @JavascriptInterface
+    public void stopFocusSession() {
+        try {
+            ShortsReelsBlockerService.isFocusSessionOngoing = false;
+            SharedPreferences prefs = context.getSharedPreferences(ShortsReelsBlockerService.PREFS_NAME, Context.MODE_PRIVATE);
+            prefs.edit()
+                    .putBoolean(ShortsReelsBlockerService.KEY_FOCUS_ACTIVE, false)
+                    .apply();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Master Switch: Enable or disable The Distraction Blocker manually.
+     */
+    @JavascriptInterface
+    public void setDistractionBlockerMasterEnabled(boolean enabled) {
+        try {
+            ShortsReelsBlockerService.isMasterBlockerEnabled = enabled;
+            SharedPreferences prefs = context.getSharedPreferences(ShortsReelsBlockerService.PREFS_NAME, Context.MODE_PRIVATE);
+            prefs.edit()
+                    .putBoolean(ShortsReelsBlockerService.KEY_MASTER_ENABLED, enabled)
+                    .apply();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Queries whether The Distraction Blocker Master Switch is currently enabled.
+     */
+    @JavascriptInterface
+    public boolean isDistractionBlockerMasterEnabled() {
+        try {
+            SharedPreferences prefs = context.getSharedPreferences(ShortsReelsBlockerService.PREFS_NAME, Context.MODE_PRIVATE);
+            return prefs.getBoolean(ShortsReelsBlockerService.KEY_MASTER_ENABLED, false);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    /**
+     * Queries whether a focus session is currently ongoing.
+     */
+    @JavascriptInterface
+    public boolean isFocusSessionOngoing() {
+        try {
+            if (ShortsReelsBlockerService.isFocusSessionOngoing) return true;
+            SharedPreferences prefs = context.getSharedPreferences(ShortsReelsBlockerService.PREFS_NAME, Context.MODE_PRIVATE);
+            return prefs.getBoolean(ShortsReelsBlockerService.KEY_FOCUS_ACTIVE, false);
+        } catch (Exception e) {
+            return false;
         }
     }
 }

@@ -81,19 +81,25 @@ function showCustomModal(title, message, type = 'info', confirmCallback = null, 
     overlay.style.display = 'flex';
 
     const newConfirm = confirmBtn.cloneNode(true);
+    newConfirm.innerText = confirmBtnText;
     confirmBtn.parentNode.replaceChild(newConfirm, confirmBtn);
     const newCancel = cancelBtn.cloneNode(true);
     cancelBtn.parentNode.replaceChild(newCancel, cancelBtn);
 
-    document.getElementById('customModalConfirmBtn').addEventListener('click', () => {
+    const handleConfirm = (e) => {
+        if (e) { e.preventDefault(); e.stopPropagation(); }
         overlay.style.display = 'none';
         if (confirmCallback) confirmCallback(true);
-    });
+    };
 
-    document.getElementById('customModalCancelBtn').addEventListener('click', () => {
+    const handleCancel = (e) => {
+        if (e) { e.preventDefault(); e.stopPropagation(); }
         overlay.style.display = 'none';
         if (confirmCallback) confirmCallback(false);
-    });
+    };
+
+    newConfirm.addEventListener('click', handleConfirm);
+    newCancel.addEventListener('click', handleCancel);
 }
 
 /* --- FEATURES HUB NAVIGATION --- */
@@ -414,8 +420,9 @@ function renderAcademicTasks() {
             return;
         }
 
-        if (availableTasks.length > 0) {
-            showIndependentStartBox(availableTasks[0].title);
+        const firstPending = allSortedTasks.find(t => !t.completed);
+        if (firstPending) {
+            showIndependentStartBox(firstPending.title, firstPending.duration, firstPending.id);
         } else {
             clearIndependentStartBox();
         }
@@ -423,9 +430,10 @@ function renderAcademicTasks() {
         allSortedTasks.forEach(t => {
             const taskDiv = document.createElement('div');
             const safeTitleClass = 'task-row-' + t.title.replace(/[^a-zA-Z0-9]/g, '-');
-            taskDiv.className = `task-row-item ${safeTitleClass} ${t.isAvailable ? '' : 'task-locked'}`;
+            taskDiv.className = `task-row-item ${safeTitleClass}`;
             taskDiv.style.cursor = 'pointer';
             taskDiv.style.transition = 'all 0.2s ease';
+            taskDiv.style.marginBottom = '8px';
 
             const fHour = t.startH.toString().padStart(2, '0');
             const fMin = t.startM.toString().padStart(2, '0');
@@ -433,24 +441,22 @@ function renderAcademicTasks() {
             let badgeHtml = '';
             if (t.completed) {
                 badgeHtml = '<span style="color: #00e676; font-weight: bold; font-size: 0.85em;"><i class="fa-solid fa-circle-check"></i> Done</span>';
-            } else if (t.isAvailable) {
-                badgeHtml = '<button type="button" class="btn-row-start" style="background: #00e676; color: #000; border: none; padding: 4px 10px; border-radius: 6px; font-weight: 800; font-size: 0.78rem; cursor: pointer;">Start</button>';
             } else {
-                badgeHtml = '<button type="button" class="btn-row-start" style="background: rgba(0, 229, 255, 0.12); color: #00e5ff; border: 1px solid rgba(0, 229, 255, 0.3); padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 0.75rem; cursor: pointer;">Start Early</button>';
+                badgeHtml = `<button type="button" class="btn-row-start" data-task-id="${t.id}" style="background: #00e676; color: #000; border: none; padding: 6px 14px; border-radius: 6px; font-weight: 800; font-size: 0.78rem; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;"><i class="fa-solid fa-play"></i> Start Session</button>`;
             }
             
             taskDiv.innerHTML = `
                 <div style="flex: 1;">
-                    <div class="task-title" style="${t.completed ? 'text-decoration: line-through; opacity: 0.7;' : (t.isAvailable ? 'color: #00e676;' : '')}">${t.title}</div>
-                    <div class="task-meta">Scheduled: ${fHour}:${fMin} (${t.duration}m)</div>
+                    <div class="task-title" style="${t.completed ? 'text-decoration: line-through; opacity: 0.7;' : 'color: #fff; font-weight: 700;'}">${t.title}</div>
+                    <div class="task-meta" style="color: #94a3b8; font-size: 0.8rem; margin-top: 2px;"><i class="fa-regular fa-clock"></i> Scheduled: ${fHour}:${fMin} (${t.duration}m)</div>
                 </div>
                 <div class="task-status-badge">
                     ${badgeHtml}
                 </div>
             `;
 
-            taskDiv.addEventListener('click', () => {
-                if (!sessionActive) {
+            taskDiv.addEventListener('click', (e) => {
+                if (!sessionActive && !t.completed) {
                     beginActivePomodoroCountdown(t.title, t.duration, t.id);
                 }
             });
@@ -460,33 +466,63 @@ function renderAcademicTasks() {
     }
 }
 
+// Auto sync when returning from Day Planner or switching apps
+window.addEventListener('storage', (e) => {
+    if (e.key === 'productometer_chrono_planner_list') {
+        renderAcademicTasks();
+    }
+});
+window.addEventListener('focus', () => {
+    renderAcademicTasks();
+});
+
 setInterval(renderAcademicTasks, 15000);
 renderAcademicTasks();
 
+// Auto-start session if requested from Home screen link (?autoStart=true)
+try {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('autoStart') === 'true' && !sessionActive) {
+        let rawList = localStorage.getItem('productometer_chrono_planner_list');
+        if (rawList) {
+            let list = JSON.parse(rawList);
+            let target = list.find(t => !t.completed);
+            if (target) {
+                setTimeout(() => {
+                    beginActivePomodoroCountdown(target.title || target.name, target.durationMinutes || target.durationMin || 60, target.id);
+                }, 200);
+            }
+        }
+    }
+} catch (e) {}
+
 /* --- 4. INDEPENDENT SEPARATE BOX FOR STARTING SESSION --- */
-function showIndependentStartBox(title) {
+function showIndependentStartBox(title, customDuration = null, taskId = null) {
     const boxContainer = document.getElementById('activeSessionBoxContainer');
     if (!boxContainer || sessionActive) return;
 
     boxContainer.innerHTML = `
         <div class="glow-card" style="border: 1.5px solid #00e676; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
             <div>
-                <div class="soft-heading" style="color: #00e676; margin-bottom: 4px;">Session Unlocked & Ready</div>
-                <div style="font-size: 1.1rem; font-weight: 800; color: #fff;">${title}</div>
+                <div class="soft-heading" style="color: #00e676; margin-bottom: 4px;">Session Ready to Begin</div>
+                <div style="font-size: 1.15rem; font-weight: 800; color: #fff;">${title}</div>
+                ${customDuration ? `<div style="font-size: 0.78rem; color: #94a3b8; margin-top: 2px;"><i class="fa-regular fa-clock"></i> Scheduled Duration: ${customDuration}m</div>` : ''}
             </div>
-            <button id="independentStartActionBtn" class="btn-cyan-solid" style="background: #00e676; color: #030305;">
-                Start Session
+            <button id="independentStartActionBtn" class="btn-cyan-solid" style="background: #00e676; color: #030305; font-weight: 800; padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                <i class="fa-solid fa-play"></i> Start Session
             </button>
         </div>
     `;
 
     const startBtn = document.getElementById('independentStartActionBtn');
     if (startBtn) {
-        startBtn.addEventListener('click', function() {
+        startBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
             [distractionAlarm, breakAlarm].forEach(a => {
                 if (a) { a.play().then(() => { a.pause(); a.currentTime = 0; }).catch(() => {}); }
             });
-            beginActivePomodoroCountdown(title);
+            beginActivePomodoroCountdown(title, customDuration, taskId);
         });
     }
 }

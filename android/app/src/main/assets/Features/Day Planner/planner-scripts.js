@@ -594,6 +594,7 @@ if (addToPlannerBtn) {
 
         plannerListData.sort((a, b) => a.startMin - b.startMin);
         localStorage.setItem('productometer_chrono_planner_list', JSON.stringify(plannerListData));
+        try { window.dispatchEvent(new Event('storage')); } catch (e) {}
 
         synchronizeLegacyTimelineArray();
         renderChronologicalMasterTimelineGrid();
@@ -690,6 +691,7 @@ function renderChronologicalMasterTimelineGrid() {
                 window.NativeBridge.vibrate(25);
             }
             localStorage.setItem('productometer_chrono_planner_list', JSON.stringify(plannerListData));
+            try { window.dispatchEvent(new Event('storage')); } catch (e) {}
             synchronizeLegacyTimelineArray();
             renderChronologicalMasterTimelineGrid();
         });
