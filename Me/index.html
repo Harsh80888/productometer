@@ -99,6 +99,65 @@
                         </div>
                     </div>
                 </section>
+
+                <!-- SYSTEM ACCESS & RESTRICTED SETTINGS UNLOCK HUB -->
+                <section class="me-card permissions-hub-card">
+                    <div class="me-card-header">
+                        <div class="me-title">
+                            <i class="fa-solid fa-key" style="color: #00e5ff;"></i> System Access &amp; Permissions
+                        </div>
+                    </div>
+
+                    <!-- Android 13/14 Restricted Settings Guide Banner -->
+                    <div class="restricted-settings-banner">
+                        <div class="restricted-header">
+                            <i class="fa-solid fa-triangle-exclamation" style="color: #ffd166;"></i>
+                            <span>Seeing <strong>"Restricted setting"</strong> on your phone?</span>
+                        </div>
+                        <p class="restricted-desc">
+                            Android 13+ restricts Accessibility for downloaded APKs. Tap the button below to open App Info, then tap the <strong>3 vertical dots (⋮) in the top-right corner</strong> and select <strong>"Allow restricted settings"</strong>.
+                        </p>
+                        <button type="button" class="btn-unlock-app-info" id="btnUnlockRestrictedSettings">
+                            <i class="fa-solid fa-unlock-keyhole"></i> Unlock Restricted Settings (App Info)
+                        </button>
+                    </div>
+
+                    <!-- Live Permission Status Toggles -->
+                    <div class="permissions-checklist">
+                        <!-- 1. Accessibility Service -->
+                        <div class="perm-row">
+                            <div class="perm-meta">
+                                <span class="perm-title">Accessibility (Doomscroll Guardian)</span>
+                                <span class="perm-desc">Closes 2nd Reel and returns to previous screen</span>
+                            </div>
+                            <button type="button" class="btn-perm-status" id="btnPermAccessibility">
+                                <i class="fa-solid fa-gear"></i> Enable
+                            </button>
+                        </div>
+
+                        <!-- 2. Usage Access -->
+                        <div class="perm-row">
+                            <div class="perm-meta">
+                                <span class="perm-title">Usage Access (Screen Time)</span>
+                                <span class="perm-desc">Monitors real app usage &amp; digital wellbeing</span>
+                            </div>
+                            <button type="button" class="btn-perm-status" id="btnPermUsage">
+                                <i class="fa-solid fa-gear"></i> Enable
+                            </button>
+                        </div>
+
+                        <!-- 3. Overlay Permission -->
+                        <div class="perm-row">
+                            <div class="perm-meta">
+                                <span class="perm-title">Display Over Apps (Overlay)</span>
+                                <span class="perm-desc">Displays 5-second countdown popup on 2nd Reel</span>
+                            </div>
+                            <button type="button" class="btn-perm-status" id="btnPermOverlay">
+                                <i class="fa-solid fa-gear"></i> Enable
+                            </button>
+                        </div>
+                    </div>
+                </section>
             </div>
 
             <!-- ========================================================
@@ -175,6 +234,21 @@
                         </div>
                     </div>
 
+                    <!-- Smart Grace Rule Explainer Banner -->
+                    <div class="guardian-schedule-summary" style="margin-bottom: 12px; border-left: 3px solid #00e5ff; background: rgba(0, 229, 255, 0.05);">
+                        <div style="font-size: 0.78rem; font-weight: 800; color: #00e5ff; margin-bottom: 3px;">
+                            <i class="fa-solid fa-shield-halved"></i> 1-Reel Grace Rule Active
+                        </div>
+                        <div style="font-size: 0.72rem; color: #94a3b8; line-height: 1.4;">
+                            The 1st Reel or Short is allowed. When scrolling to the 2nd Reel, a 5-second countdown popup appears and returns back once to the page from where you were distracted.
+                        </div>
+                    </div>
+
+                    <!-- Native Accessibility Service Status Box -->
+                    <div id="accessibilityStatusBox" style="margin-bottom: 14px;">
+                        <!-- Injected dynamically by scripts.js -->
+                    </div>
+
                     <!-- Switch 1: YouTube Shorts Only -->
                     <div class="content-toggle-row">
                         <div class="content-info">
@@ -182,8 +256,8 @@
                                 <i class="fa-brands fa-youtube"></i>
                             </div>
                             <div class="content-text">
-                                <span class="content-title">Block YouTube Shorts Only</span>
-                                <span class="content-desc">Leaves long-form lectures &amp; study tutorials accessible; terminates vertical short doomscrolling.</span>
+                                <span class="content-title">Block YouTube Shorts</span>
+                                <span class="content-desc">Allows 1st Short. On 2nd Short, displays 5s countdown popup and returns back to lectures or search.</span>
                             </div>
                         </div>
                         <label class="cyber-switch">
@@ -199,8 +273,8 @@
                                 <i class="fa-brands fa-instagram"></i>
                             </div>
                             <div class="content-text">
-                                <span class="content-title">Block Instagram Reels &amp; Explore</span>
-                                <span class="content-desc">Restricts algorithmic video feeds while leaving essential direct messaging intact.</span>
+                                <span class="content-title">Block Instagram Reels</span>
+                                <span class="content-desc">Allows 1st Reel. On 2nd Reel, displays 5s countdown popup and returns back to DMs or feed.</span>
                             </div>
                         </div>
                         <label class="cyber-switch">

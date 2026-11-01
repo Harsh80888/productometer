@@ -59,7 +59,7 @@
         <!-- 1. 🧬 TOP BIOMETRICS & BMI HUD SECTION -->
         <section class="glow-card" id="bioProfileCard">
             <div class="card-header-row">
-                <h2 class="soft-heading"><i class="fa-solid fa-dna"></i> Biometrics & BMI HUD</h2>
+                <h2 class="soft-heading"><i class="fa-solid fa-weight-scale"></i> Body Stats & BMI</h2>
                 <button type="button" id="editBioBtn" class="corner-action-btn">
                     <i class="fa-solid fa-pen-to-square"></i> Edit
                 </button>
@@ -109,36 +109,17 @@
             </div>
         </section>
 
-        <!-- 🥗 GAMIFIED DIET & MACRO CALCULATOR LAUNCHER (JUST BELOW BMI BOX) -->
-        <div class="diet-launcher-container">
-            <button type="button" class="btn-open-diet-calculator" id="btnOpenDietCalculator">
-                <div class="diet-btn-left-content">
-                    <div class="diet-btn-icon-halo">
-                        <i class="fa-solid fa-chart-pie"></i>
-                    </div>
-                    <div class="diet-btn-text-stack">
-                        <div class="diet-btn-title-row">
-                            <span class="diet-btn-main-title">Gamified Diet & Macro Calculator</span>
-                            <span class="diet-btn-badge"><i class="fa-solid fa-bolt text-yellow"></i> Interactive</span>
-                        </div>
-                        <span class="diet-btn-sub-caption">Food Library • Drag & Drop Macro Pie Chart • Calorie Targets</span>
-                    </div>
-                </div>
-                <div class="diet-btn-right-action">
-                    <span class="diet-btn-action-pill">Open Diet Matrix <i class="fa-solid fa-arrow-right"></i></span>
-                </div>
-            </button>
-        </div>
+        
 
         <!-- 2. ⚡ ACTIVE WORKOUT TIME & CALORIES BURNED HUD -->
         <section class="health-analytics-hud">
             <div class="hud-metric-card timer-matrix-glow">
                 <div class="hud-metric-header">
                     <i class="fa-solid fa-stopwatch-20"></i>
-                    <span>Total Active Time</span>
+                    <span>Active Time</span>
                 </div>
                 <div class="hud-big-counter" id="hudActiveTime">0 min</div>
-                <span class="hud-sub-caption">Logged practice sessions</span>
+                <span class="hud-sub-caption">Time spent working out today</span>
             </div>
 
             <div class="hud-metric-card calories-matrix-glow">
@@ -147,14 +128,14 @@
                     <span>Calories Burned</span>
                 </div>
                 <div class="hud-big-counter" id="hudCaloriesBurned">0 kcal</div>
-                <span class="hud-sub-caption">Dynamic MET estimate</span>
+                <span class="hud-sub-caption">Estimated calories burned</span>
             </div>
         </section>
 
         <!-- 3. 📋 SCHEDULED SESSIONS FOR TODAY (DAY PLANNER SYNC) -->
         <section class="glow-card">
             <div class="card-header-row">
-                <h2 class="soft-heading"><i class="fa-solid fa-calendar-check"></i> Today's Scheduled Sessions</h2>
+                <h2 class="soft-heading"><i class="fa-solid fa-calendar-day"></i> Today's Schedule</h2>
                 <!-- Connects straight into Day Planner -->
                 <a href="../Day Planner/planner-index.html" class="corner-action-btn">
                     <i class="fa-solid fa-plus"></i> Day Planner
@@ -166,228 +147,41 @@
             </div>
         </section>
 
-        <!-- ================================================================= -->
-        <!-- 4. 🏋️‍♂️🏃‍♂️⚡ THE 3 CORE TRAINING DISCIPLINES HUB                        -->
-        <!-- ================================================================= -->
-        <section class="glow-card training-hub-card">
-            <div class="card-header-row">
-                <h2 class="soft-heading"><i class="fa-solid fa-fire text-emerald"></i> Training Disciplines</h2>
-                <span class="hud-sub-caption">Select discipline</span>
-            </div>
-
-            <!-- Mode Selector Switcher Pills -->
-            <div class="discipline-nav-tabs" id="disciplineNavTabs">
-                <button type="button" class="discipline-tab-btn active" data-tab="workout">
-                    <i class="fa-solid fa-dumbbell"></i>
-                    <span>Workout</span>
-                </button>
-                <button type="button" class="discipline-tab-btn" data-tab="running">
-                    <i class="fa-solid fa-person-running"></i>
-                    <span>Running</span>
-                </button>
-                <button type="button" class="discipline-tab-btn" data-tab="hiit">
-                    <i class="fa-solid fa-bolt"></i>
-                    <span>HIITs</span>
-                </button>
-            </div>
-
-            <!-- TAB 1: 🏋️‍♂️ WORKOUT MODULE -->
-            <div class="discipline-tab-content active" id="tabContentWorkout">
-                <div class="discipline-header-box">
-                    <div>
-                        <h3 class="discipline-title">Strength & Muscle Hypertrophy</h3>
-                        <p class="discipline-desc">Custom sets & reps, 3D anatomical animations, integrated stopwatches, and automatic break timers.</p>
-                    </div>
-                    <button type="button" id="openAllExercisesBtn" class="corner-action-btn">
-                        <i class="fa-solid fa-dumbbell"></i> Exercise Library
-                    </button>
-                </div>
-
-                <!-- Launch Banner with Quick Routine Summary -->
-                <div class="workout-launch-banner">
-                    <div class="workout-summary-metrics">
-                        <div class="summary-pill">
-                            <span class="summary-num text-emerald" id="workoutRoutineCount">0</span>
-                            <span class="summary-lbl">Routine Exercises</span>
+<!-- 🏆 DUAL MAIN ACTION TILES: PHYSICAL ACTIVITIES & DIET -->
+        <section class="main-hub-tiles-section">
+            <div class="main-hub-tiles-grid">
+                <!-- TILE 1: PHYSICAL ACTIVITIES -->
+                <div class="hub-action-tile tile-physical" id="tilePhysicalActivities" role="button" tabindex="0">
+                    <div class="tile-top-row">
+                        <div class="tile-icon-halo physical">
+                            <i class="fa-solid fa-person-running"></i>
                         </div>
-                        <div class="summary-pill">
-                            <span class="summary-num text-cyan" id="workoutEstDuration">0 min</span>
-                            <span class="summary-lbl">Est. Duration</span>
+                        <span class="tile-badge physical"><i class="fa-solid fa-bolt"></i> 3 Activities</span>
+                    </div>
+                    <div class="tile-content-stack">
+                        <h3 class="tile-main-title">Physical activities</h3>
+                        <p class="tile-sub-caption">Workout • Running • HIIT</p>
+                    </div>
+                    <div class="tile-bottom-action">
+                        <span class="tile-action-link">Start Activity <i class="fa-solid fa-arrow-right"></i></span>
+                    </div>
+                </div>
+
+                <!-- TILE 2: DIET -->
+                <div class="hub-action-tile tile-diet" id="tileDietCalculator" role="button" tabindex="0">
+                    <div class="tile-top-row">
+                        <div class="tile-icon-halo diet">
+                            <i class="fa-solid fa-chart-pie"></i>
                         </div>
-                        <div class="summary-pill">
-                            <span class="summary-num text-neon-orange" id="workoutEstBurn">0 kcal</span>
-                            <span class="summary-lbl">Target Burn</span>
-                        </div>
+                        <span class="tile-badge diet"><i class="fa-solid fa-apple-whole text-yellow"></i> Calculator</span>
                     </div>
-                    <button type="button" class="btn-launch-workout-dialog" id="btnOpenWorkoutDialog">
-                        <i class="fa-solid fa-play"></i> Start Workout Session
-                    </button>
-                </div>
-
-                <!-- My Exercises Routine Grid -->
-                <div class="routine-section-header-row">
-                    <h4 class="routine-section-label"><i class="fa-solid fa-list-check"></i> Today's Exercises Routine</h4>
-                    <span class="hud-sub-caption">Tap + to add from library</span>
-                </div>
-                <div id="myExercisesBucket" class="my-exercises-grid">
-                    <!-- Populated dynamically -->
-                </div>
-            </div>
-
-            <!-- TAB 2: 🏃‍♂️ RUNNING MODULE -->
-            <div class="discipline-tab-content" id="tabContentRunning" style="display: none;">
-                <div class="discipline-header-box">
-                    <div>
-                        <h3 class="discipline-title">Outdoor & Treadmill Running</h3>
-                        <p class="discipline-desc">Live GPS route distance calculation, millisecond stopwatch, pedometer cadence, and calorie meter.</p>
+                    <div class="tile-content-stack">
+                        <h3 class="tile-main-title">Diet</h3>
+                        <p class="tile-sub-caption">Food Tracker & Calorie Counter</p>
                     </div>
-                    <div class="gps-status-badge" id="runningGpsStatusBadge">
-                        <i class="fa-solid fa-satellite-dish"></i> <span>GPS Ready</span>
+                    <div class="tile-bottom-action">
+                        <span class="tile-action-link" id="btnOpenDietCalculator">Open Diet <i class="fa-solid fa-arrow-right"></i></span>
                     </div>
-                </div>
-
-                <!-- Running Big Telemetry Grid -->
-                <div class="running-telemetry-grid">
-                    <div class="telemetry-card">
-                        <span class="telemetry-label"><i class="fa-solid fa-stopwatch text-emerald"></i> Elapsed Time</span>
-                        <span class="telemetry-val text-emerald" id="runningTimerDisplay">00:00.0</span>
-                    </div>
-                    <div class="telemetry-card">
-                        <span class="telemetry-label"><i class="fa-solid fa-route text-cyan"></i> GPS Distance</span>
-                        <span class="telemetry-val text-cyan"><span id="runningDistanceDisplay">0.00</span> <small>km</small></span>
-                    </div>
-                    <div class="telemetry-card">
-                        <span class="telemetry-label"><i class="fa-solid fa-shoe-prints text-neon-orange"></i> Pedometer</span>
-                        <span class="telemetry-val text-neon-orange"><span id="runningStepsDisplay">0</span> <small>steps</small></span>
-                    </div>
-                    <div class="telemetry-card">
-                        <span class="telemetry-label"><i class="fa-solid fa-gauge-high text-yellow"></i> Live Pace & Calories</span>
-                        <span class="telemetry-val-sub"><span id="runningPaceDisplay">0'00"</span> /km • <span id="runningKcalDisplay">0</span> kcal</span>
-                    </div>
-                </div>
-
-                <!-- Running Controls -->
-                <div class="running-actions-row">
-                    <button type="button" class="btn-run-action start" id="btnStartRun">
-                        <i class="fa-solid fa-play"></i> Start Run
-                    </button>
-                    <button type="button" class="btn-run-action pause" id="btnPauseRun" style="display: none;">
-                        <i class="fa-solid fa-pause"></i> Pause Run
-                    </button>
-                    <button type="button" class="btn-run-action finish" id="btnFinishRun" style="display: none;">
-                        <i class="fa-solid fa-flag-checkered"></i> Finish Run
-                    </button>
-                    <button type="button" class="btn-run-action reset" id="btnResetRun">
-                        <i class="fa-solid fa-rotate-right"></i> Reset
-                    </button>
-                </div>
-            </div>
-
-            <!-- TAB 3: ⚡ HIITS MODULE -->
-            <div class="discipline-tab-content" id="tabContentHIIT" style="display: none;">
-                <div class="discipline-header-box">
-                    <div>
-                        <h3 class="discipline-title">High-Intensity Interval Training & Sprints</h3>
-                        <p class="discipline-desc">Tabata interval sprint engine with audible whistle cues, cadence cycles, and explosive HIIT circuits.</p>
-                    </div>
-                </div>
-
-                <!-- Special Sprint Interval Engine Section -->
-                <div class="hiit-sprint-engine-card">
-                    <div class="sprint-header-row">
-                        <h4 class="sprint-title"><i class="fa-solid fa-bolt text-yellow"></i> Sprint Interval Session</h4>
-                        <span class="sprint-round-pill" id="sprintRoundDisplay">Round 1 / 8</span>
-                    </div>
-
-                    <!-- Interval Phase Banner (SPRINT vs REST) -->
-                    <div class="sprint-phase-banner sprint-work" id="sprintPhaseBanner">
-                        <div class="sprint-phase-badge" id="sprintPhaseText">⚡ ALL-OUT SPRINT</div>
-                        <div class="sprint-countdown-display" id="sprintTimerDisplay">00:20.0</div>
-                    </div>
-
-                    <!-- Sprint Settings Config -->
-                    <div class="sprint-settings-row">
-                        <div class="sprint-setting-item">
-                            <label>Sprint (Work)</label>
-                            <select id="sprintWorkDuration">
-                                <option value="15">15 sec</option>
-                                <option value="20" selected>20 sec (Tabata)</option>
-                                <option value="30">30 sec</option>
-                                <option value="45">45 sec</option>
-                            </select>
-                        </div>
-                        <div class="sprint-setting-item">
-                            <label>Walk / Rest</label>
-                            <select id="sprintRestDuration">
-                                <option value="10" selected>10 sec (Tabata)</option>
-                                <option value="15">15 sec</option>
-                                <option value="20">20 sec</option>
-                                <option value="30">30 sec</option>
-                            </select>
-                        </div>
-                        <div class="sprint-setting-item">
-                            <label>Rounds</label>
-                            <select id="sprintTotalRounds">
-                                <option value="4">4 Rounds</option>
-                                <option value="8" selected>8 Rounds (4 mins)</option>
-                                <option value="10">10 Rounds</option>
-                                <option value="12">12 Rounds</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Sprint Action Controls -->
-                    <div class="sprint-actions-row">
-                        <button type="button" class="btn-sprint-action start" id="btnStartSprint">
-                            <i class="fa-solid fa-play"></i> Start Sprints
-                        </button>
-                        <button type="button" class="btn-sprint-action pause" id="btnPauseSprint" style="display: none;">
-                            <i class="fa-solid fa-pause"></i> Pause
-                        </button>
-                        <button type="button" class="btn-sprint-action reset" id="btnResetSprint">
-                            <i class="fa-solid fa-rotate-right"></i> Reset
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Launch Banner with HIIT Routine Summary -->
-                <div class="workout-launch-banner" style="margin-top: 18px;">
-                    <div class="workout-summary-metrics">
-                        <div class="summary-pill">
-                            <span class="summary-num text-yellow" id="hiitRoutineCount">0</span>
-                            <span class="summary-lbl">HIIT Routine</span>
-                        </div>
-                        <div class="summary-pill">
-                            <span class="summary-num text-cyan" id="hiitEstDuration">0 min</span>
-                            <span class="summary-lbl">Est. Duration</span>
-                        </div>
-                        <div class="summary-pill">
-                            <span class="summary-num text-neon-orange" id="hiitEstBurn">0 kcal</span>
-                            <span class="summary-lbl">Target Burn</span>
-                        </div>
-                    </div>
-                    <!-- Big Prominent CTA to Launch Fullscreen HIIT Workout Modal -->
-                    <button type="button" class="btn-launch-workout-dialog btn-start-hiit-session" id="btnOpenHiitWorkoutDialog">
-                        <i class="fa-solid fa-bolt"></i> Start HIIT Session
-                    </button>
-                </div>
-
-                <!-- Today's HIIT Routine Grid -->
-                <div class="routine-section-header-row">
-                    <h4 class="routine-section-label"><i class="fa-solid fa-fire text-neon-orange"></i> Today's HIIT Routine</h4>
-                    <span class="hud-sub-caption">Active circuit sequence</span>
-                </div>
-                <div id="hiitRoutineBucket" class="my-exercises-grid">
-                    <!-- Populated dynamically with HIIT routine exercises -->
-                </div>
-
-                <!-- Curated Explosive HIIT Exercises Library Section -->
-                <div class="routine-section-header-row" style="margin-top: 22px;">
-                    <h4 class="routine-section-label"><i class="fa-solid fa-fire-burner"></i> Explosive HIIT Exercises Library</h4>
-                    <span class="hud-sub-caption">Tap + to add to HIIT routine</span>
-                </div>
-                <div id="hiitExercisesBucket" class="my-exercises-grid">
-                    <!-- Populated with curated HIIT exercises -->
                 </div>
             </div>
         </section>
@@ -395,8 +189,8 @@
         <!-- 5. 📅 WEEKLY SPLIT SCHEDULER (MON - SUN) -->
         <section class="glow-card">
             <div class="card-header-row">
-                <h2 class="soft-heading"><i class="fa-solid fa-calendar-week"></i> Weekly Protocol Split</h2>
-                <span class="hud-sub-caption">Tap any day to change</span>
+                <h2 class="soft-heading"><i class="fa-solid fa-calendar-week"></i> Weekly Schedule</h2>
+                <span class="hud-sub-caption">Tap any day to change workout</span>
             </div>
 
             <div class="weekly-days-grid" id="weeklyDaysGrid">
@@ -411,7 +205,7 @@
     <!-- ======================================================== -->
     <dialog id="bioProfileDialog" class="health-dialog-modal">
         <div class="dialog-top-header">
-            <h3 class="dialog-modal-title"><i class="fa-solid fa-user-gear"></i> Biometric Calibration</h3>
+            <h3 class="dialog-modal-title"><i class="fa-solid fa-user-gear"></i> Body Measurements</h3>
             <button type="button" class="dialog-close-btn" onclick="document.getElementById('bioProfileDialog').close()">&times;</button>
         </div>
 
@@ -427,6 +221,11 @@
             </div>
 
             <div class="input-field-group">
+                <label for="inputAge">Age (years) <small style="color: #8fa397; font-weight: normal;">• For calorie math only (hidden on HUD)</small></label>
+                <input type="number" id="inputAge" min="10" max="120" placeholder="e.g. 25" required>
+            </div>
+
+            <div class="input-field-group">
                 <label for="inputGender">Biological Sex / Factor</label>
                 <select id="inputGender">
                     <option value="male">Male</option>
@@ -434,7 +233,7 @@
                 </select>
             </div>
 
-            <button type="submit" class="btn-confirm-green">Save & Recalculate BMI</button>
+            <button type="submit" class="btn-confirm-green">Save Measurements</button>
         </form>
     </dialog>
 
@@ -841,7 +640,7 @@
     <!-- ======================================================== -->
     <dialog id="dayProtocolDialog" class="health-dialog-modal" style="max-width: 400px;">
         <div class="dialog-top-header">
-            <h3 class="dialog-modal-title" id="protocolDayTitle">Edit Monday Split</h3>
+            <h3 class="dialog-modal-title" id="protocolDayTitle">Edit Monday Workout</h3>
             <button type="button" class="dialog-close-btn" onclick="document.getElementById('dayProtocolDialog').close()">&times;</button>
         </div>
 
@@ -905,15 +704,338 @@
     </dialog>
 
     <!-- ======================================================== -->
-    <!-- 🪟 MODAL: GAMIFIED DIET & MACRO CALCULATOR FULLSCREEN HUB  -->
+        <!-- ======================================================== -->
+    <!-- 🪟 MODAL: PHYSICAL ACTIVITIES DISCIPLINE SELECTOR DIALOG -->
     <!-- ======================================================== -->
+    <dialog id="physicalActivitiesDialog" class="health-dialog-modal physical-selector-modal" style="max-width: 500px;">
+        <div class="dialog-top-header">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span class="diet-header-icon-badge" style="background: rgba(0, 230, 118, 0.15); border-color: rgba(0, 230, 118, 0.4);"><i class="fa-solid fa-person-running text-emerald"></i></span>
+                <div>
+                    <h3 class="dialog-modal-title">Physical Activities</h3>
+                    <span class="hud-sub-caption">What would you like to do?</span>
+                </div>
+            </div>
+            <button type="button" class="dialog-close-btn" onclick="document.getElementById('physicalActivitiesDialog').close()">&times;</button>
+        </div>
+
+        <div class="physical-options-container">
+            <!-- Option 1: Workout -->
+            <button type="button" class="discipline-choice-card choice-workout" data-discipline="workout">
+                <div class="choice-icon-wrap workout">
+                    <i class="fa-solid fa-dumbbell"></i>
+                </div>
+                <div class="choice-text-wrap">
+                    <div class="choice-title-row">
+                        <span class="choice-title">Workout</span>
+                        <span class="choice-tag text-emerald">Strength</span>
+                    </div>
+                    <span class="choice-desc">Custom sets & reps, 3D anatomical animations, integrated stopwatches, and rest timers.</span>
+                </div>
+                <i class="fa-solid fa-chevron-right choice-arrow"></i>
+            </button>
+
+            <!-- Option 2: Running -->
+            <button type="button" class="discipline-choice-card choice-running" data-discipline="running">
+                <div class="choice-icon-wrap running">
+                    <i class="fa-solid fa-person-running"></i>
+                </div>
+                <div class="choice-text-wrap">
+                    <div class="choice-title-row">
+                        <span class="choice-title">Running</span>
+                        <span class="choice-tag text-cyan">Cardio</span>
+                    </div>
+                    <span class="choice-desc">Live GPS route distance calculation, millisecond stopwatch, pedometer cadence, and calorie meter.</span>
+                </div>
+                <i class="fa-solid fa-chevron-right choice-arrow"></i>
+            </button>
+
+            <!-- Option 3: HIITs -->
+            <button type="button" class="discipline-choice-card choice-hiit" data-discipline="hiit">
+                <div class="choice-icon-wrap hiit">
+                    <i class="fa-solid fa-bolt"></i>
+                </div>
+                <div class="choice-text-wrap">
+                    <div class="choice-title-row">
+                        <span class="choice-title">HIIT</span>
+                        <span class="choice-tag text-yellow">Intervals</span>
+                    </div>
+                    <span class="choice-desc">Tabata interval sprint engine with audible whistle cues, cadence cycles, and explosive HIIT circuits.</span>
+                </div>
+                <i class="fa-solid fa-chevron-right choice-arrow"></i>
+            </button>
+        </div>
+    </dialog>
+
+<!-- 🪟 MODAL: GAMIFIED DIET & MACRO CALCULATOR FULLSCREEN HUB  -->
+        <!-- ======================================================== -->
+    <!-- 🪟 MODAL: WORKOUT DEDICATED FULLSCREEN SECTION           -->
+    <!-- ======================================================== -->
+    <dialog id="workoutSectionModal" class="health-dialog-modal diet-fullscreen-modal activity-fullscreen-modal">
+        <div class="dialog-top-header">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span class="diet-header-icon-badge" style="background: rgba(0, 230, 118, 0.14); border-color: rgba(0, 230, 118, 0.35);">
+                    <i class="fa-solid fa-dumbbell text-emerald"></i>
+                </span>
+                <div>
+                    <h3 class="dialog-modal-title">Strength Workout</h3>
+                    <span class="hud-sub-caption">Choose exercises, log sets and reps, watch animations, and use timers</span>
+                </div>
+            </div>
+            <button type="button" class="dialog-close-btn" onclick="document.getElementById('workoutSectionModal').close()">&times;</button>
+        </div>
+
+        <div class="activity-modal-body">
+
+                <div class="discipline-header-box">
+                    <div>
+                        <h3 class="discipline-title">Strength Workout</h3>
+                        <p class="discipline-desc">Choose exercises, log sets and reps, watch animations, and use timers.</p>
+                    </div>
+                    <button type="button" id="openAllExercisesBtn" class="corner-action-btn">
+                        <i class="fa-solid fa-dumbbell"></i> Exercise Library
+                    </button>
+                </div>
+
+                <!-- Launch Banner with Quick Routine Summary -->
+                <div class="workout-launch-banner">
+                    <div class="workout-summary-metrics">
+                        <div class="summary-pill">
+                            <span class="summary-num text-emerald" id="workoutRoutineCount">0</span>
+                            <span class="summary-lbl">Routine Exercises</span>
+                        </div>
+                        <div class="summary-pill">
+                            <span class="summary-num text-cyan" id="workoutEstDuration">0 min</span>
+                            <span class="summary-lbl">Est. Duration</span>
+                        </div>
+                        <div class="summary-pill">
+                            <span class="summary-num text-neon-orange" id="workoutEstBurn">0 kcal</span>
+                            <span class="summary-lbl">Target Burn</span>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-launch-workout-dialog" id="btnOpenWorkoutDialog">
+                        <i class="fa-solid fa-play"></i> Start Workout Session
+                    </button>
+                </div>
+
+                <!-- My Exercises Routine Grid -->
+                <div class="routine-section-header-row">
+                    <h4 class="routine-section-label"><i class="fa-solid fa-list-check"></i> Today's Exercises</h4>
+                    <span class="hud-sub-caption">Tap + to add from library</span>
+                </div>
+                <div id="myExercisesBucket" class="my-exercises-grid">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+
+            <!-- TAB 2: 🏃‍♂️ RUNNING MODULE -->
+        </div>
+    </dialog>
+
+    <!-- ======================================================== -->
+    <!-- 🪟 MODAL: RUNNING DEDICATED FULLSCREEN SECTION           -->
+    <!-- ======================================================== -->
+    <dialog id="runningSectionModal" class="health-dialog-modal diet-fullscreen-modal activity-fullscreen-modal">
+        <div class="dialog-top-header">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span class="diet-header-icon-badge" style="background: rgba(0, 176, 255, 0.14); border-color: rgba(0, 176, 255, 0.35);">
+                    <i class="fa-solid fa-person-running text-cyan"></i>
+                </span>
+                <div>
+                    <h3 class="dialog-modal-title">Running</h3>
+                    <span class="hud-sub-caption">Track distance, time, steps, and calories while running</span>
+                </div>
+            </div>
+            <button type="button" class="dialog-close-btn" onclick="document.getElementById('runningSectionModal').close()">&times;</button>
+        </div>
+
+        <div class="activity-modal-body">
+
+                <div class="discipline-header-box">
+                    <div>
+                        <h3 class="discipline-title">Running</h3>
+                        <p class="discipline-desc">Track distance, time, steps, and calories while running.</p>
+                    </div>
+                    <div class="gps-status-badge" id="runningGpsStatusBadge">
+                        <i class="fa-solid fa-satellite-dish"></i> <span>GPS Ready</span>
+                    </div>
+                </div>
+
+                <!-- Running Big Telemetry Grid -->
+                <div class="running-telemetry-grid">
+                    <div class="telemetry-card">
+                        <span class="telemetry-label"><i class="fa-solid fa-stopwatch text-emerald"></i> Elapsed Time</span>
+                        <span class="telemetry-val text-emerald" id="runningTimerDisplay">00:00.0</span>
+                    </div>
+                    <div class="telemetry-card">
+                        <span class="telemetry-label"><i class="fa-solid fa-route text-cyan"></i> GPS Distance</span>
+                        <span class="telemetry-val text-cyan"><span id="runningDistanceDisplay">0.00</span> <small>km</small></span>
+                    </div>
+                    <div class="telemetry-card">
+                        <span class="telemetry-label"><i class="fa-solid fa-shoe-prints text-neon-orange"></i> Pedometer</span>
+                        <span class="telemetry-val text-neon-orange"><span id="runningStepsDisplay">0</span> <small>steps</small></span>
+                    </div>
+                    <div class="telemetry-card">
+                        <span class="telemetry-label"><i class="fa-solid fa-gauge-high text-yellow"></i> Live Pace & Calories</span>
+                        <span class="telemetry-val-sub"><span id="runningPaceDisplay">0'00"</span> /km • <span id="runningKcalDisplay">0</span> kcal</span>
+                    </div>
+                </div>
+
+                <!-- Running Controls -->
+                <div class="running-actions-row">
+                    <button type="button" class="btn-run-action start" id="btnStartRun">
+                        <i class="fa-solid fa-play"></i> Start Run
+                    </button>
+                    <button type="button" class="btn-run-action pause" id="btnPauseRun" style="display: none;">
+                        <i class="fa-solid fa-pause"></i> Pause Run
+                    </button>
+                    <button type="button" class="btn-run-action finish" id="btnFinishRun" style="display: none;">
+                        <i class="fa-solid fa-flag-checkered"></i> Finish Run
+                    </button>
+                    <button type="button" class="btn-run-action reset" id="btnResetRun">
+                        <i class="fa-solid fa-rotate-right"></i> Reset
+                    </button>
+                </div>
+            </div>
+
+            <!-- TAB 3: ⚡ HIITS MODULE -->
+        </div>
+    </dialog>
+
+    <!-- ======================================================== -->
+    <!-- 🪟 MODAL: HIIT DEDICATED FULLSCREEN SECTION              -->
+    <!-- ======================================================== -->
+    <dialog id="hiitSectionModal" class="health-dialog-modal diet-fullscreen-modal activity-fullscreen-modal">
+        <div class="dialog-top-header">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span class="diet-header-icon-badge" style="background: rgba(255, 214, 0, 0.14); border-color: rgba(255, 214, 0, 0.35);">
+                    <i class="fa-solid fa-bolt text-yellow"></i>
+                </span>
+                <div>
+                    <h3 class="dialog-modal-title">HIIT & Sprints</h3>
+                    <span class="hud-sub-caption">Sprint and rest interval timer with whistle sound cues</span>
+                </div>
+            </div>
+            <button type="button" class="dialog-close-btn" onclick="document.getElementById('hiitSectionModal').close()">&times;</button>
+        </div>
+
+        <div class="activity-modal-body">
+
+                <div class="discipline-header-box">
+                    <div>
+                        <h3 class="discipline-title">HIIT & Sprints</h3>
+                        <p class="discipline-desc">Sprint and rest interval timer with whistle sound cues.</p>
+                    </div>
+                </div>
+
+                <!-- Special Sprint Interval Engine Section -->
+                <div class="hiit-sprint-engine-card">
+                    <div class="sprint-header-row">
+                        <h4 class="sprint-title"><i class="fa-solid fa-bolt text-yellow"></i> Sprint Timer</h4>
+                        <span class="sprint-round-pill" id="sprintRoundDisplay">Round 1 / 8</span>
+                    </div>
+
+                    <!-- Interval Phase Banner (SPRINT vs REST) -->
+                    <div class="sprint-phase-banner sprint-work" id="sprintPhaseBanner">
+                        <div class="sprint-phase-badge" id="sprintPhaseText">⚡ ALL-OUT SPRINT</div>
+                        <div class="sprint-countdown-display" id="sprintTimerDisplay">00:20.0</div>
+                    </div>
+
+                    <!-- Sprint Settings Config -->
+                    <div class="sprint-settings-row">
+                        <div class="sprint-setting-item">
+                            <label>Sprint (Work)</label>
+                            <select id="sprintWorkDuration">
+                                <option value="15">15 sec</option>
+                                <option value="20" selected>20 sec (Tabata)</option>
+                                <option value="30">30 sec</option>
+                                <option value="45">45 sec</option>
+                            </select>
+                        </div>
+                        <div class="sprint-setting-item">
+                            <label>Walk / Rest</label>
+                            <select id="sprintRestDuration">
+                                <option value="10" selected>10 sec (Tabata)</option>
+                                <option value="15">15 sec</option>
+                                <option value="20">20 sec</option>
+                                <option value="30">30 sec</option>
+                            </select>
+                        </div>
+                        <div class="sprint-setting-item">
+                            <label>Rounds</label>
+                            <select id="sprintTotalRounds">
+                                <option value="4">4 Rounds</option>
+                                <option value="8" selected>8 Rounds (4 mins)</option>
+                                <option value="10">10 Rounds</option>
+                                <option value="12">12 Rounds</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Sprint Action Controls -->
+                    <div class="sprint-actions-row">
+                        <button type="button" class="btn-sprint-action start" id="btnStartSprint">
+                            <i class="fa-solid fa-play"></i> Start Sprints
+                        </button>
+                        <button type="button" class="btn-sprint-action pause" id="btnPauseSprint" style="display: none;">
+                            <i class="fa-solid fa-pause"></i> Pause
+                        </button>
+                        <button type="button" class="btn-sprint-action reset" id="btnResetSprint">
+                            <i class="fa-solid fa-rotate-right"></i> Reset
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Launch Banner with HIIT Routine Summary -->
+                <div class="workout-launch-banner" style="margin-top: 18px;">
+                    <div class="workout-summary-metrics">
+                        <div class="summary-pill">
+                            <span class="summary-num text-yellow" id="hiitRoutineCount">0</span>
+                            <span class="summary-lbl">HIIT Routine</span>
+                        </div>
+                        <div class="summary-pill">
+                            <span class="summary-num text-cyan" id="hiitEstDuration">0 min</span>
+                            <span class="summary-lbl">Est. Duration</span>
+                        </div>
+                        <div class="summary-pill">
+                            <span class="summary-num text-neon-orange" id="hiitEstBurn">0 kcal</span>
+                            <span class="summary-lbl">Target Burn</span>
+                        </div>
+                    </div>
+                    <!-- Big Prominent CTA to Launch Fullscreen HIIT Workout Modal -->
+                    <button type="button" class="btn-launch-workout-dialog btn-start-hiit-session" id="btnOpenHiitWorkoutDialog">
+                        <i class="fa-solid fa-bolt"></i> Start HIIT Session
+                    </button>
+                </div>
+
+                <!-- Today's HIIT Routine Grid -->
+                <div class="routine-section-header-row">
+                    <h4 class="routine-section-label"><i class="fa-solid fa-fire text-neon-orange"></i> Today's HIIT Routine</h4>
+                    <span class="hud-sub-caption">Active circuit sequence</span>
+                </div>
+                <div id="hiitRoutineBucket" class="my-exercises-grid">
+                    <!-- Populated dynamically with HIIT routine exercises -->
+                </div>
+
+                <!-- Curated Explosive HIIT Exercises Library Section -->
+                <div class="routine-section-header-row" style="margin-top: 22px;">
+                    <h4 class="routine-section-label"><i class="fa-solid fa-fire-burner"></i> HIIT Exercises</h4>
+                    <span class="hud-sub-caption">Tap + to add to HIIT routine</span>
+                </div>
+                <div id="hiitExercisesBucket" class="my-exercises-grid">
+                    <!-- Populated with curated HIIT exercises -->
+                </div>
+        </div>
+    </dialog>
+
+<!-- ======================================================== -->
     <dialog id="dietCalculatorModal" class="health-dialog-modal diet-fullscreen-modal">
         <div class="dialog-top-header">
             <div style="display: flex; align-items: center; gap: 10px;">
                 <span class="diet-header-icon-badge"><i class="fa-solid fa-chart-pie text-emerald"></i></span>
                 <div>
-                    <h3 class="dialog-modal-title">Diet & Macro Bio-Reactor</h3>
-                    <span class="hud-sub-caption">Drag & Drop Food into the Pie Chart • Live Macro Adjuster</span>
+                    <h3 class="dialog-modal-title">Diet & Calorie Calculator</h3>
+                    <span class="hud-sub-caption">Drag food to the chart or tap Feed</span>
                 </div>
             </div>
             <button type="button" class="dialog-close-btn" id="btnCloseDietModal">&times;</button>
@@ -923,8 +1045,8 @@
             <!-- 1. GOAL SELECTION & BIOMETRIC TARGET BAR -->
             <div class="diet-goal-card">
                 <div class="diet-goal-header-row">
-                    <span class="diet-goal-label"><i class="fa-solid fa-bullseye text-emerald"></i> Metabolic Goal</span>
-                    <span class="hud-sub-caption" id="dietBiometricsRefText">Linked to Biometrics</span>
+                    <span class="diet-goal-label"><i class="fa-solid fa-bullseye text-emerald"></i> My Goal</span>
+                    <span class="hud-sub-caption" id="dietBiometricsRefText">Based on your body measurements</span>
                 </div>
 
                 <div class="diet-goal-pills-row">
@@ -941,22 +1063,22 @@
 
                 <div class="diet-stats-summary-grid">
                     <div class="diet-summary-item">
-                        <span class="diet-summary-lbl">Daily Target</span>
+                        <span class="diet-summary-lbl">Daily Goal</span>
                         <span class="diet-summary-val text-emerald" id="dietTargetCalories">2,150</span>
                         <span class="diet-summary-sub">kcal</span>
                     </div>
                     <div class="diet-summary-item">
-                        <span class="diet-summary-lbl">Base BMR</span>
+                        <span class="diet-summary-lbl">Base (BMR)</span>
                         <span class="diet-summary-val text-cyan" id="dietBmrDisplay">1,720</span>
                         <span class="diet-summary-sub">kcal</span>
                     </div>
                     <div class="diet-summary-item">
-                        <span class="diet-summary-lbl">Fuel Consumed</span>
+                        <span class="diet-summary-lbl">Calories Eaten</span>
                         <span class="diet-summary-val text-yellow" id="dietConsumedCalories">0</span>
                         <span class="diet-summary-sub">kcal</span>
                     </div>
                     <div class="diet-summary-item">
-                        <span class="diet-summary-lbl">Energy Remaining</span>
+                        <span class="diet-summary-lbl">Calories Left</span>
                         <span class="diet-summary-val text-emerald" id="dietRemainingCalories">2,150</span>
                         <span class="diet-summary-sub">kcal</span>
                     </div>
@@ -989,13 +1111,13 @@
                     <!-- Drop Zone Callout -->
                     <div class="pie-drop-indicator-banner">
                         <i class="fa-solid fa-hand-holding-droplet"></i>
-                        <span>Drag & Drop Food Tile Here or Tap to Feed</span>
+                        <span>Drag food here or tap Feed</span>
                     </div>
                 </div>
 
                 <!-- Live Macro Breakdown Spectrum Meters -->
                 <div class="macro-meters-card">
-                    <h4 class="macro-meters-title"><i class="fa-solid fa-dna text-cyan"></i> Macro Calories Breakdown</h4>
+                    <h4 class="macro-meters-title"><i class="fa-solid fa-chart-pie text-cyan"></i> Carbs, Protein & Fat</h4>
                     
                     <div class="macro-meter-row">
                         <div class="macro-meter-header">
@@ -1044,7 +1166,7 @@
             <!-- 3. MY REGULAR FOODS TRAY (PINNED STAPLES - ROTI & RICE TOP) -->
             <div class="routine-section-header-row" style="margin-top: 18px;">
                 <div>
-                    <h4 class="routine-section-label"><i class="fa-solid fa-star text-yellow"></i> My Regular Foods Tray</h4>
+                    <h4 class="routine-section-label"><i class="fa-solid fa-star text-yellow"></i> My Regular Foods</h4>
                     <span class="hud-sub-caption">Drag tile to pie chart or tap + to feed</span>
                 </div>
                 <button type="button" class="corner-action-btn" id="btnOpenFoodLibrary">
@@ -1060,7 +1182,7 @@
             <!-- 4. TODAY'S CONSUMED FUEL LOG -->
             <div class="routine-section-header-row" style="margin-top: 24px;">
                 <div>
-                    <h4 class="routine-section-label"><i class="fa-solid fa-receipt text-cyan"></i> Today's Food Intake Log</h4>
+                    <h4 class="routine-section-label"><i class="fa-solid fa-receipt text-cyan"></i> Today's Food Log</h4>
                     <span class="hud-sub-caption">Real-time calorie and macro records</span>
                 </div>
                 <button type="button" class="btn-clear-food-log" id="btnClearDietLog">
@@ -1079,7 +1201,7 @@
     <!-- ======================================================== -->
     <dialog id="foodQuantityModal" class="health-dialog-modal" style="max-width: 420px;">
         <div class="dialog-top-header">
-            <h3 class="dialog-modal-title"><i class="fa-solid fa-scale-unbalanced-flip text-emerald"></i> Add Food Serving</h3>
+            <h3 class="dialog-modal-title"><i class="fa-solid fa-scale-unbalanced-flip text-emerald"></i> Add Food</h3>
             <button type="button" class="dialog-close-btn" onclick="document.getElementById('foodQuantityModal').close()">&times;</button>
         </div>
 
@@ -1137,7 +1259,7 @@
     <!-- ======================================================== -->
     <dialog id="foodLibraryModal" class="health-dialog-modal" style="max-width: 620px;">
         <div class="dialog-top-header">
-            <h3 class="dialog-modal-title"><i class="fa-solid fa-book-bookmark text-emerald"></i> Food Nutrition Library</h3>
+            <h3 class="dialog-modal-title"><i class="fa-solid fa-book-bookmark text-emerald"></i> Food Library</h3>
             <button type="button" class="dialog-close-btn" onclick="document.getElementById('foodLibraryModal').close()">&times;</button>
         </div>
 
@@ -1175,7 +1297,7 @@
     <!-- ======================================================== -->
     <dialog id="customFoodModal" class="health-dialog-modal" style="max-width: 440px;">
         <div class="dialog-top-header">
-            <h3 class="dialog-modal-title"><i class="fa-solid fa-apple-whole text-emerald"></i> Create Custom Food</h3>
+            <h3 class="dialog-modal-title"><i class="fa-solid fa-apple-whole text-emerald"></i> Add Custom Food</h3>
             <button type="button" class="dialog-close-btn" onclick="document.getElementById('customFoodModal').close()">&times;</button>
         </div>
 

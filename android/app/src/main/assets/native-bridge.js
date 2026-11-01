@@ -115,6 +115,84 @@ const NativeBridge = {
                 window.AndroidBridge.stopFocusSession();
             }
         } catch (e) {}
+    },
+
+    // --- 🛡️ DOOMSCROLL GUARDIAN (REELS & SHORTS) ---
+    isAccessibilityServiceEnabled: () => {
+        try {
+            if (typeof window.AndroidBridge !== 'undefined' && window.AndroidBridge.isAccessibilityServiceEnabled) {
+                return window.AndroidBridge.isAccessibilityServiceEnabled();
+            }
+        } catch (e) {}
+        return false;
+    },
+
+    openAccessibilitySettings: () => {
+        try {
+            if (typeof window.AndroidBridge !== 'undefined' && window.AndroidBridge.openAccessibilitySettings) {
+                window.AndroidBridge.openAccessibilitySettings();
+            }
+        } catch (e) {}
+    },
+
+    setShortsBlockerEnabled: (enabled) => {
+        try {
+            if (typeof window.AndroidBridge !== 'undefined' && window.AndroidBridge.setShortsBlockerEnabled) {
+                window.AndroidBridge.setShortsBlockerEnabled(enabled);
+            }
+        } catch (e) {}
+    },
+
+    setReelsBlockerEnabled: (enabled) => {
+        try {
+            if (typeof window.AndroidBridge !== 'undefined' && window.AndroidBridge.setReelsBlockerEnabled) {
+                window.AndroidBridge.setReelsBlockerEnabled(enabled);
+            }
+        } catch (e) {}
+    },
+
+    isShortsBlockerEnabled: () => {
+        try {
+            if (typeof window.AndroidBridge !== 'undefined' && window.AndroidBridge.isShortsBlockerEnabled) {
+                return window.AndroidBridge.isShortsBlockerEnabled();
+            }
+        } catch (e) {}
+        return true;
+    },
+
+    isReelsBlockerEnabled: () => {
+        try {
+            if (typeof window.AndroidBridge !== 'undefined' && window.AndroidBridge.isReelsBlockerEnabled) {
+                return window.AndroidBridge.isReelsBlockerEnabled();
+            }
+        } catch (e) {}
+        return true;
+    },
+
+    // --- 🔑 ANDROID 13/14 RESTRICTED SETTINGS & PERMISSIONS ---
+    openAppDetailsSettings: () => {
+        try {
+            if (typeof window.AndroidBridge !== 'undefined' && window.AndroidBridge.openAppDetailsSettings) {
+                window.AndroidBridge.openAppDetailsSettings();
+            }
+        } catch (e) {}
+    },
+
+    openOverlaySettings: () => {
+        try {
+            if (typeof window.AndroidBridge !== 'undefined' && window.AndroidBridge.openOverlaySettings) {
+                window.AndroidBridge.openOverlaySettings();
+            }
+        } catch (e) {}
+    },
+
+    hasOverlayPermission: () => {
+        try {
+            if (typeof window.AndroidBridge !== 'undefined' && window.AndroidBridge.hasOverlayPermission) {
+                return window.AndroidBridge.hasOverlayPermission();
+            }
+        } catch (e) {}
+        return true;
     }
 };
 

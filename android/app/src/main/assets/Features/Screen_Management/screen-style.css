@@ -1,6 +1,7 @@
 /* ==========================================================================
-   PRODUCTOMETER - SCREEN MANAGEMENT (DIGITAL WELLBEING MAINFRAME)
-   Cyberpunk Solid Black Aesthetic · Crimson Red Screen Theme (#ff1744)
+   PRODUCTOMETER - SCREEN MANAGEMENT: DIGITAL WELLBEING STYLESHEET
+   Clean Cyberpunk Obsidian & Electric Cyan Theme
+   RED (#ff1744) is strictly reserved for excessive screentime & danger states!
    ========================================================================== */
 
 /* --- ROOT WRAPPER --- */
@@ -39,53 +40,113 @@
 }
 
 .back-to-features-btn:hover {
-    color: #ff1744;
-    border-color: rgba(255, 23, 68, 0.4);
-    background: rgba(255, 23, 68, 0.08);
-    box-shadow: 0 0 14px rgba(255, 23, 68, 0.15);
+    color: #00e5ff;
+    border-color: rgba(0, 229, 255, 0.4);
+    background: rgba(0, 229, 255, 0.08);
+    box-shadow: 0 0 14px rgba(0, 229, 255, 0.15);
 }
 
 .module-title-chip {
     font-size: 0.75rem;
     font-weight: 800;
     letter-spacing: 0.8px;
-    color: #ff1744;
+    color: #00e5ff;
     text-transform: uppercase;
     display: flex;
     align-items: center;
     gap: 6px;
     padding: 6px 12px;
     border-radius: 20px;
-    background: rgba(255, 23, 68, 0.12);
-    border: 1px solid rgba(255, 23, 68, 0.35);
-    box-shadow: 0 0 10px rgba(255, 23, 68, 0.15);
+    background: rgba(0, 229, 255, 0.12);
+    border: 1px solid rgba(0, 229, 255, 0.35);
+    box-shadow: 0 0 10px rgba(0, 229, 255, 0.15);
+    transition: all 0.3s ease;
 }
 
-/* --- GLASS CARD PRIMITIVE (RED THEME) --- */
+/* DANGER STATE FOR TOP TITLE CHIP */
+.module-title-chip.over-limit {
+    color: #ff1744;
+    background: rgba(255, 23, 68, 0.15);
+    border-color: rgba(255, 23, 68, 0.45);
+    box-shadow: 0 0 14px rgba(255, 23, 68, 0.35);
+}
+
+/* --- 🚨 EXCESSIVE SCREEN TIME WARNING ALERT BANNER --- */
+.excessive-alert-banner {
+    display: none; /* Controlled dynamically by screen-scripts.js */
+    background: linear-gradient(135deg, rgba(255, 23, 68, 0.2) 0%, rgba(20, 8, 12, 0.95) 100%);
+    border: 1.5px solid #ff1744;
+    border-radius: 16px;
+    padding: 14px 18px;
+    box-sizing: border-box;
+    box-shadow: 0 0 25px rgba(255, 23, 68, 0.35), inset 0 0 12px rgba(255, 23, 68, 0.2);
+    align-items: center;
+    gap: 14px;
+    animation: alertBorderFlash 1.6s infinite alternate;
+}
+
+@keyframes alertBorderFlash {
+    0% {
+        border-color: rgba(255, 23, 68, 0.5);
+        box-shadow: 0 0 15px rgba(255, 23, 68, 0.2);
+    }
+    100% {
+        border-color: #ff1744;
+        box-shadow: 0 0 35px rgba(255, 23, 68, 0.55), inset 0 0 15px rgba(255, 23, 68, 0.25);
+    }
+}
+
+.excessive-alert-icon {
+    font-size: 1.6rem;
+    color: #ff1744;
+    text-shadow: 0 0 15px rgba(255, 23, 68, 0.8);
+    flex-shrink: 0;
+}
+
+.excessive-alert-text {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.alert-headline {
+    font-size: 0.88rem;
+    font-weight: 800;
+    color: #ffffff;
+    letter-spacing: 0.3px;
+}
+
+.alert-subtext {
+    font-size: 0.74rem;
+    color: #fca5a5;
+    line-height: 1.35;
+}
+
+/* --- GLASS CARD PRIMITIVE (CYBERPUNK CLEAN THEME) --- */
 .sm-card {
-    background: linear-gradient(180deg, rgba(22, 12, 16, 0.9) 0%, rgba(10, 8, 12, 0.96) 100%);
-    border: 1px solid rgba(255, 23, 68, 0.2);
+    background: linear-gradient(180deg, rgba(14, 18, 28, 0.85) 0%, rgba(8, 10, 16, 0.95) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 18px;
     padding: 20px;
     box-sizing: border-box;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.05);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     position: relative;
     overflow: hidden;
-    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .sm-card:hover {
-    border-color: rgba(255, 23, 68, 0.38);
-    box-shadow: 0 10px 35px rgba(0, 0, 0, 0.8), 0 0 15px rgba(255, 23, 68, 0.1);
+    border-color: rgba(0, 229, 255, 0.3);
+    box-shadow: 0 10px 35px rgba(0, 0, 0, 0.8), 0 0 15px rgba(0, 229, 255, 0.08);
 }
 
 .sm-card::before {
     content: '';
     position: absolute;
     top: 0; left: 20%; width: 60%; height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(255, 23, 68, 0.65), transparent);
+    background: linear-gradient(90deg, transparent, rgba(0, 229, 255, 0.5), transparent);
 }
 
 .sm-card-header {
@@ -107,16 +168,29 @@
 }
 
 .sm-title i {
-    color: #ff1744;
+    color: #00e5ff;
     font-size: 1.15rem;
-    text-shadow: 0 0 10px rgba(255, 23, 68, 0.4);
+    text-shadow: 0 0 10px rgba(0, 229, 255, 0.4);
 }
 
 /* --- SECTION 1: HERO SCREEN TIME --- */
 .hero-screen-time-card {
     text-align: center;
     padding: 24px 20px 20px 20px;
-    background: radial-gradient(circle at 50% 0%, rgba(255, 23, 68, 0.12) 0%, rgba(10, 8, 12, 0.96) 80%);
+    background: radial-gradient(circle at 50% 0%, rgba(0, 229, 255, 0.08) 0%, rgba(8, 10, 16, 0.96) 80%);
+    border-color: rgba(0, 229, 255, 0.18);
+    transition: all 0.4s ease;
+}
+
+/* 🔴 HERO DANGER OVERLAY (Only triggered when total screen time exceeds daily limit) */
+.hero-screen-time-card.over-limit {
+    background: radial-gradient(circle at 50% 0%, rgba(255, 23, 68, 0.22) 0%, rgba(16, 8, 12, 0.98) 85%);
+    border-color: rgba(255, 23, 68, 0.6) !important;
+    box-shadow: 0 10px 35px rgba(0, 0, 0, 0.85), 0 0 25px rgba(255, 23, 68, 0.35);
+}
+
+.hero-screen-time-card.over-limit::before {
+    background: linear-gradient(90deg, transparent, rgba(255, 23, 68, 0.8), transparent);
 }
 
 .hero-subtitle {
@@ -126,6 +200,10 @@
     letter-spacing: 1.5px;
     text-transform: uppercase;
     margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
 }
 
 .hero-timer-display {
@@ -141,19 +219,29 @@
     font-weight: 900;
     line-height: 1;
     color: #ffffff;
-    text-shadow: 0 0 30px rgba(255, 23, 68, 0.45);
+    text-shadow: 0 0 25px rgba(0, 229, 255, 0.3);
     font-variant-numeric: tabular-nums;
+    transition: text-shadow 0.3s ease;
 }
 
 .hero-unit {
     font-size: 1.3rem;
     font-weight: 700;
-    color: #ff1744;
+    color: #00e5ff;
     margin-right: 12px;
+    transition: color 0.3s ease;
 }
 
 .hero-unit:last-child {
     margin-right: 0;
+}
+
+/* 🔴 Hero numbers turn RED only when over limit! */
+.hero-screen-time-card.over-limit .hero-num {
+    text-shadow: 0 0 35px rgba(255, 23, 68, 0.55);
+}
+.hero-screen-time-card.over-limit .hero-unit {
+    color: #ff1744;
 }
 
 /* DIGITAL WELLBEING TRI-METRICS ROW */
@@ -189,9 +277,10 @@
     font-size: 0.95rem;
     font-weight: 800;
     color: #ffffff;
+    transition: color 0.3s ease;
 }
 
-/* --- SECTION 2: DEDICATED PRODUCTIVITY VS OTHERS BAR (CRIMSON RED) --- */
+/* --- SECTION 2: DEDICATED PRODUCTIVITY VS OTHERS BAR --- */
 .productivity-bar-card {
     position: relative;
 }
@@ -211,8 +300,8 @@
 .ratio-percentage-display {
     font-size: 1.25rem;
     font-weight: 900;
-    color: #ff1744;
-    text-shadow: 0 0 14px rgba(255, 23, 68, 0.5);
+    color: #00e5ff;
+    text-shadow: 0 0 14px rgba(0, 229, 255, 0.4);
 }
 
 .dedicated-bar-container {
@@ -223,7 +312,7 @@
 .dedicated-progress-track {
     width: 100%;
     height: 20px;
-    background: #110e14;
+    background: #0f131d;
     border-radius: 20px;
     overflow: hidden;
     display: flex;
@@ -232,10 +321,11 @@
     box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6);
 }
 
+/* PRODUCTIVITY SEGMENT: Clean Electric Cyan & Emerald */
 .seg-productive {
     height: 100%;
-    background: linear-gradient(90deg, #d50000 0%, #ff1744 50%, #ff5252 100%);
-    box-shadow: 0 0 18px rgba(255, 23, 68, 0.6);
+    background: linear-gradient(90deg, #00b0ff 0%, #00e5ff 60%, #00e676 100%);
+    box-shadow: 0 0 15px rgba(0, 229, 255, 0.5);
     transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
     position: relative;
 }
@@ -251,6 +341,12 @@
     height: 100%;
     background: linear-gradient(90deg, #334155 0%, #475569 100%);
     transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* When others/entertainment exceeds healthy ratio, others bar turns cautionary */
+.seg-others.over-limit {
+    background: linear-gradient(90deg, #b71c1c 0%, #ff1744 100%);
+    box-shadow: 0 0 12px rgba(255, 23, 68, 0.6);
 }
 
 .ratio-legend {
@@ -269,7 +365,8 @@
 
 .dot-prod {
     width: 10px; height: 10px; border-radius: 3px;
-    background: #ff1744; box-shadow: 0 0 8px rgba(255, 23, 68, 0.7);
+    background: #00e5ff;
+    box-shadow: 0 0 8px rgba(0, 229, 255, 0.7);
 }
 
 .dot-oth {
@@ -304,9 +401,9 @@
     width: 34px; height: 34px; border-radius: 10px;
     display: flex; align-items: center; justify-content: center;
     font-size: 1rem;
-    background: rgba(255, 23, 68, 0.12);
-    color: #ff1744;
-    border: 1px solid rgba(255, 23, 68, 0.3);
+    background: rgba(0, 229, 255, 0.12);
+    color: #00e5ff;
+    border: 1px solid rgba(0, 229, 255, 0.3);
 }
 
 .wb-tool-text {
@@ -334,8 +431,8 @@
 
 .goal-input-box {
     background: rgba(0, 0, 0, 0.5);
-    border: 1px solid rgba(255, 23, 68, 0.35);
-    color: #ff1744;
+    border: 1px solid rgba(0, 229, 255, 0.35);
+    color: #00e5ff;
     font-size: 0.85rem;
     font-weight: 800;
     padding: 6px 10px;
@@ -347,7 +444,14 @@
 }
 
 .goal-input-box:focus {
+    border-color: #00e5ff;
+    box-shadow: 0 0 10px rgba(0, 229, 255, 0.3);
+}
+
+/* Goal input turns red when over target */
+.goal-input-box.over-limit {
     border-color: #ff1744;
+    color: #ff1744;
     box-shadow: 0 0 10px rgba(255, 23, 68, 0.3);
 }
 
@@ -360,8 +464,8 @@
 
 .android-permission-banner {
     display: none;
-    background: linear-gradient(135deg, rgba(255, 23, 68, 0.15), rgba(255, 179, 0, 0.12));
-    border: 1px solid rgba(255, 23, 68, 0.4);
+    background: linear-gradient(135deg, rgba(255, 171, 0, 0.15), rgba(15, 23, 42, 0.95));
+    border: 1px solid rgba(255, 171, 0, 0.4);
     border-radius: 12px;
     padding: 12px 14px;
     align-items: center;
@@ -371,13 +475,13 @@
 
 .perm-text {
     font-size: 0.76rem;
-    color: #ff5252;
+    color: #ffb300;
     line-height: 1.4;
 }
 
 .btn-grant-perm {
-    background: linear-gradient(135deg, #d50000, #ff1744);
-    color: #ffffff;
+    background: linear-gradient(135deg, #0284c7, #00e5ff);
+    color: #04121d;
     font-size: 0.72rem;
     font-weight: 800;
     padding: 8px 12px;
@@ -385,7 +489,7 @@
     border: none;
     cursor: pointer;
     white-space: nowrap;
-    box-shadow: 0 0 12px rgba(255, 23, 68, 0.3);
+    box-shadow: 0 0 12px rgba(0, 229, 255, 0.3);
 }
 
 .app-filters-row {
@@ -417,31 +521,12 @@
 }
 
 .filter-btn.active {
-    background: rgba(255, 23, 68, 0.2);
-    color: #ff1744;
-    border: 1px solid rgba(255, 23, 68, 0.35);
+    background: rgba(0, 229, 255, 0.18);
+    color: #00e5ff;
+    border: 1px solid rgba(0, 229, 255, 0.4);
 }
 
-.btn-add-custom-app {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    color: #e2e8f0;
-    font-size: 0.74rem;
-    font-weight: 700;
-    padding: 6px 12px;
-    border-radius: 8px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    transition: all 0.2s;
-}
 
-.btn-add-custom-app:hover {
-    border-color: #ff1744;
-    color: #ff1744;
-    box-shadow: 0 0 10px rgba(255, 23, 68, 0.2);
-}
 
 /* APP LIST */
 .app-breakdown-list {
@@ -462,8 +547,17 @@
 }
 
 .app-card-item:hover {
-    border-color: rgba(255, 23, 68, 0.3);
+    border-color: rgba(0, 229, 255, 0.3);
     background: rgba(255, 255, 255, 0.04);
+}
+
+/* 🔴 EXCESSIVE INDIVIDUAL APP CONSUMPTION: Highlight in Red only if a single app consumes over 2 hours! */
+.app-card-item.excessive-app {
+    border-color: rgba(255, 23, 68, 0.5);
+    background: rgba(255, 23, 68, 0.05);
+}
+.app-card-item.excessive-app .app-time-bold {
+    color: #ff1744;
 }
 
 .app-top-info {
@@ -508,11 +602,12 @@
     user-select: none;
 }
 
+/* PRODUCTIVITY BADGE: Cyan / Green */
 .cat-prod {
-    background: rgba(255, 23, 68, 0.15);
-    color: #ff1744;
-    border: 1px solid rgba(255, 23, 68, 0.4);
-    box-shadow: 0 0 8px rgba(255, 23, 68, 0.15);
+    background: rgba(0, 229, 255, 0.15);
+    color: #00e5ff;
+    border: 1px solid rgba(0, 229, 255, 0.4);
+    box-shadow: 0 0 8px rgba(0, 229, 255, 0.15);
 }
 
 .cat-others {
@@ -551,81 +646,14 @@
 }
 
 .fill-prod {
-    background: linear-gradient(90deg, #d50000, #ff1744);
-    box-shadow: 0 0 8px rgba(255, 23, 68, 0.4);
+    background: linear-gradient(90deg, #0284c7, #00e5ff);
+    box-shadow: 0 0 8px rgba(0, 229, 255, 0.4);
 }
 .fill-oth { background: #64748b; }
 
-/* MODAL: ADD / CONFIGURE APP */
-.modal-backdrop {
-    display: none;
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(4, 3, 6, 0.92);
-    backdrop-filter: blur(14px);
-    z-index: 999999;
-    justify-content: center;
-    align-items: center;
-    padding: 20px;
-    box-sizing: border-box;
+/* 🔴 When app is excessive, fill track turns Red */
+.fill-excessive {
+    background: linear-gradient(90deg, #b71c1c, #ff1744);
+    box-shadow: 0 0 8px rgba(255, 23, 68, 0.6);
 }
 
-.modal-dialog {
-    background: #120a10;
-    border: 1px solid rgba(255, 23, 68, 0.35);
-    border-radius: 18px;
-    padding: 24px;
-    max-width: 400px;
-    width: 100%;
-    box-shadow: 0 0 40px rgba(255, 23, 68, 0.25);
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-}
-
-.modal-header-title {
-    font-size: 1.1rem;
-    font-weight: 800;
-    color: #ffffff;
-}
-
-.modal-input {
-    background: rgba(0, 0, 0, 0.5);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 8px;
-    padding: 10px 12px;
-    color: #ffffff;
-    font-size: 0.85rem;
-    outline: none;
-}
-
-.modal-input:focus {
-    border-color: #ff1744;
-}
-
-.modal-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    margin-top: 8px;
-}
-
-.btn-secondary {
-    background: transparent;
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    color: #94a3b8;
-    padding: 8px 16px;
-    border-radius: 8px;
-    cursor: pointer;
-}
-
-.btn-primary {
-    background: linear-gradient(135deg, #d50000, #ff1744);
-    color: #ffffff;
-    font-weight: 800;
-    border: none;
-    padding: 8px 18px;
-    border-radius: 8px;
-    cursor: pointer;
-    box-shadow: 0 0 14px rgba(255, 23, 68, 0.4);
-}

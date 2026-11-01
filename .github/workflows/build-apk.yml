@@ -65,20 +65,44 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create v1.0.2 dist/Productometer.apk \
-            --title "Productometer v1.0.2 - Android Release APK" \
-            --notes "### 📱 Productometer Android Release v1.0.2
+          gh release create v1.0.3 dist/Productometer.apk \
+            --title "Productometer v1.0.3 - Android Release APK" \
+            --notes "### 📱 Productometer Android Release v1.0.3
 
-          Major update featuring Day Planner task rendering fixes, Hardware Pedometer & GPS integration, Clean Screen Management app names, Compact mobile framing, and Home Screen Light & Dark mode toggle.
+          Comprehensive update resolving Academics Monitoring Day Planner sync, Android 13/14/15 Restricted Settings access, Reels & Shorts Doomscroll Blocker with 1-reel grace, high-precision GPS anti-drift tracking, decoupled hardware step counting, and clean UI framing.
 
           #### 🚀 Enhancements & Bug Fixes:
-          - **Day Planner Task Rendering Fix:** Resolved JavaScript ReferenceError on native bridge alarm dispatch; tasks now reliably save into local storage and render onto the chronological timeline and Home screen schedule.
-          - **Hardware Pedometer & GPS Fix:** Activated native Android \`Sensor.TYPE_STEP_COUNTER\` / \`TYPE_STEP_DETECTOR\` bridge, motion sensor fallbacks, and \`WebChromeClient.onGeolocationPermissionsShowPrompt\` callback for outdoor GPS tracking.
-          - **Clean Screen Management App Names:** Added Android \`QUERY_ALL_PACKAGES\` visibility and native package label resolver, replacing raw package identifiers (\`com.facebook.katana\`, \`com.google.android.youtube\`) with clean human labels (\"Facebook\", \"YouTube\", \"WhatsApp\").
-          - **Compact Mobile Frame & Sizing:** Fixed excessive vertical length and screen zooming by disabling wide-viewport desktop emulation in Android WebView, compacting HUD (52px), bottom dock (54px), and optimizing card padding.
-          - **Light & Dark Mode Switcher:** Added a one-tap theme toggle button directly on the Home screen top HUD with full CSS token adaptation and persistent storage across app launches.
-          - **100% Offline Capability:** All assets and application logic remain fully offline and local.
+          - **Academics Monitoring <-> Day Planner Two-Way Sync:**
+            - Day Planner tasks categorized under \`academics\`, \`skills\`, or containing study keywords (\`study\`, \`math\`, \`physic\`, \`code\`, \`exam\`, \`dsa\`, etc.) now automatically synchronize into Academics Monitoring.
+            - Added direct **Start** and **Start Early** buttons on task cards, allowing immediate launch of Pomodoro study timers without waiting for the exact scheduled minute.
+            - Completing a 25-minute Pomodoro study cycle now automatically marks the planned task as completed in Day Planner (\`completed: true\`).
+            - Cross-tab reactive updates ensure live synchronization whenever tasks are added, edited, or marked done.
+
+          - **Android 13/14/15 Restricted Settings Unlock Hub:**
+            - Solved Android's greyed-out \"Restricted settings\" issue for sideloaded APKs.
+            - Added a dedicated **System Access & Permissions** hub under the **Me** profile with a direct one-tap shortcut to App Info (\`ACTION_APPLICATION_DETAILS_SETTINGS\`).
+            - Step-by-step guided instructions direct users to tap the **3 dots (⋮)** in the top right and select **\"Allow restricted settings\"** to enable Accessibility, Usage Access, and Overlay permissions.
+
+          - **Reels & Shorts Anti-Doomscroll Blocker (1-Reel Grace & 5s Auto-Exit):**
+            - Dedicated native Android Accessibility Service (\`ShortsReelsBlockerService\`) actively detects Instagram Reels and YouTube Shorts.
+            - **1st Reel Grace Period:** Allows you to enjoy a single reel or short sent by a friend without interruption.
+            - **2nd Reel Countdown Alert:** Triggers an interactive 5-second countdown notification on consecutive reel scrolling.
+            - **Single-Step Back Action:** Automatically sends a single back command to return you cleanly to the exact chat, feed, or page you were on before getting distracted.
+
+          - **High-Precision Anti-Drift GPS & Independent Pedometer:**
+            - Completely decoupled step counting from GPS coordinate jitter—steps are driven strictly by hardware pedometer sensors (\`TYPE_STEP_COUNTER\` / \`TYPE_STEP_DETECTOR\`) and accelerometer peak detection.
+            - Built-in stationary deadband filter (< 0.6 m/s / < 6m) eliminates the ~100m phantom distance gap when stopped or resting.
+
+          - **Screen Management Clean Human App Names:**
+            - Android \`QUERY_ALL_PACKAGES\` visibility and native package label resolver replaces raw package identifiers (\`com.facebook.katana\`, \`com.google.android.youtube\`) with clean readable names.
+
+          - **Compact Mobile Frame & Home Screen Light/Dark Mode Switcher:**
+            - Compacted HUD and dock navigation with viewport normalization.
+            - One-tap Light & Dark mode switch button on the Home screen HUD with full CSS token adaptation.
+
+          - **100% Offline Capability:**
+            - Fully functional offline without requiring an active internet connection.
 
           #### 📦 Direct Download:
           - Click **\`Productometer.apk\`** under Assets below to download and install." || \
-          gh release upload v1.0.2 dist/Productometer.apk --clobber
+          gh release upload v1.0.3 dist/Productometer.apk --clobber

@@ -19,7 +19,7 @@
     <!-- Top Fixed Status Ribbon HUD Header (No Diamonds) -->
     <header class="portal-top-hud">
         <div class="nav-branding-title">Productometer</div>
-        <div class="module-title-chip">
+        <div class="module-title-chip" id="topModuleChip">
             <i class="fa-solid fa-chart-line"></i> Screen Time
         </div>
     </header>
@@ -36,9 +36,23 @@
                 <span style="font-size: 0.78rem; font-weight: 700; color: #94a3b8;">Screen Time Manager</span>
             </div>
 
+            <!-- 🚨 EXCESSIVE SCREEN TIME ALERT BANNER (Triggers RED strictly when over target) -->
+            <div class="excessive-alert-banner" id="excessiveAlertBanner">
+                <div class="excessive-alert-icon">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+                <div class="excessive-alert-text">
+                    <div class="alert-headline" id="alertHeadlineText">Excessive Screen Time Warning</div>
+                    <div class="alert-subtext" id="alertSubtext">You have exceeded your daily screen target. Consider stepping away to safeguard your focus and sleep.</div>
+                </div>
+            </div>
+
             <!-- SECTION 1: HERO SCREEN TIME & DIGITAL WELLBEING TRI-METRICS -->
-            <section class="sm-card hero-screen-time-card">
-                <div class="hero-subtitle">Total Screen Time Today</div>
+            <section class="sm-card hero-screen-time-card" id="heroScreenCard">
+                <div class="hero-subtitle">
+                    <span>Total Screen Time Today</span>
+                    <span id="screenHealthStatus" style="font-size: 0.72rem; color: #00e676; font-weight: 800; letter-spacing: 0.5px;">🟢 BALANCED</span>
+                </div>
                 <div class="hero-timer-display">
                     <span class="hero-num" id="heroHours">0</span>
                     <span class="hero-unit">h</span>
@@ -54,7 +68,7 @@
                     </div>
                     <div class="wb-metric-box">
                         <span class="wb-metric-label"><i class="fa-solid fa-bullseye"></i> Daily Goal</span>
-                        <span class="wb-metric-value" id="metricGoalAchieved">0% (0/4.0h)</span>
+                        <span class="wb-metric-value" id="metricGoalAchieved" style="color: #00e5ff;">0% (0/4.0h)</span>
                     </div>
                     <div class="wb-metric-box">
                         <span class="wb-metric-label"><i class="fa-solid fa-moon"></i> Bedtime Mode</span>
@@ -63,7 +77,7 @@
                 </div>
             </section>
 
-            <!-- SECTION 2: DEDICATED PRODUCTIVITY VS OTHERS RATIO BAR (CRIMSON RED) -->
+            <!-- SECTION 2: DEDICATED PRODUCTIVITY VS OTHERS RATIO BAR -->
             <section class="sm-card productivity-bar-card">
                 <div class="ratio-meta-row">
                     <div>
@@ -87,7 +101,7 @@
                 <div class="ratio-legend">
                     <div class="legend-badge">
                         <span class="dot-prod"></span>
-                        <span>Productivity (Academics) <span id="legendProductiveText" style="color: #ff1744;">· 0h 0m</span></span>
+                        <span>Productivity (Academics) <span id="legendProductiveText" style="color: #00e5ff;">· 0h 0m</span></span>
                     </div>
                     <div class="legend-badge">
                         <span class="dot-oth"></span>
@@ -112,7 +126,7 @@
                         </div>
                         <div class="wb-tool-text">
                             <span class="wb-tool-title">Daily Screen Time Target</span>
-                            <span class="wb-tool-sub">Alerts trigger when device screen time exceeds target.</span>
+                            <span class="wb-tool-sub">Warning alerts activate when device screen time exceeds target.</span>
                         </div>
                     </div>
                     <div class="wb-tool-action">
@@ -142,19 +156,25 @@
             <section class="sm-card app-section-card">
                 <div class="sm-card-header">
                     <div class="sm-title">
-                        <i class="fa-solid fa-mobile-screen-button"></i> App Screen Time
+                        <i class="fa-solid fa-mobile-screen-button"></i> App &amp; Website Screen Time
                     </div>
-                    <button class="btn-add-custom-app" id="btnAddCustomApp">
-                        <i class="fa-solid fa-plus"></i> Add App
-                    </button>
+                    <span style="font-size: 0.72rem; color: #00e5ff; font-weight: 700; display: flex; align-items: center; gap: 5px;">
+                        <i class="fa-solid fa-bolt"></i> Auto-Synced
+                    </span>
                 </div>
 
                 <!-- Android UsageStats Permission Banner (Visible on Android if needed) -->
                 <div class="android-permission-banner" id="androidPermissionBanner">
                     <div class="perm-text">
                         <i class="fa-solid fa-circle-exclamation"></i> Enable Android Usage Access to load real system screen time.
+                        <div style="font-size: 0.72rem; color: #ffd166; margin-top: 4px;">
+                            ⚠️ If blocked as <em>"Restricted setting"</em>: Tap "Unlock", tap the 3-dots (⋮) top-right, and select "Allow restricted settings".
+                        </div>
                     </div>
-                    <button class="btn-grant-perm" id="btnGrantUsageAccess">Enable Access</button>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px;">
+                        <button class="btn-grant-perm" id="btnGrantUsageAccess">Enable Access</button>
+                        <button class="btn-grant-perm" id="btnUnlockUsageAccess" style="background: rgba(255, 209, 102, 0.2); border-color: #ffd166; color: #ffd166;">Unlock Restricted Settings</button>
+                    </div>
                 </div>
 
                 <!-- Category Filters -->
@@ -192,24 +212,7 @@
         </a>
     </nav>
 
-    <!-- MODAL: ADD CUSTOM MONITORED APP -->
-    <div class="modal-backdrop" id="modalAddApp">
-        <div class="modal-dialog">
-            <div class="modal-header-title">
-                <i class="fa-solid fa-plus" style="color: #ff1744;"></i> Add Monitored Application
-            </div>
-            <input type="text" class="modal-input" id="customAppName" placeholder="Application or Website name (e.g. Duolingo, Netflix)...">
-            <select class="modal-input" id="customAppCategory">
-                <option value="productivity">Productivity (Academics / Tools)</option>
-                <option value="others" selected>Others (Entertainment / Social)</option>
-            </select>
-            <input type="number" class="modal-input" id="customAppMinutes" placeholder="Minutes used today (e.g. 45)" value="30">
-            <div class="modal-actions">
-                <button class="btn-secondary" id="btnCancelCustomApp">Cancel</button>
-                <button class="btn-primary" id="btnSaveCustomApp">Save App</button>
-            </div>
-        </div>
-    </div>
+
 
     <script src="../../native-bridge.js"></script>
     <script src="../../main-portal.js"></script>

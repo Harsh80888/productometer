@@ -7,9 +7,11 @@ import android.app.usage.UsageStats;
 import android.app.usage.UsageStatsManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Process;
 import android.os.VibrationEffect;
@@ -81,7 +83,7 @@ public class WebAppInterface {
      */
     @JavascriptInterface
     public void resetStepCount() {
-        MainActivity.liveStepCount = 0;
+        MainActivity.resetSteps();
     }
 
     /**
@@ -345,5 +347,119 @@ public class WebAppInterface {
             Intent serviceIntent = new Intent(context, FocusService.class);
             context.stopService(serviceIntent);
         } catch (Exception ignored) {}
+    }
+
+    /**
+     * Checks if the Productometer Accessibility Service (Doomscroll Guardian) is active.
+     */
+    @JavascriptInterface
+    public boolean isAccessibilityServiceEnabled() {
+        if (ShortsReelsBlockerService.isServiceRunning) return true;
+        try {
+            int accessibilityEnabled = Settings.Secure.getInt(
+                    context.getContentResolver(),
+                    Settings.Secure.ACCESSIBILITY_ENABLED
+            );
+            if (accessibilityEnabled == 1) {
+                String services = Settings.Secure.getString(
+                        context.getContentResolver(),
+                        Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
+                );
+                if (services != null && services.contains(context.getPackageName())) {
+                    return true;
+                }
+            }
+        } catch (Exception ignored) {}
+        return false;
+    }
+
+    /**
+     * Opens Android Accessibility Settings page directly so user can enable Doomscroll Guardian.
+     */
+    @JavascriptInterface
+    public void openAccessibilitySettings() {
+        try {
+            Intent intent = new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.startActivity(intent);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Sets Shorts blocking rule preference.
+     */
+    @JavascriptInterface
+    public void setShortsBlockerEnabled(boolean enabled) {
+        SharedPreferences prefs = context.getSharedPreferences(ShortsReelsBlockerService.PREFS_NAME, Context.MODE_PRIVATE);
+        prefs.edit().putBoolean(ShortsReelsBlockerService.KEY_SHORTS_ENABLED, enabled).apply();
+    }
+
+    /**
+     * Sets Reels blocking rule preference.
+     */
+    @JavascriptInterface
+    public void setReelsBlockerEnabled(boolean enabled) {
+        SharedPreferences prefs = context.getSharedPreferences(ShortsReelsBlockerService.PREFS_NAME, Context.MODE_PRIVATE);
+        prefs.edit().putBoolean(ShortsReelsBlockerService.KEY_REELS_ENABLED, enabled).apply();
+    }
+
+    @JavascriptInterface
+    public boolean isShortsBlockerEnabled() {
+        SharedPreferences prefs = context.getSharedPreferences(ShortsReelsBlockerService.PREFS_NAME, Context.MODE_PRIVATE);
+        return prefs.getBoolean(ShortsReelsBlockerService.KEY_SHORTS_ENABLED, true);
+    }
+
+    @JavascriptInterface
+    public boolean isReelsBlockerEnabled() {
+        SharedPreferences prefs = context.getSharedPreferences(ShortsReelsBlockerService.PREFS_NAME, Context.MODE_PRIVATE);
+        return prefs.getBoolean(ShortsReelsBlockerService.KEY_REELS_ENABLED, true);
+    }
+
+    /**
+     * Opens Application Details Settings in Android (App Info page).
+     * On Android 13/14, this is where users tap the top-right 3-dots (⋮) -> "Allow restricted settings"
+     * to unlock Accessibility and other advanced system features for sideloaded APKs.
+     */
+    @JavascriptInterface
+    public void openAppDetailsSettings() {
+        try {
+            Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+            Uri uri = Uri.fromParts("package", context.getPackageName(), null);
+            intent.setData(uri);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.startActivity(intent);
+        } catch (Exception e) {
+            showToast("Open phone Settings -> Apps -> Productometer to unlock restricted settings");
+        }
+    }
+
+    /**
+     * Checks if Display Over Other Apps (Overlay) permission is granted.
+     */
+    @JavascriptInterface
+    public boolean hasOverlayPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            return Settings.canDrawOverlays(context);
+        }
+        return true;
+    }
+
+    /**
+     * Opens Display Over Other Apps permission settings screen.
+     */
+    @JavascriptInterface
+    public void openOverlaySettings() {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION);
+                intent.setData(Uri.parse("package:" + context.getPackageName()));
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(intent);
+            }
+        } catch (Exception e) {
+            showToast("Please allow Display over other apps in Settings");
+        }
     }
 }

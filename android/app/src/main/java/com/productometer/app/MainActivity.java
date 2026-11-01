@@ -41,6 +41,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     public static int liveStepCount = 0;
     private static int initialSensorSteps = -1;
 
+    public static void resetSteps() {
+        liveStepCount = 0;
+        initialSensorSteps = -1;
+    }
+
     private WebView webView;
     private WebAppInterface webAppInterface;
     private SensorManager sensorManager;
@@ -81,8 +86,18 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             if (sensorManager != null) {
                 stepSensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
                 stepDetectorSensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR);
+                registerStepSensorListener();
             }
         } catch (Exception ignored) {}
+    }
+
+    private void registerStepSensorListener() {
+        if (sensorManager == null) return;
+        if (stepSensor != null) {
+            sensorManager.registerListener(this, stepSensor, SensorManager.SENSOR_DELAY_UI);
+        } else if (stepDetectorSensor != null) {
+            sensorManager.registerListener(this, stepDetectorSensor, SensorManager.SENSOR_DELAY_UI);
+        }
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -239,13 +254,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     protected void onResume() {
         super.onResume();
         if (webView != null) webView.onResume();
-        if (sensorManager != null) {
-            if (stepSensor != null) {
-                sensorManager.registerListener(this, stepSensor, SensorManager.SENSOR_DELAY_UI);
-            } else if (stepDetectorSensor != null) {
-                sensorManager.registerListener(this, stepDetectorSensor, SensorManager.SENSOR_DELAY_UI);
-            }
-        }
+        registerStepSensorListener();
     }
 
     @Override

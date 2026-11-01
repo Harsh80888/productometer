@@ -257,6 +257,37 @@ if (saveWeeklyTaskBtn) {
 
 loadAndRenderWeeklyTasks();
 
+
+function markPlannerTaskCompleted(taskTitle) {
+    if (!taskTitle) return;
+    try {
+        const raw = localStorage.getItem('productometer_chrono_planner_list');
+        if (raw) {
+            let list = JSON.parse(raw);
+            let matched = false;
+            list.forEach(item => {
+                if (item && item.title && (
+                    item.title.toUpperCase() === taskTitle.toUpperCase() ||
+                    item.title.toUpperCase().includes(taskTitle.toUpperCase()) ||
+                    taskTitle.toUpperCase().includes(item.title.toUpperCase())
+                )) {
+                    item.completed = true;
+                    matched = true;
+                }
+            });
+            if (matched) {
+                localStorage.setItem('productometer_chrono_planner_list', JSON.stringify(list));
+                // Dispatch storage event so other open pages update live
+                try {
+                    window.dispatchEvent(new Event('storage'));
+                } catch (e) {}
+            }
+        }
+    } catch (e) {
+        console.error("Error syncing completed task to Day Planner:", e);
+    }
+}
+
 /* --- 3. ADVANCED CROSS-PAGE TASK EXTRACTOR & GLOBAL ALARM SYNC --- */
 function renderAcademicTasks() {
     let dayPlannerTasks = [];
@@ -265,9 +296,18 @@ function renderAcademicTasks() {
         if (rawData) dayPlannerTasks = JSON.parse(rawData);
     } catch (err) { console.log("Error parsing storage:", err); }
 
-    const academicPlannerTasks = dayPlannerTasks.filter(task => 
-        task.category && task.category.toLowerCase() === 'academics'
-    );
+    const academicPlannerTasks = dayPlannerTasks.filter(task => {
+        if (!task) return false;
+        const cat = (task.category || '').toLowerCase();
+        if (cat === 'academics' || cat === 'skills') return true;
+        const t = (task.title || '').toLowerCase();
+        return t.includes('study') || t.includes('math') || t.includes('physic') ||
+               t.includes('chem') || t.includes('bio') || t.includes('read') ||
+               t.includes('code') || t.includes('exam') || t.includes('test') ||
+               t.includes('practice') || t.includes('revision') || t.includes('lecture') ||
+               t.includes('learn') || t.includes('class') || t.includes('homework') ||
+               t.includes('dsa') || t.includes('chapter');
+    });
 
     const now = new Date();
     const currentTotalMins = now.getHours() * 60 + now.getMinutes();
@@ -304,7 +344,7 @@ function renderAcademicTasks() {
         const windowCloseMins = taskStartMins + Math.floor(duration / 2); 
 
         const isAvailable = currentTotalMins >= windowOpenMins && currentTotalMins <= windowCloseMins;
-        const taskObj = { title: taskTitle, startH, startM, duration, isAvailable };
+        const taskObj = { title: taskTitle, startH, startM, duration, isAvailable, completed: !!task.completed };
 
         if (isAvailable) availableTasks.push(taskObj);
         else lockedTasks.push(taskObj);
@@ -357,19 +397,37 @@ function renderAcademicTasks() {
             const taskDiv = document.createElement('div');
             const safeTitleClass = 'task-row-' + t.title.replace(/[^a-zA-Z0-9]/g, '-');
             taskDiv.className = `task-row-item ${safeTitleClass} ${t.isAvailable ? '' : 'task-locked'}`;
+            taskDiv.style.cursor = 'pointer';
+            taskDiv.style.transition = 'all 0.2s ease';
 
             const fHour = t.startH.toString().padStart(2, '0');
             const fMin = t.startM.toString().padStart(2, '0');
+
+            let badgeHtml = '';
+            if (t.completed) {
+                badgeHtml = '<span style="color: #00e676; font-weight: bold; font-size: 0.85em;"><i class="fa-solid fa-circle-check"></i> Done</span>';
+            } else if (t.isAvailable) {
+                badgeHtml = '<button type="button" class="btn-row-start" style="background: #00e676; color: #000; border: none; padding: 4px 10px; border-radius: 6px; font-weight: 800; font-size: 0.78rem; cursor: pointer;">Start</button>';
+            } else {
+                badgeHtml = '<button type="button" class="btn-row-start" style="background: rgba(0, 229, 255, 0.12); color: #00e5ff; border: 1px solid rgba(0, 229, 255, 0.3); padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 0.75rem; cursor: pointer;">Start Early</button>';
+            }
             
             taskDiv.innerHTML = `
-                <div>
-                    <div class="task-title" style="${t.isAvailable ? 'color: #00e676;' : ''}">${t.title}</div>
+                <div style="flex: 1;">
+                    <div class="task-title" style="${t.completed ? 'text-decoration: line-through; opacity: 0.7;' : (t.isAvailable ? 'color: #00e676;' : '')}">${t.title}</div>
                     <div class="task-meta">Scheduled: ${fHour}:${fMin} (${t.duration}m)</div>
                 </div>
-                <div class="task-status-badge" style="color: ${t.isAvailable ? '#00e676' : '#64748b'}; font-weight: bold; font-size: 0.9em;">
-                    ${t.isAvailable ? 'Ready' : 'Locked'}
+                <div class="task-status-badge">
+                    ${badgeHtml}
                 </div>
             `;
+
+            taskDiv.addEventListener('click', () => {
+                if (!sessionActive) {
+                    beginActivePomodoroCountdown(t.title);
+                }
+            });
+
             container.appendChild(taskDiv);
         });
     }
@@ -456,9 +514,12 @@ function beginActivePomodoroCountdown(title) {
             
             showCustomModal(
                 "Session Completed!", 
-                `Great focus! You completed 25 minutes of ${currentActiveTaskTitle}.\n\nPlease take a 5-minute break.`, 
+                `Great focus! You completed 25 minutes of ${currentActiveTaskTitle}.\n\nPlease take a 5-minute break. Marked as completed in your Day Planner!`, 
                 "break"
             );
+
+            // Synchronize with Day Planner
+            markPlannerTaskCompleted(currentActiveTaskTitle);
 
             clearIndependentStartBox();
             renderAcademicTasks(); 
@@ -559,10 +620,20 @@ function checkAndResetPlannerForNewDay() {
     const lastSavedDate = localStorage.getItem(lastActiveDateKey);
 
     if (lastSavedDate && lastSavedDate !== currentDateStr) {
-        localStorage.removeItem('productometer_chrono_planner_list');
+        // Safe reset: do NOT wipe Day Planner schedule! Reset daily study seconds only.
         localStorage.removeItem('productometer_daily_study_seconds');
     }
     localStorage.setItem(lastActiveDateKey, currentDateStr);
 }
 
 checkAndResetPlannerForNewDay();
+
+// Reactive Sync: Auto-update when Day Planner updates in another tab or view
+window.addEventListener('storage', (e) => {
+    if (!e.key || e.key.includes('planner') || e.key.includes('chrono')) {
+        renderAcademicTasks();
+    }
+});
+window.addEventListener('focus', () => {
+    renderAcademicTasks();
+});

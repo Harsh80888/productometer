@@ -4240,3 +4240,367 @@ html {
     font-size: 0.65rem;
     font-weight: 800;
 }
+
+
+/* ==========================================================================
+   ⚡ REDESIGN: DUAL HERO TILES (PHYSICAL ACTIVITIES & DIET) & SELECTOR DIALOG
+   ========================================================================== */
+.main-hub-tiles-section {
+    margin: 18px 0;
+}
+
+.main-hub-tiles-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+}
+
+@media (max-width: 580px) {
+    .main-hub-tiles-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.hub-action-tile {
+    background: linear-gradient(145deg, rgba(10, 22, 16, 0.88) 0%, rgba(2, 6, 4, 0.96) 100%);
+    border: 1px solid rgba(0, 230, 118, 0.25);
+    border-radius: 16px;
+    padding: 20px 18px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 165px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    user-select: none;
+}
+
+.hub-action-tile::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(0, 230, 118, 0.6), transparent);
+    opacity: 0.6;
+    transition: opacity 0.25s ease;
+}
+
+.hub-action-tile:hover {
+    transform: translateY(-3px);
+    border-color: rgba(0, 230, 118, 0.6);
+    box-shadow: 0 14px 32px rgba(0, 0, 0, 0.65), 0 0 20px rgba(0, 230, 118, 0.22);
+}
+
+.hub-action-tile:hover::before {
+    opacity: 1;
+}
+
+.hub-action-tile:active {
+    transform: translateY(-1px) scale(0.99);
+}
+
+/* Physical Activities tile specific neon theme */
+.hub-action-tile.tile-physical {
+    border-color: rgba(0, 230, 118, 0.3);
+}
+
+.hub-action-tile.tile-physical:hover {
+    border-color: #00e676;
+    box-shadow: 0 14px 32px rgba(0, 0, 0, 0.65), 0 0 24px rgba(0, 230, 118, 0.28);
+}
+
+/* Diet tile specific neon theme */
+.hub-action-tile.tile-diet {
+    border-color: rgba(0, 176, 255, 0.3);
+}
+
+.hub-action-tile.tile-diet:hover {
+    border-color: #00b0ff;
+    box-shadow: 0 14px 32px rgba(0, 0, 0, 0.65), 0 0 24px rgba(0, 176, 255, 0.28);
+}
+
+.tile-top-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.tile-icon-halo {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+}
+
+.tile-icon-halo.physical {
+    background: rgba(0, 230, 118, 0.15);
+    color: #00e676;
+    border: 1px solid rgba(0, 230, 118, 0.35);
+    box-shadow: 0 0 12px rgba(0, 230, 118, 0.2);
+}
+
+.tile-icon-halo.diet {
+    background: rgba(0, 176, 255, 0.15);
+    color: #00b0ff;
+    border: 1px solid rgba(0, 176, 255, 0.35);
+    box-shadow: 0 0 12px rgba(0, 176, 255, 0.2);
+}
+
+.tile-badge {
+    font-size: 0.68rem;
+    font-weight: 800;
+    padding: 4px 10px;
+    border-radius: 20px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.tile-badge.physical {
+    background: rgba(0, 230, 118, 0.12);
+    color: #00e676;
+    border: 1px solid rgba(0, 230, 118, 0.3);
+}
+
+.tile-badge.diet {
+    background: rgba(255, 214, 0, 0.12);
+    color: #ffd600;
+    border: 1px solid rgba(255, 214, 0, 0.3);
+}
+
+.tile-content-stack {
+    margin-bottom: 14px;
+}
+
+.tile-main-title {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #ffffff;
+    margin: 0 0 6px 0;
+    letter-spacing: -0.01em;
+}
+
+.tile-sub-caption {
+    font-size: 0.78rem;
+    color: #8fa397;
+    line-height: 1.4;
+    margin: 0;
+}
+
+.tile-bottom-action {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.tile-action-link {
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: #00e676;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: gap 0.2s ease, color 0.2s ease;
+}
+
+.hub-action-tile.tile-diet .tile-action-link {
+    color: #00b0ff;
+}
+
+.hub-action-tile:hover .tile-action-link {
+    gap: 9px;
+}
+
+/* --- PHYSICAL ACTIVITIES SELECTOR DIALOG --- */
+.physical-selector-modal {
+    border: 1px solid rgba(0, 230, 118, 0.35);
+    background: rgba(2, 6, 4, 0.96);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8), 0 0 30px rgba(0, 230, 118, 0.2);
+}
+
+.physical-options-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.discipline-choice-card {
+    width: 100%;
+    background: rgba(10, 22, 16, 0.75);
+    border: 1px solid rgba(0, 230, 118, 0.2);
+    border-radius: 12px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    cursor: pointer;
+    text-align: left;
+    color: #ffffff;
+    transition: all 0.2s ease;
+}
+
+.discipline-choice-card:hover {
+    background: rgba(0, 230, 118, 0.1);
+    border-color: #00e676;
+    transform: translateX(4px);
+    box-shadow: 0 4px 18px rgba(0, 230, 118, 0.2);
+}
+
+.choice-icon-wrap {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.choice-icon-wrap.workout {
+    background: rgba(0, 230, 118, 0.15);
+    color: #00e676;
+    border: 1px solid rgba(0, 230, 118, 0.35);
+}
+
+.choice-icon-wrap.running {
+    background: rgba(0, 176, 255, 0.15);
+    color: #00b0ff;
+    border: 1px solid rgba(0, 176, 255, 0.35);
+}
+
+.choice-icon-wrap.hiit {
+    background: rgba(255, 214, 0, 0.15);
+    color: #ffd600;
+    border: 1px solid rgba(255, 214, 0, 0.35);
+}
+
+.choice-text-wrap {
+    flex: 1;
+    min-width: 0;
+}
+
+.choice-title-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.choice-title {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #ffffff;
+}
+
+.choice-tag {
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.choice-desc {
+    display: block;
+    font-size: 0.74rem;
+    color: #8fa397;
+    line-height: 1.35;
+}
+
+.choice-arrow {
+    color: #64756b;
+    font-size: 0.9rem;
+    transition: transform 0.2s ease, color 0.2s ease;
+    flex-shrink: 0;
+}
+
+.discipline-choice-card:hover .choice-arrow {
+    color: #00e676;
+    transform: translateX(3px);
+}
+
+/* --- APPROPRIATE FOOD DELETE SYMBOL & DANGER STYLES --- */
+.btn-remove-food-tile {
+    background: rgba(255, 82, 82, 0.12);
+    border: 1px solid rgba(255, 82, 82, 0.3);
+    color: #ff5252;
+    padding: 5px 9px;
+    border-radius: 7px;
+    font-size: 0.72rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+}
+
+.btn-remove-food-tile:hover {
+    background: #ff5252;
+    color: #ffffff;
+    border-color: #ff5252;
+    box-shadow: 0 0 12px rgba(255, 82, 82, 0.5);
+    transform: scale(1.05);
+}
+
+.btn-remove-food-tile:active {
+    transform: scale(0.96);
+}
+
+/* --- SECTION HIGHLIGHT PULSE --- */
+@keyframes hubHighlightPulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(0, 230, 118, 0.75);
+        border-color: #00e676;
+    }
+    40% {
+        box-shadow: 0 0 28px 8px rgba(0, 230, 118, 0.45);
+        border-color: #00e676;
+    }
+    100% {
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
+        border-color: rgba(0, 230, 118, 0.25);
+    }
+}
+
+.highlight-pulse {
+    animation: hubHighlightPulse 1.25s ease-out;
+}
+
+.discipline-choice-card.choice-workout:hover {
+    border-color: #00e676;
+    box-shadow: 0 4px 18px rgba(0, 230, 118, 0.25);
+}
+.discipline-choice-card.choice-running:hover {
+    border-color: #00b0ff;
+    box-shadow: 0 4px 18px rgba(0, 176, 255, 0.25);
+}
+.discipline-choice-card.choice-hiit:hover {
+    border-color: #ffd600;
+    box-shadow: 0 4px 18px rgba(255, 214, 0, 0.25);
+}
+
+
+/* Activity fullscreen modal body */
+.activity-fullscreen-modal {
+    max-width: 680px !important;
+    width: 95vw !important;
+    border-radius: 22px !important;
+    padding: 22px !important;
+}
+
+.activity-modal-body {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 12px;
+}

@@ -3,4 +3,5 @@
     <string name="notification_channel_id">productivity_meter_channel</string>
     <string name="notification_channel_name">Focus &amp; Alarms</string>
     <string name="notification_channel_desc">Focus sessions, study countdowns, and scheduled task alarms</string>
+    <string name="accessibility_service_desc">Productometer Doomscroll Guardian allows viewing the 1st Reel or Short, then shows a 5-second countdown on the 2nd Reel before returning you safely back to your previous screen.</string>
 </resources>

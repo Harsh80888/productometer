@@ -359,6 +359,57 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             localStorage.setItem(KEY_CONTENT_RULES, JSON.stringify(rules));
         } catch (e) {}
+
+        // Forward rule to Native Android Blocker Service
+        if (window.NativeBridge && window.NativeBridge.isAvailable()) {
+            if (key === 'shorts' && window.NativeBridge.setShortsBlockerEnabled) {
+                window.NativeBridge.setShortsBlockerEnabled(value);
+            }
+            if (key === 'reels' && window.NativeBridge.setReelsBlockerEnabled) {
+                window.NativeBridge.setReelsBlockerEnabled(value);
+            }
+        }
+    }
+
+    function checkAccessibilityServiceStatus() {
+        const box = document.getElementById('accessibilityStatusBox');
+        if (!box) return;
+
+        if (window.NativeBridge && window.NativeBridge.isAvailable()) {
+            const isEnabled = window.NativeBridge.isAccessibilityServiceEnabled();
+            if (isEnabled) {
+                box.innerHTML = `
+                    <div class="accessibility-active-pill">
+                        <i class="fa-solid fa-circle-check" style="color: #00e676;"></i>
+                        <span>Doomscroll Guardian Active · 1st Reel Allowed, 2nd Reel Blocked</span>
+                    </div>
+                `;
+            } else {
+                box.innerHTML = `
+                    <div class="accessibility-prompt-box">
+                        <div style="font-size: 0.76rem; font-weight: 700; color: #ffca28; margin-bottom: 6px;">
+                            <i class="fa-solid fa-triangle-exclamation"></i> Enable Accessibility Service for Doomscroll Protection
+                        </div>
+                        <div style="font-size: 0.7rem; color: #94a3b8; margin-bottom: 8px;">
+                            Allows Productometer to monitor the 2nd Reel and return back automatically.
+                        </div>
+                        <button type="button" class="btn-enable-acc" id="btnEnableAccessibility">
+                            <i class="fa-solid fa-gear"></i> Open Accessibility Settings
+                        </button>
+                    </div>
+                `;
+                const newBtn = document.getElementById('btnEnableAccessibility');
+                if (newBtn) {
+                    newBtn.addEventListener('click', () => {
+                        if (window.NativeBridge && window.NativeBridge.openAccessibilitySettings) {
+                            window.NativeBridge.openAccessibilitySettings();
+                        }
+                    });
+                }
+            }
+        } else {
+            box.style.display = 'none';
+        }
     }
 
     const tShorts = document.getElementById('toggleShorts');
@@ -392,6 +443,8 @@ document.addEventListener('DOMContentLoaded', () => {
             count++;
             localStorage.setItem(KEY_INTERCEPTIONS, count.toString());
             renderInterceptionsCount();
+    refreshPermissionsHub();
+    window.addEventListener('focus', refreshPermissionsHub);
 
             modalBackdrop.style.display = 'flex';
 
@@ -493,6 +546,7 @@ document.addEventListener('DOMContentLoaded', () => {
             renderSessionAppRules();
             syncContentToggles();
             checkScheduleGuardian();
+            checkAccessibilityServiceStatus();
             if (window.NativeBridge && window.NativeBridge.vibrate) window.NativeBridge.vibrate(30);
         });
     }
@@ -502,6 +556,8 @@ document.addEventListener('DOMContentLoaded', () => {
             distractionBlockerView.style.display = 'none';
             meHubView.style.display = 'flex';
             renderInterceptionsCount();
+    refreshPermissionsHub();
+    window.addEventListener('focus', refreshPermissionsHub);
             if (window.NativeBridge && window.NativeBridge.vibrate) window.NativeBridge.vibrate(20);
         });
     }
@@ -516,6 +572,78 @@ document.addEventListener('DOMContentLoaded', () => {
             .replace(/'/g, '&#39;');
     }
 
+
+    // --- 🔑 SYSTEM ACCESS & RESTRICTED SETTINGS CONTROLLER ---
+    function refreshPermissionsHub() {
+        const btnUnlock = document.getElementById('btnUnlockRestrictedSettings');
+        const btnAcc = document.getElementById('btnPermAccessibility');
+        const btnUsage = document.getElementById('btnPermUsage');
+        const btnOverlay = document.getElementById('btnPermOverlay');
+
+        if (btnUnlock) {
+            btnUnlock.onclick = () => {
+                if (window.NativeBridge && window.NativeBridge.openAppDetailsSettings) {
+                    window.NativeBridge.openAppDetailsSettings();
+                } else {
+                    alert('Open phone Settings -> Apps -> Productometer -> Tap 3 dots (⋮) -> Allow restricted settings');
+                }
+            };
+        }
+
+        if (window.NativeBridge && window.NativeBridge.isAvailable()) {
+            // 1. Accessibility Service Check
+            const hasAcc = window.NativeBridge.isAccessibilityServiceEnabled();
+            if (btnAcc) {
+                if (hasAcc) {
+                    btnAcc.className = 'btn-perm-status active';
+                    btnAcc.innerHTML = '<i class="fa-solid fa-check"></i> Active';
+                } else {
+                    btnAcc.className = 'btn-perm-status';
+                    btnAcc.innerHTML = '<i class="fa-solid fa-gear"></i> Enable';
+                }
+                btnAcc.onclick = () => {
+                    if (window.NativeBridge.openAccessibilitySettings) {
+                        window.NativeBridge.openAccessibilitySettings();
+                    }
+                };
+            }
+
+            // 2. Usage Access Check
+            const hasUsage = window.NativeBridge.hasUsageStatsPermission();
+            if (btnUsage) {
+                if (hasUsage) {
+                    btnUsage.className = 'btn-perm-status active';
+                    btnUsage.innerHTML = '<i class="fa-solid fa-check"></i> Active';
+                } else {
+                    btnUsage.className = 'btn-perm-status';
+                    btnUsage.innerHTML = '<i class="fa-solid fa-gear"></i> Enable';
+                }
+                btnUsage.onclick = () => {
+                    if (window.NativeBridge.openUsageAccessSettings) {
+                        window.NativeBridge.openUsageAccessSettings();
+                    }
+                };
+            }
+
+            // 3. Overlay (Display Over Apps) Check
+            const hasOverlay = window.NativeBridge.hasOverlayPermission ? window.NativeBridge.hasOverlayPermission() : true;
+            if (btnOverlay) {
+                if (hasOverlay) {
+                    btnOverlay.className = 'btn-perm-status active';
+                    btnOverlay.innerHTML = '<i class="fa-solid fa-check"></i> Active';
+                } else {
+                    btnOverlay.className = 'btn-perm-status';
+                    btnOverlay.innerHTML = '<i class="fa-solid fa-gear"></i> Enable';
+                }
+                btnOverlay.onclick = () => {
+                    if (window.NativeBridge.openOverlaySettings) {
+                        window.NativeBridge.openOverlaySettings();
+                    }
+                };
+            }
+        }
+    }
+
     // --- 8. REACTIVE SCHEDULE DATA LISTENER ---
     window.addEventListener('storage', (e) => {
         if (e.key === 'productometer_chrono_planner_list') {
@@ -527,7 +655,10 @@ document.addEventListener('DOMContentLoaded', () => {
     renderSessionAppRules();
     syncContentToggles();
     checkScheduleGuardian();
+    checkAccessibilityServiceStatus();
     renderInterceptionsCount();
+    refreshPermissionsHub();
+    window.addEventListener('focus', refreshPermissionsHub);
 
     // Auto-refresh schedule check
     setInterval(checkScheduleGuardian, 10000);

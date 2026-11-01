@@ -7,7 +7,7 @@
     <!-- Google Fonts Framework Links -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <!-- FontAwesome Icons Framework Asset -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
@@ -28,30 +28,178 @@
 
     <!-- Main Content Workspace Area Frame -->
     <main class="portal-main-content">
-        <!-- Live Real-Time Overview Snapshot Cards Deck -->
-        <section class="home-analytics-hud">
-            <div class="hud-metric-card score-matrix-glow">
-                <span class="hud-label">Net Performance Score</span>
-                <h2 id="hudNetScore">+0</h2>
+        <!-- 1. 🌟 TOTAL PRODUCTIVITY SCORE & CHRONOLOGICAL DAILY TREND GRAPH (AT TOP) -->
+        <section class="home-score-card">
+            <div class="score-card-header">
+                <div class="score-title-stack">
+                    <span class="hud-pill-tag"><i class="fa-solid fa-chart-line text-cyan"></i> DAILY PRODUCTIVITY CURVE</span>
+                    <h2 class="score-card-title">Productivity Score</h2>
+                </div>
+                <div class="score-rating-pill" id="homeScoreRatingPill">
+                    <i class="fa-solid fa-bolt" id="homeScoreRatingIcon"></i>
+                    <span id="homeScoreRatingText">Calculating...</span>
+                </div>
             </div>
-            <div class="hud-metric-card hours-matrix-glow">
-                <span class="hud-label">Logged Tracked Hours</span>
-                <h2 id="hudTrackedHours">0.0h</h2>
+
+            <!-- Big Score Readout & Math Chips Breakdown Row -->
+            <div class="score-stat-hero-row">
+                <div class="score-number-display">
+                    <span class="score-big-num" id="homeProductivityScore">0</span>
+                    <span class="score-max-unit">NET AP SCORE</span>
+                </div>
+
+                <!-- Math Formula Chips Deck -->
+                <div class="home-math-chips-deck">
+                    <div class="home-math-chip acad" title="Academics: +100n pts (n = hours)">
+                        <span class="home-chip-dot"></span>
+                        <div class="home-chip-meta">
+                            <span class="home-chip-lbl">Academics</span>
+                            <span class="home-chip-formula">100n</span>
+                        </div>
+                        <span class="home-chip-val" id="chipValAcad">+0</span>
+                    </div>
+
+                    <div class="home-math-chip health" title="Health: 150 - 30n pts (n = hours)">
+                        <span class="home-chip-dot"></span>
+                        <div class="home-chip-meta">
+                            <span class="home-chip-lbl">Health</span>
+                            <span class="home-chip-formula">150-30n</span>
+                        </div>
+                        <span class="home-chip-val" id="chipValHealth">+0</span>
+                    </div>
+
+                    <div class="home-math-chip other-prod" title="Other Productive Tasks: +50n pts (Skills/School)">
+                        <span class="home-chip-dot"></span>
+                        <div class="home-chip-meta">
+                            <span class="home-chip-lbl">Other Prod</span>
+                            <span class="home-chip-formula">50n</span>
+                        </div>
+                        <span class="home-chip-val" id="chipValOtherProd">+0</span>
+                    </div>
+
+                    <div class="home-math-chip screen" title="Non-productive Screen: -(50 + 50n) pts penalty">
+                        <span class="home-chip-dot"></span>
+                        <div class="home-chip-meta">
+                            <span class="home-chip-lbl">Screen</span>
+                            <span class="home-chip-formula">-(50+50n)</span>
+                        </div>
+                        <span class="home-chip-val" id="chipValScreen">0</span>
+                    </div>
+
+                    <div class="home-math-chip tasks" title="Tasks Bonus: +50 pts per completed session">
+                        <span class="home-chip-dot"></span>
+                        <div class="home-chip-meta">
+                            <span class="home-chip-lbl">Tasks Bonus</span>
+                            <span class="home-chip-formula">+50/ea</span>
+                        </div>
+                        <span class="home-chip-val" id="chipValTasks">+0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Daily Chronological Canvas Trend Visualizer -->
+            <div class="score-graph-container" id="homeScoreGraphWrap">
+                <canvas id="dailyGraphCanvas" width="720" height="200"></canvas>
             </div>
         </section>
 
-        <!-- 📋 SYNCHRONIZED REFLECTED CHRONO TASK LIST SECTION -->
-        <section class="home-tasks-display-section">
+        <!-- 2. ⚡ CORE LIVE METRICS DECK (CALORIES CONSUMED & TOTAL SCREENTIME) -->
+        <section class="home-metrics-grid">
+            <!-- Metric 1: Calories Consumed (from Health Tracker) -->
+            <a href="./Features/Health_Tracker/index.html" class="home-metric-tile calories-tile" id="tileHomeCalories" title="Open Health Tracker">
+                <div class="metric-tile-header">
+                    <div class="metric-icon-wrap calories">
+                        <i class="fa-solid fa-fire"></i>
+                    </div>
+                    <span class="metric-badge calories"><i class="fa-solid fa-heart-pulse"></i> Health</span>
+                </div>
+                <div class="metric-data-stack">
+                    <span class="hud-label">Calories Consumed</span>
+                    <h3 class="metric-big-val" id="homeCaloriesVal">0 <small>kcal</small></h3>
+                    <span class="metric-sub-caption" id="homeCaloriesSub">/ 2,000 kcal goal</span>
+                </div>
+                <!-- Mini Progress Track -->
+                <div class="metric-progress-track">
+                    <div class="metric-progress-fill calories" id="homeCaloriesBar" style="width: 0%;"></div>
+                </div>
+            </a>
+
+            <!-- Metric 2: Total Screentime (from Screen Management) -->
+            <a href="./Features/Screen_Management/index.html" class="home-metric-tile screentime-tile" id="tileHomeScreen" title="Open Screen Management">
+                <div class="metric-tile-header">
+                    <div class="metric-icon-wrap screentime">
+                        <i class="fa-solid fa-mobile-screen"></i>
+                    </div>
+                    <span class="metric-badge screentime"><i class="fa-solid fa-hourglass-half"></i> Screen</span>
+                </div>
+                <div class="metric-data-stack">
+                    <span class="hud-label">Total Screen Time</span>
+                    <h3 class="metric-big-val" id="homeScreenVal">0m</h3>
+                    <span class="metric-sub-caption" id="homeScreenSub">0m productive today</span>
+                </div>
+                <!-- Mini Progress Track -->
+                <div class="metric-progress-track">
+                    <div class="metric-progress-fill screentime" id="homeScreenBar" style="width: 0%;"></div>
+                </div>
+            </a>
+        </section>
+
+        <!-- 3. 📋 UPCOMING SESSIONS (FROM DAY PLANNER) -->
+        <section class="home-upcoming-section">
             <div class="tasks-section-header">
-                <div class="tasks-section-title">Today's Schedule</div>
+                <div class="upcoming-header-left">
+                    <div class="tasks-section-title"><i class="fa-solid fa-clock text-cyan"></i> Upcoming Sessions</div>
+                    <span class="upcoming-count-badge" id="upcomingCountBadge">0 Sessions</span>
+                </div>
                 <a href="./Features/Day Planner/planner-index.html" class="corner-edit-btn">
-                    <i class="fa-solid fa-pen-to-square"></i> Edit
+                    <i class="fa-solid fa-plus"></i> Day Planner
                 </a>
             </div>
-            
-            <!-- Dynamic Reflected Task Row Container Bucket -->
+
+            <!-- Dynamic Reflected Upcoming Sessions Container -->
             <div class="home-tasks-bucket" id="homeTasksBucket">
-                <!-- Javascript populates items here dynamically from your Day Planner cache -->
+                <!-- Javascript dynamically populates upcoming sessions -->
+            </div>
+        </section>
+
+        <!-- 🌟 4. WEEKLY COMPARISON PERFORMANCE (AT BOTTOM) -->
+        <section class="home-weekly-section">
+            <div class="home-weekly-card">
+                <div class="weekly-card-header">
+                    <div class="weekly-title-stack">
+                        <span class="hud-pill-tag weekly"><i class="fa-solid fa-calendar-week text-magenta"></i> 7-DAY PERFORMANCE CYCLE</span>
+                        <h2 class="score-card-title">Weekly Comparison Analytics</h2>
+                    </div>
+                    <div class="weekly-metrics-deck">
+                        <div class="weekly-stat-chip total">
+                            <span class="weekly-chip-lbl">Week Total</span>
+                            <span class="weekly-chip-val" id="weeklyTotalScore">0</span>
+                        </div>
+                        <div class="weekly-stat-chip avg">
+                            <span class="weekly-chip-lbl">Daily Avg</span>
+                            <span class="weekly-chip-val" id="weeklyAvgScore">0</span>
+                        </div>
+                        <div class="weekly-stat-chip best">
+                            <span class="weekly-chip-lbl">Best Day</span>
+                            <span class="weekly-chip-val" id="weeklyBestDay">--</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="weekly-canvas-container">
+                    <canvas id="weeklyGraphCanvas" width="720" height="200"></canvas>
+                </div>
+
+                <!-- Multi-Colored 7-Day Legend -->
+                <div class="weekly-days-legend">
+                    <span class="day-legend-pill mon"><span class="day-dot"></span> Mon</span>
+                    <span class="day-legend-pill tue"><span class="day-dot"></span> Tue</span>
+                    <span class="day-legend-pill wed"><span class="day-dot"></span> Wed</span>
+                    <span class="day-legend-pill thu"><span class="day-dot"></span> Thu</span>
+                    <span class="day-legend-pill fri"><span class="day-dot"></span> Fri</span>
+                    <span class="day-legend-pill sat"><span class="day-dot"></span> Sat</span>
+                    <span class="day-legend-pill sun"><span class="day-dot"></span> Sun</span>
+                </div>
             </div>
         </section>
     </main>
