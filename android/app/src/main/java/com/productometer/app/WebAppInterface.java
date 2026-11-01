@@ -504,6 +504,14 @@ public class WebAppInterface {
     @JavascriptInterface
     public void startFocusSession(String title, long durationSeconds) {
         try {
+            ShortsReelsBlockerService.isFocusSessionOngoing = true;
+            SharedPreferences prefs = context.getSharedPreferences(ShortsReelsBlockerService.PREFS_NAME, Context.MODE_PRIVATE);
+            prefs.edit()
+                    .putBoolean(ShortsReelsBlockerService.KEY_FOCUS_ACTIVE, true)
+                    .putString("focus_session_title", title != null ? title : "Focus Session")
+                    .putLong("focus_session_end_time", System.currentTimeMillis() + (durationSeconds * 1000L))
+                    .apply();
+
             Intent serviceIntent = new Intent(context, FocusService.class);
             serviceIntent.putExtra("task_title", title);
             serviceIntent.putExtra("duration_seconds", durationSeconds);
@@ -518,11 +526,17 @@ public class WebAppInterface {
     }
 
     /**
-     * Terminates the foreground countdown service.
+     * Terminates the foreground countdown service and notifies guardian blocker.
      */
     @JavascriptInterface
     public void stopFocusSession() {
         try {
+            ShortsReelsBlockerService.isFocusSessionOngoing = false;
+            SharedPreferences prefs = context.getSharedPreferences(ShortsReelsBlockerService.PREFS_NAME, Context.MODE_PRIVATE);
+            prefs.edit()
+                    .putBoolean(ShortsReelsBlockerService.KEY_FOCUS_ACTIVE, false)
+                    .apply();
+
             Intent serviceIntent = new Intent(context, FocusService.class);
             context.stopService(serviceIntent);
         } catch (Exception ignored) {}
@@ -639,40 +653,6 @@ public class WebAppInterface {
             }
         } catch (Exception e) {
             showToast("Please allow Display over other apps in Settings");
-        }
-    }
-
-    /**
-     * Bridges focus session start from Academics Monitoring to Android Guardian Blocker.
-     */
-    @JavascriptInterface
-    public void startFocusSession(String title, long durationSeconds) {
-        try {
-            ShortsReelsBlockerService.isFocusSessionOngoing = true;
-            SharedPreferences prefs = context.getSharedPreferences(ShortsReelsBlockerService.PREFS_NAME, Context.MODE_PRIVATE);
-            prefs.edit()
-                    .putBoolean(ShortsReelsBlockerService.KEY_FOCUS_ACTIVE, true)
-                    .putString("focus_session_title", title != null ? title : "Focus Session")
-                    .putLong("focus_session_end_time", System.currentTimeMillis() + (durationSeconds * 1000L))
-                    .apply();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    /**
-     * Bridges focus session end from Academics Monitoring to Android Guardian Blocker.
-     */
-    @JavascriptInterface
-    public void stopFocusSession() {
-        try {
-            ShortsReelsBlockerService.isFocusSessionOngoing = false;
-            SharedPreferences prefs = context.getSharedPreferences(ShortsReelsBlockerService.PREFS_NAME, Context.MODE_PRIVATE);
-            prefs.edit()
-                    .putBoolean(ShortsReelsBlockerService.KEY_FOCUS_ACTIVE, false)
-                    .apply();
-        } catch (Exception e) {
-            e.printStackTrace();
         }
     }
 
