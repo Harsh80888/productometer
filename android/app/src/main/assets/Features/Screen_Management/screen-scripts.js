@@ -1291,16 +1291,16 @@ document.addEventListener('DOMContentLoaded', () => {
                             </div>`
                         }
                         <div>
-                            <div style="font-size: 0.88rem; font-weight: 800; color: #fff;">
+                            <div class="limit-app-name">
                                 ${escapeHTML(app.name)}
                                 ${app.isCompulsory ? '<span style="background: rgba(255,214,0,0.15); border: 1px solid rgba(255,214,0,0.4); color: #ffd600; font-size: 0.65rem; font-weight: 800; padding: 2px 6px; border-radius: 4px; margin-left: 5px;">MANDATORY</span>' : ''}
                             </div>
                             <div style="font-size: 0.74rem; color: #cbd5e1; margin-top: 1px;">Used ${usedMins}m today</div>
                         </div>
                     </div>
-                    <div style="display: flex; align-items: center; gap: 8px;">
+                    <div class="limit-card-right">
                         ${statusBadge}
-                        <button type="button" class="btn-adjust-limit" data-app-id="${app.id}" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #00e5ff; font-weight: 800; font-size: 0.74rem; padding: 5px 10px; border-radius: 8px; cursor: pointer;">
+                        <button type="button" class="btn-adjust-limit" data-app-id="${app.id}" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #00e5ff; font-weight: 800; font-size: 0.74rem; padding: 5px 10px; border-radius: 8px; cursor: pointer; white-space: nowrap;">
                             ${limit > 0 ? `${limit}m Limit` : '+ Set'}
                         </button>
                     </div>

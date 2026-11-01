@@ -353,65 +353,122 @@ public class WebAppInterface {
             PackageManager pm = context.getPackageManager();
             Map<String, Long> foregroundTimeMap = new HashMap<>();
 
-            // 1. Authoritative UsageEvents timeline simulation (Exact Digital Wellbeing parity)
-            UsageEvents usageEvents = usageStatsManager.queryEvents(startOfDay, now);
-            if (usageEvents != null) {
+            // Identify all launcher packages to filter out home screen wallpaper time
+            Set<String> launcherPackages = new HashSet<>();
+            try {
+                Intent homeIntent = new Intent(Intent.ACTION_MAIN);
+                homeIntent.addCategory(Intent.CATEGORY_HOME);
+                List<ResolveInfo> launchers = pm.queryIntentActivities(homeIntent, PackageManager.MATCH_DEFAULT_ONLY);
+                if (launchers != null) {
+                    for (ResolveInfo ri : launchers) {
+                        if (ri.activityInfo != null && ri.activityInfo.packageName != null) {
+                            launcherPackages.add(ri.activityInfo.packageName);
+                        }
+                    }
+                }
+                ResolveInfo defaultLauncher = pm.resolveActivity(homeIntent, PackageManager.MATCH_DEFAULT_ONLY);
+                if (defaultLauncher != null && defaultLauncher.activityInfo != null) {
+                    launcherPackages.add(defaultLauncher.activityInfo.packageName);
+                }
+            } catch (Exception ignored) {}
+
+            // Ground Truth Engine: Pure UsageEvents timeline starting 15 minutes before midnight to now (v1.0.9 + enhancements)
+            try {
+                long queryStart = Math.max(0L, startOfDay - (15 * 60 * 1000L));
+                UsageEvents events = usageStatsManager.queryEvents(queryStart, now);
                 UsageEvents.Event event = new UsageEvents.Event();
-                String currentFgPkg = null;
-                long sessionStartTime = 0L;
+
+                String currentForegroundPkg = null;
+                String lastKnownPkg = null;
+                long currentSessionStart = startOfDay;
                 boolean isScreenInteractive = true;
 
-                while (usageEvents.hasNextEvent()) {
-                    usageEvents.getNextEvent(event);
-                    int eventType = event.getEventType();
-                    long eventTime = event.getTimeStamp();
-                    String pkgName = event.getPackageName();
+                while (events != null && events.hasNextEvent()) {
+                    events.getNextEvent(event);
+                    int type = event.getEventType();
+                    long time = event.getTimeStamp();
+                    String pkg = event.getPackageName();
 
-                    // Android 9+ (API 28+) SCREEN_NON_INTERACTIVE (Screen lock / off)
-                    if (eventType == 16 /* SCREEN_NON_INTERACTIVE */ || eventType == 26 /* DEVICE_SHUTDOWN */) {
-                        if (currentFgPkg != null && sessionStartTime > 0 && eventTime > sessionStartTime) {
-                            long delta = eventTime - sessionStartTime;
-                            long prev = foregroundTimeMap.containsKey(currentFgPkg) ? foregroundTimeMap.get(currentFgPkg) : 0L;
-                            foregroundTimeMap.put(currentFgPkg, prev + delta);
-                        }
-                        currentFgPkg = null;
-                        sessionStartTime = 0L;
-                        isScreenInteractive = false;
-                    }
-                    // Android 9+ SCREEN_INTERACTIVE (Screen turned on)
-                    else if (eventType == 15 /* SCREEN_INTERACTIVE */) {
-                        isScreenInteractive = true;
-                    }
-                    // Activity Resumed / Move to Foreground (Event 1)
-                    else if (eventType == UsageEvents.Event.ACTIVITY_RESUMED || eventType == 1) {
-                        if (currentFgPkg != null && sessionStartTime > 0 && eventTime > sessionStartTime) {
-                            long delta = eventTime - sessionStartTime;
-                            long prev = foregroundTimeMap.containsKey(currentFgPkg) ? foregroundTimeMap.get(currentFgPkg) : 0L;
-                            foregroundTimeMap.put(currentFgPkg, prev + delta);
-                        }
-                        currentFgPkg = pkgName;
-                        sessionStartTime = isScreenInteractive ? eventTime : 0L;
-                    }
-                    // Activity Paused / Move to Background (Event 2)
-                    else if (eventType == UsageEvents.Event.ACTIVITY_PAUSED || eventType == 2 || eventType == 23 /* ACTIVITY_STOPPED */) {
-                        if (pkgName != null && pkgName.equals(currentFgPkg)) {
-                            if (sessionStartTime > 0 && eventTime > sessionStartTime) {
-                                long delta = eventTime - sessionStartTime;
-                                long prev = foregroundTimeMap.containsKey(currentFgPkg) ? foregroundTimeMap.get(currentFgPkg) : 0L;
-                                foregroundTimeMap.put(currentFgPkg, prev + delta);
+                    // Pre-midnight events: seed active foreground state crossing midnight
+                    if (time < startOfDay) {
+                        if (type == UsageEvents.Event.SCREEN_NON_INTERACTIVE || type == UsageEvents.Event.KEYGUARD_SHOWN) {
+                            isScreenInteractive = false;
+                            currentForegroundPkg = null;
+                        } else if (type == UsageEvents.Event.SCREEN_INTERACTIVE || type == UsageEvents.Event.KEYGUARD_HIDDEN) {
+                            isScreenInteractive = true;
+                        } else if (type == UsageEvents.Event.ACTIVITY_RESUMED || type == UsageEvents.Event.MOVE_TO_FOREGROUND) {
+                            currentForegroundPkg = pkg;
+                            lastKnownPkg = pkg;
+                            isScreenInteractive = true;
+                        } else if (type == UsageEvents.Event.ACTIVITY_PAUSED || type == UsageEvents.Event.MOVE_TO_BACKGROUND) {
+                            if (pkg != null && pkg.equals(currentForegroundPkg)) {
+                                currentForegroundPkg = null;
                             }
-                            currentFgPkg = null;
-                            sessionStartTime = 0L;
+                        }
+                        currentSessionStart = startOfDay;
+                        continue;
+                    }
+
+                    // Events at or after startOfDay (00:00:00 midnight)
+                    if (type == UsageEvents.Event.SCREEN_NON_INTERACTIVE || type == UsageEvents.Event.KEYGUARD_SHOWN) {
+                        // Phone locked or display turned off: commit active app session
+                        if (currentForegroundPkg != null && isScreenInteractive) {
+                            long duration = time - Math.max(currentSessionStart, startOfDay);
+                            if (duration > 0 && duration < 12 * 3600 * 1000L) {
+                                long current = foregroundTimeMap.containsKey(currentForegroundPkg) ? foregroundTimeMap.get(currentForegroundPkg) : 0L;
+                                foregroundTimeMap.put(currentForegroundPkg, current + duration);
+                            }
+                        }
+                        lastKnownPkg = currentForegroundPkg;
+                        currentForegroundPkg = null;
+                        isScreenInteractive = false;
+                    } else if (type == UsageEvents.Event.SCREEN_INTERACTIVE || type == UsageEvents.Event.KEYGUARD_HIDDEN) {
+                        isScreenInteractive = true;
+                        currentSessionStart = time;
+                        // Precision enhancement: Restore last known top app upon unlocking,
+                        // recovering the 1-2 minutes per session that was undercounted in v1.0.9
+                        if (lastKnownPkg != null && !lastKnownPkg.isEmpty()) {
+                            currentForegroundPkg = lastKnownPkg;
+                        }
+                    } else if (type == UsageEvents.Event.ACTIVITY_RESUMED || type == UsageEvents.Event.MOVE_TO_FOREGROUND) {
+                        isScreenInteractive = true;
+                        if (currentForegroundPkg != null && !currentForegroundPkg.equals(pkg)) {
+                            // User switched to a different application
+                            long duration = time - Math.max(currentSessionStart, startOfDay);
+                            if (duration > 0 && duration < 12 * 3600 * 1000L) {
+                                long current = foregroundTimeMap.containsKey(currentForegroundPkg) ? foregroundTimeMap.get(currentForegroundPkg) : 0L;
+                                foregroundTimeMap.put(currentForegroundPkg, current + duration);
+                            }
+                            currentForegroundPkg = pkg;
+                            lastKnownPkg = pkg;
+                            currentSessionStart = time;
+                        } else if (currentForegroundPkg == null) {
+                            currentForegroundPkg = pkg;
+                            lastKnownPkg = pkg;
+                            currentSessionStart = time;
+                        }
+                    } else if (type == UsageEvents.Event.ACTIVITY_PAUSED || type == UsageEvents.Event.MOVE_TO_BACKGROUND) {
+                        if (pkg != null && pkg.equals(currentForegroundPkg)) {
+                            long duration = time - Math.max(currentSessionStart, startOfDay);
+                            if (duration > 0 && duration < 12 * 3600 * 1000L) {
+                                long current = foregroundTimeMap.containsKey(currentForegroundPkg) ? foregroundTimeMap.get(currentForegroundPkg) : 0L;
+                                foregroundTimeMap.put(currentForegroundPkg, current + duration);
+                            }
+                            currentForegroundPkg = null;
                         }
                     }
                 }
 
-                // If an application is actively in foreground right now and phone screen is ON:
-                if (currentFgPkg != null && sessionStartTime > 0 && now > sessionStartTime && isScreenInteractive) {
-                    long delta = now - sessionStartTime;
-                    long prev = foregroundTimeMap.containsKey(currentFgPkg) ? foregroundTimeMap.get(currentFgPkg) : 0L;
-                    foregroundTimeMap.put(currentFgPkg, prev + delta);
+                // If an app is active in foreground right now, add its elapsed running time
+                if (currentForegroundPkg != null && isScreenInteractive) {
+                    long duration = now - Math.max(currentSessionStart, startOfDay);
+                    if (duration > 0 && duration < 4 * 3600 * 1000L) {
+                        long current = foregroundTimeMap.containsKey(currentForegroundPkg) ? foregroundTimeMap.get(currentForegroundPkg) : 0L;
+                        foregroundTimeMap.put(currentForegroundPkg, current + duration);
+                    }
                 }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
 
             // Fallback: If UsageEvents was empty or restricted, fallback to queryAndAggregateUsageStats
@@ -430,17 +487,6 @@ public class WebAppInterface {
                 }
             }
 
-            // Determine default home launcher to filter out home screen wallpaper time
-            String defaultLauncherPkg = "";
-            try {
-                Intent homeIntent = new Intent(Intent.ACTION_MAIN);
-                homeIntent.addCategory(Intent.CATEGORY_HOME);
-                ResolveInfo defaultLauncher = pm.resolveActivity(homeIntent, PackageManager.MATCH_DEFAULT_ONLY);
-                if (defaultLauncher != null && defaultLauncher.activityInfo != null) {
-                    defaultLauncherPkg = defaultLauncher.activityInfo.packageName;
-                }
-            } catch (Exception ignored) {}
-
             // Load saved daily app limits
             SharedPreferences prefs = context.getSharedPreferences(ShortsReelsBlockerService.PREFS_NAME, Context.MODE_PRIVATE);
             String limitsJsonStr = prefs.getString("productometer_app_limits_json", "{}");
@@ -456,7 +502,8 @@ public class WebAppInterface {
                 if (totalForegroundMs < 1000L) continue;
                 if (pkgName.equals("com.android.systemui") || pkgName.equals("android")) continue;
                 if (pkgName.equals(context.getPackageName())) continue;
-                if (!defaultLauncherPkg.isEmpty() && pkgName.equals(defaultLauncherPkg)) continue;
+                if (launcherPackages.contains(pkgName)) continue;
+                if (pkgName.contains("inputmethod")) continue;
 
                 String appLabel = getFriendlyAppName(pm, pkgName);
                 String iconBase64 = getAppIconBase64(pm, pkgName);

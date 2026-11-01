@@ -1064,6 +1064,8 @@
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 12px;
     padding: 10px 14px;
+    box-sizing: border-box;
+    min-width: 0;
 }
 
 .bedtime-input-label {
@@ -1079,10 +1081,13 @@
     color: #ffd600;
     font-size: 1.1rem;
     font-weight: 800;
-    padding: 4px 8px;
+    padding: 6px 8px;
     border-radius: 8px;
     font-family: inherit;
     color-scheme: dark;
+    width: 100%;
+    box-sizing: border-box;
+    min-width: 0;
 }
 
 /* --- ⏱️ DEDICATED APP LIMITS SECTION --- */
@@ -1095,6 +1100,8 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 12px;
+    gap: 10px;
+    flex-wrap: wrap;
 }
 
 .btn-add-app-limit {
@@ -1111,6 +1118,8 @@
     gap: 6px;
     box-shadow: 0 0 12px rgba(0, 229, 255, 0.25);
     transition: all 0.2s ease;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .btn-add-app-limit:hover {
@@ -1122,6 +1131,15 @@
     display: flex;
     gap: 8px;
     margin-bottom: 12px;
+    overflow-x: auto;
+    white-space: nowrap;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 4px;
+}
+
+.limits-tab-row::-webkit-scrollbar {
+    display: none;
 }
 
 .limit-tab-btn {
@@ -1134,6 +1152,7 @@
     font-weight: 700;
     cursor: pointer;
     transition: all 0.2s ease;
+    flex-shrink: 0;
 }
 
 .limit-tab-btn.active {
@@ -1163,12 +1182,51 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 8px;
 }
 
 .limit-card-left {
     display: flex;
     align-items: center;
     gap: 10px;
+    min-width: 0;
+    flex: 1;
+}
+
+.limit-card-left > div {
+    min-width: 0;
+}
+
+.limit-card-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+@media (max-width: 480px) {
+    .bedtime-inputs-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+    .bedtime-input-box {
+        padding: 8px 10px;
+    }
+    .bedtime-time-field {
+        font-size: 0.95rem;
+    }
+    .limit-card-top {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    .limit-card-left {
+        width: 100%;
+    }
+    .limit-card-right {
+        width: 100%;
+        justify-content: space-between;
+    }
 }
 
 .limit-progress-bar {

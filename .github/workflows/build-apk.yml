@@ -65,28 +65,24 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create v1.1.3 dist/Productometer.apk \
-            --title "Productometer v1.1.3 - Android Release APK" \
-            --notes "### 📱 Productometer Android Release v1.1.3
+          gh release create v1.1.4 dist/Productometer.apk \
+            --title "Productometer v1.1.4 - Android Release APK" \
+            --notes "### 📱 Productometer Android Release v1.1.4
 
-          Comprehensive major update delivering Digital Wellbeing accuracy, interactive Bedtime Mode & App Limits, Day Planner Future Calendar, and Academics Focus & Break management.
+          Enhanced screen time tracking algorithm based directly on high-accuracy v1.0.9 reference, with mobile UI alignment polish.
 
-          #### 🚀 Highlights in v1.1.3:
-          - **📚 Academics Monitoring:**
-            - Strict academic subject filtering excluding chores/fitness from academic tracking.
-            - Prominent **Skip Break / Resume Study** button with immediate countdown restoration.
-            - Distraction blocker dynamically paused during study breaks and manual pause.
-            - Pure cumulative study time tracking without artificial inflation or ticking on breaks.
-            - Dynamic notification: \`⏸️ Focus Paused\` and \`☕ Break Time: mm:ss remaining\`.
-          - **📅 Day Planner Future Calendar:**
-            - Added interactive Calendar ribbon, quick date chips (Today, Tomorrow, +2d, +1w), and full monthly calendar modal.
-            - Date-keyed task persistence (\`productometer_planner_tasks_YYYY-MM-DD\`) with glowing task dot indicators.
-            - Future alarm scheduling support.
-          - **📱 Screen Manager & Digital Wellbeing:**
-            - Inbuilt Digital Wellbeing replication using \`UsageEvents\` interactive screen-lock timeline simulation.
-            - Interactive **Bedtime Mode** card with start/end time pickers, active countdown, and native sync.
-            - Dedicated **App Daily Limits & Parental Controls** with \`+ Set App Limit\` picker, progress bars, grace periods, and freeze states.
+          #### 🚀 Highlights in v1.1.4:
+          - **🎯 Enhanced Screen Time Accuracy (v1.0.9 Reference Engine):**
+            - Reverted to and enhanced the authoritative v1.0.9 \`UsageEvents\` algorithm.
+            - Pre-seeds active foreground sessions from 15 minutes prior to midnight, capturing midnight rollover sessions.
+            - Restores top foreground application upon device unlock, recovering the 1-2 minute undercounting observed in v1.0.9.
+            - Multi-launcher and system IME input method filtering to avoid counting background UI.
+          - **📱 Android Mobile Alignment & UI Polish:**
+            - Bedtime Mode time input boxes and pickers refined with \`box-sizing: border-box\` and responsive grid.
+            - App Daily Limits header and tab navigation made horizontally scrollable with touch-momentum for all phone aspect ratios.
+            - Active App Limit cards upgraded with responsive \`.limit-card-right\` and truncated \`.limit-app-name\` to eliminate mobile text clipping and wrapping.
+            - Day Planner quick date chips and calendar day cells reinforced with \`min-height\` and \`flex-shrink: 0\`.
 
           #### 📦 Direct Download:
           - Click **\`Productometer.apk\`** under Assets below to download and install." || \
-          gh release upload v1.1.3 dist/Productometer.apk --clobber
+          gh release upload v1.1.4 dist/Productometer.apk --clobber
