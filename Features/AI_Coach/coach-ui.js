@@ -5309,13 +5309,7 @@ if (typeof globalThis !== 'undefined') {
         const chatModal = document.getElementById('chronoCoachModal');
         if (chatModal) chatModal.classList.remove('active');
 
-        const sr = getSpeechRecognizer();
-        if (!sr) {
-            // Speech recognition not supported or unavailable -> fallback to chat modal
-            openCoachModal();
-            return;
-        }
-
+        // ALWAYS open Voice-first listening mode overlay with "Chat instead" option
         if (overlay) overlay.style.display = 'flex';
         if (window.NativeBridge && window.NativeBridge.vibrate) {
             window.NativeBridge.vibrate(25);
@@ -5325,8 +5319,20 @@ if (typeof globalThis !== 'undefined') {
         const placeholder = document.getElementById('transcriptPlaceholder');
         const liveText = document.getElementById('transcriptLiveText');
         if (title) title.textContent = "Listening...";
-        if (placeholder) placeholder.style.display = 'inline';
+        if (placeholder) {
+            placeholder.style.display = 'inline';
+            placeholder.textContent = '"Schedule Physics at 4 PM" or "I ate 2 eggs"...';
+        }
         if (liveText) { liveText.style.display = 'none'; liveText.textContent = ''; }
+
+        const sr = getSpeechRecognizer();
+        if (!sr) {
+            // If Web Speech API is unavailable in this environment (e.g. mobile WebView)
+            // Keep the listening mode overlay open and provide clear "Chat instead" option
+            if (title) title.textContent = "Voice Assistant";
+            if (placeholder) placeholder.textContent = 'Tap "Chat instead" below to type your question!';
+            return;
+        }
 
         speechRecognizer = sr;
         isVoiceActive = true;

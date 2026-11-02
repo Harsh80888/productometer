@@ -298,6 +298,37 @@ document.addEventListener('DOMContentLoaded', () => {
             activeApp.seconds = activeWebSeconds;
         }
 
+        // E. EXACT ALIGNMENT WITH DAY PLANNER TIMELINE SCREEN SLOTS:
+        let timelineScreenSecs = 0;
+        try {
+            const rawTimeline = localStorage.getItem('productometer_timeline');
+            if (rawTimeline) {
+                const parsedTimeline = JSON.parse(rawTimeline);
+                if (Array.isArray(parsedTimeline)) {
+                    parsedTimeline.forEach(slot => {
+                        if (slot === 'screen') timelineScreenSecs += (30 * 60);
+                    });
+                }
+            }
+        } catch (e) {}
+
+        if (timelineScreenSecs > 0) {
+            let timelineApp = apps.find(a => a.id === 'app_timeline_screen');
+            if (timelineApp) {
+                timelineApp.seconds = timelineScreenSecs;
+            } else {
+                apps.push({
+                    id: 'app_timeline_screen',
+                    name: 'Day Planner Screen Time',
+                    category: 'others',
+                    seconds: timelineScreenSecs,
+                    icon: 'fa-solid fa-tv',
+                    bg: '#ef4444',
+                    color: '#fff'
+                });
+            }
+        }
+
         // Web Fallback: calculate limit & compulsory rules
         let localLimits = {};
         try {
@@ -393,22 +424,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
         });
 
-        // 🎯 BIDIRECTIONAL SYNC: Commit to 'productometer_screen_data' so Features tab displays matching live hours!
+        // 🎯 BIDIRECTIONAL SYNC: Commit to 'productometer_screen_data' and hours so Features tab & AI Coach match!
+        if (totalSecs === 0) {
+            try {
+                const cached = localStorage.getItem(KEY_SCREEN_DATA);
+                if (cached) {
+                    const parsed = JSON.parse(cached);
+                    if (parsed && parsed.date === todayStr && parsed.totalScreenSecondsToday > 0) {
+                        totalSecs = parsed.totalScreenSecondsToday;
+                        prodSecs = parsed.productiveSeconds || 0;
+                        othersSecs = parsed.othersSeconds || totalSecs;
+                    }
+                }
+            } catch (e) {}
+        }
 
         try {
-
             localStorage.setItem(KEY_SCREEN_DATA, JSON.stringify({
-
                 totalScreenSecondsToday: totalSecs,
-
                 productiveSeconds: prodSecs,
-
                 othersSeconds: othersSecs,
-
                 date: todayStr
-
             }));
-
+            localStorage.setItem('screen_total_hours', (totalSecs / 3600).toFixed(2));
+            localStorage.setItem('screen_nonprod_hours', (othersSecs / 3600).toFixed(2));
         } catch (e) {}
 
         const totalMins = Math.round(totalSecs / 60);

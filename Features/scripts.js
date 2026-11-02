@@ -42,11 +42,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 const screenDataRaw = localStorage.getItem('productometer_screen_data');
                 if (screenDataRaw) {
                     const sData = JSON.parse(screenDataRaw);
-                    if (sData.totalScreenSecondsToday !== undefined) {
+                    if (sData.totalScreenSecondsToday !== undefined && sData.totalScreenSecondsToday > 0) {
                         hours = sData.totalScreenSecondsToday / 3600;
                     }
                 }
             } catch (e) {}
+            if (hours === 0 && window.NativeBridge && window.NativeBridge.isAvailable && window.NativeBridge.isAvailable()) {
+                try {
+                    const stats = window.NativeBridge.getRealAppUsageStats();
+                    if (Array.isArray(stats) && stats.length > 0) {
+                        let totalSec = 0;
+                        stats.forEach(s => totalSec += (s.totalSeconds || 0));
+                        if (totalSec > 0) hours = totalSec / 3600;
+                    }
+                } catch (e) {}
+            }
             document.getElementById('metric-screen').textContent = `${hours.toFixed(1)}h Screen`;
             if (hours >= 4.0) document.getElementById('metric-screen').classList.add('text-warn');
             else document.getElementById('metric-screen').classList.remove('text-warn');

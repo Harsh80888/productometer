@@ -123,11 +123,17 @@ public class WebAppInterface {
                 if (mode == AppOpsManager.MODE_ALLOWED) return true;
             }
 
-            // Secondary check: query small slice to see if system permits usage stats
+            // Secondary check: query today's usage stats to see if system permits usage stats
             UsageStatsManager usm = (UsageStatsManager) context.getSystemService(Context.USAGE_STATS_SERVICE);
             if (usm != null) {
                 long now = System.currentTimeMillis();
-                List<UsageStats> list = usm.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, now - 60000L, now);
+                Calendar cal = Calendar.getInstance();
+                cal.set(Calendar.HOUR_OF_DAY, 0);
+                cal.set(Calendar.MINUTE, 0);
+                cal.set(Calendar.SECOND, 0);
+                cal.set(Calendar.MILLISECOND, 0);
+                long startOfDay = cal.getTimeInMillis();
+                List<UsageStats> list = usm.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, startOfDay, now);
                 if (list != null && !list.isEmpty()) return true;
             }
             return false;
@@ -409,112 +415,13 @@ public class WebAppInterface {
                 }
             } catch (Exception ignored) {}
 
-            // Ground Truth Engine: Pure UsageEvents timeline starting 15 minutes before midnight to now (v1.0.9 + enhancements)
+            // 1. Direct aggregated query (official Android OS rollup from midnight to now)
             try {
-                long queryStart = Math.max(0L, startOfDay - (15 * 60 * 1000L));
-                UsageEvents events = usageStatsManager.queryEvents(queryStart, now);
-                UsageEvents.Event event = new UsageEvents.Event();
-
-                String currentForegroundPkg = null;
-                String lastKnownPkg = null;
-                long currentSessionStart = startOfDay;
-                boolean isScreenInteractive = true;
-
-                while (events != null && events.hasNextEvent()) {
-                    events.getNextEvent(event);
-                    int type = event.getEventType();
-                    long time = event.getTimeStamp();
-                    String pkg = event.getPackageName();
-
-                    // Pre-midnight events: seed active foreground state crossing midnight
-                    if (time < startOfDay) {
-                        if (type == UsageEvents.Event.SCREEN_NON_INTERACTIVE || type == UsageEvents.Event.KEYGUARD_SHOWN) {
-                            isScreenInteractive = false;
-                            currentForegroundPkg = null;
-                        } else if (type == UsageEvents.Event.SCREEN_INTERACTIVE || type == UsageEvents.Event.KEYGUARD_HIDDEN) {
-                            isScreenInteractive = true;
-                        } else if (type == UsageEvents.Event.ACTIVITY_RESUMED || type == UsageEvents.Event.MOVE_TO_FOREGROUND) {
-                            currentForegroundPkg = pkg;
-                            lastKnownPkg = pkg;
-                            isScreenInteractive = true;
-                        } else if (type == UsageEvents.Event.ACTIVITY_PAUSED || type == UsageEvents.Event.MOVE_TO_BACKGROUND) {
-                            if (pkg != null && pkg.equals(currentForegroundPkg)) {
-                                currentForegroundPkg = null;
-                            }
-                        }
-                        currentSessionStart = startOfDay;
-                        continue;
-                    }
-
-                    // Events at or after startOfDay (00:00:00 midnight)
-                    if (type == UsageEvents.Event.SCREEN_NON_INTERACTIVE || type == UsageEvents.Event.KEYGUARD_SHOWN) {
-                        // Phone locked or display turned off: commit active app session
-                        if (currentForegroundPkg != null && isScreenInteractive) {
-                            long duration = time - Math.max(currentSessionStart, startOfDay);
-                            if (duration > 0 && duration < 12 * 3600 * 1000L) {
-                                long current = foregroundTimeMap.containsKey(currentForegroundPkg) ? foregroundTimeMap.get(currentForegroundPkg) : 0L;
-                                foregroundTimeMap.put(currentForegroundPkg, current + duration);
-                            }
-                        }
-                        lastKnownPkg = currentForegroundPkg;
-                        currentForegroundPkg = null;
-                        isScreenInteractive = false;
-                    } else if (type == UsageEvents.Event.SCREEN_INTERACTIVE || type == UsageEvents.Event.KEYGUARD_HIDDEN) {
-                        isScreenInteractive = true;
-                        currentSessionStart = time;
-                        // Precision enhancement: Restore last known top app upon unlocking,
-                        // recovering the 1-2 minutes per session that was undercounted in v1.0.9
-                        if (lastKnownPkg != null && !lastKnownPkg.isEmpty()) {
-                            currentForegroundPkg = lastKnownPkg;
-                        }
-                    } else if (type == UsageEvents.Event.ACTIVITY_RESUMED || type == UsageEvents.Event.MOVE_TO_FOREGROUND) {
-                        isScreenInteractive = true;
-                        if (currentForegroundPkg != null && !currentForegroundPkg.equals(pkg)) {
-                            // User switched to a different application
-                            long duration = time - Math.max(currentSessionStart, startOfDay);
-                            if (duration > 0 && duration < 12 * 3600 * 1000L) {
-                                long current = foregroundTimeMap.containsKey(currentForegroundPkg) ? foregroundTimeMap.get(currentForegroundPkg) : 0L;
-                                foregroundTimeMap.put(currentForegroundPkg, current + duration);
-                            }
-                            currentForegroundPkg = pkg;
-                            lastKnownPkg = pkg;
-                            currentSessionStart = time;
-                        } else if (currentForegroundPkg == null) {
-                            currentForegroundPkg = pkg;
-                            lastKnownPkg = pkg;
-                            currentSessionStart = time;
-                        }
-                    } else if (type == UsageEvents.Event.ACTIVITY_PAUSED || type == UsageEvents.Event.MOVE_TO_BACKGROUND) {
-                        if (pkg != null && pkg.equals(currentForegroundPkg)) {
-                            long duration = time - Math.max(currentSessionStart, startOfDay);
-                            if (duration > 0 && duration < 12 * 3600 * 1000L) {
-                                long current = foregroundTimeMap.containsKey(currentForegroundPkg) ? foregroundTimeMap.get(currentForegroundPkg) : 0L;
-                                foregroundTimeMap.put(currentForegroundPkg, current + duration);
-                            }
-                            currentForegroundPkg = null;
-                        }
-                    }
-                }
-
-                // If an app is active in foreground right now, add its elapsed running time
-                if (currentForegroundPkg != null && isScreenInteractive) {
-                    long duration = now - Math.max(currentSessionStart, startOfDay);
-                    if (duration > 0 && duration < 4 * 3600 * 1000L) {
-                        long current = foregroundTimeMap.containsKey(currentForegroundPkg) ? foregroundTimeMap.get(currentForegroundPkg) : 0L;
-                        foregroundTimeMap.put(currentForegroundPkg, current + duration);
-                    }
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-            // Fallback: If UsageEvents was empty or restricted, fallback to queryAndAggregateUsageStats
-            if (foregroundTimeMap.isEmpty()) {
                 Map<String, UsageStats> aggregated = usageStatsManager.queryAndAggregateUsageStats(startOfDay, now);
-                if (aggregated != null) {
+                if (aggregated != null && !aggregated.isEmpty()) {
                     for (Map.Entry<String, UsageStats> entry : aggregated.entrySet()) {
                         UsageStats u = entry.getValue();
-                        if (u != null && (u.getLastTimeUsed() >= startOfDay || u.getLastTimeStamp() >= startOfDay)) {
+                        if (u != null) {
                             long fg = u.getTotalTimeInForeground();
                             if (fg > 0) {
                                 foregroundTimeMap.put(entry.getKey(), fg);
@@ -522,7 +429,66 @@ public class WebAppInterface {
                         }
                     }
                 }
-            }
+            } catch (Exception ignored) {}
+
+            // 2. Daily interval query (supplements any packages that may have been omitted by rollup)
+            try {
+                List<UsageStats> statsList = usageStatsManager.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, startOfDay, now);
+                if (statsList != null) {
+                    for (UsageStats u : statsList) {
+                        if (u != null && u.getTotalTimeInForeground() > 0) {
+                            String pkg = u.getPackageName();
+                            long existing = foregroundTimeMap.containsKey(pkg) ? foregroundTimeMap.get(pkg) : 0L;
+                            if (u.getTotalTimeInForeground() > existing) {
+                                foregroundTimeMap.put(pkg, u.getTotalTimeInForeground());
+                            }
+                        }
+                    }
+                }
+            } catch (Exception ignored) {}
+
+            // 3. Live active session tracking: add elapsed time for the app currently in foreground
+            try {
+                long queryStart = Math.max(0L, startOfDay - (15 * 60 * 1000L));
+                UsageEvents events = usageStatsManager.queryEvents(queryStart, now);
+                if (events != null) {
+                    UsageEvents.Event event = new UsageEvents.Event();
+                    String currentForegroundPkg = null;
+                    long currentSessionStart = 0L;
+                    boolean isScreenInteractive = true;
+
+                    while (events.hasNextEvent()) {
+                        events.getNextEvent(event);
+                        int type = event.getEventType();
+                        long time = event.getTimeStamp();
+                        String pkg = event.getPackageName();
+
+                        if (type == UsageEvents.Event.SCREEN_NON_INTERACTIVE || type == UsageEvents.Event.KEYGUARD_SHOWN) {
+                            currentForegroundPkg = null;
+                            isScreenInteractive = false;
+                        } else if (type == UsageEvents.Event.SCREEN_INTERACTIVE || type == UsageEvents.Event.KEYGUARD_HIDDEN) {
+                            isScreenInteractive = true;
+                            currentSessionStart = time;
+                        } else if (type == UsageEvents.Event.ACTIVITY_RESUMED || type == UsageEvents.Event.MOVE_TO_FOREGROUND) {
+                            currentForegroundPkg = pkg;
+                            currentSessionStart = time;
+                            isScreenInteractive = true;
+                        } else if (type == UsageEvents.Event.ACTIVITY_PAUSED || type == UsageEvents.Event.MOVE_TO_BACKGROUND) {
+                            if (pkg != null && pkg.equals(currentForegroundPkg)) {
+                                currentForegroundPkg = null;
+                            }
+                        }
+                    }
+
+                    if (currentForegroundPkg != null && isScreenInteractive && currentSessionStart > 0 && now > currentSessionStart) {
+                        long activeDelta = now - Math.max(currentSessionStart, startOfDay);
+                        if (activeDelta > 0 && activeDelta < 2 * 3600 * 1000L) {
+                            long current = foregroundTimeMap.containsKey(currentForegroundPkg) ? foregroundTimeMap.get(currentForegroundPkg) : 0L;
+                            foregroundTimeMap.put(currentForegroundPkg, current + activeDelta);
+                        }
+                    }
+                }
+            } catch (Exception ignored) {}
 
             // Load saved daily app limits
             SharedPreferences prefs = context.getSharedPreferences(ShortsReelsBlockerService.PREFS_NAME, Context.MODE_PRIVATE);
@@ -536,8 +502,8 @@ public class WebAppInterface {
                 long totalForegroundMs = entry.getValue();
 
                 // Skip system internal daemons, launchers, and keyboards
-                // (Note: Productometer itself IS counted so total screentime matches device wellbeing)
-                if (totalForegroundMs < 1000L) continue;
+                // Include all apps with at least 2 seconds of usage
+                if (totalForegroundMs < 2000L) continue;
                 if (pkgName.equals("com.android.systemui") || pkgName.equals("android")) continue;
                 if (launcherPackages.contains(pkgName)) continue;
                 if (pkgName.contains("inputmethod")) continue;
@@ -590,18 +556,8 @@ public class WebAppInterface {
                 obj.put("isGrace", isGrace);
                 obj.put("graceRemaining", graceRemaining);
                 obj.put("isUnchangeable", isUnchangeable);
-                if (iconBase64 != null) {
-                    obj.put("iconBase64", iconBase64);
-                }
-
-                // Smart default category tagging
-                String lower = (pkgName + " " + appLabel).toLowerCase();
-                boolean isProd = lower.contains("study") || lower.contains("learn") || lower.contains("doc") || 
-                                 lower.contains("pdf") || lower.contains("book") || lower.contains("productivity") ||
-                                 lower.contains("school") || lower.contains("calculator") || lower.contains("notes") ||
-                                 lower.contains("productometer") || lower.contains("drive") || lower.contains("classroom") ||
-                                 lower.contains("code") || lower.contains("term") || lower.contains("sheet");
-                obj.put("category", isProd ? "productivity" : "others");
+                obj.put("iconBase64", iconBase64);
+                obj.put("category", isGame ? "games" : (isCompulsory ? "social" : "others"));
 
                 jsonArray.put(obj);
             }
@@ -613,10 +569,6 @@ public class WebAppInterface {
         }
     }
 
-    /**
-     * Sets daily time limit for an app.
-     * Enforces strict immutability if the app is currently in grace period or frozen.
-     */
     @JavascriptInterface
     public boolean setAppDailyLimit(String packageName, int limitMinutes) {
         try {
