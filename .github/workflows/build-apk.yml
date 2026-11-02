@@ -65,20 +65,26 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create v1.1.5 dist/Productometer.apk \
-            --title "Productometer v1.1.5 - Android Release APK" \
-            --notes "### 📱 Productometer Android Release v1.1.5
+          gh release create v1.1.6 dist/Productometer.apk \
+            --title "Productometer v1.1.6 - Android Release APK" \
+            --notes "### 📱 Productometer Android Release v1.1.6
 
-          Critical fix resolving app usage breakdown rendering and restoring active App Time Limit enforcement.
+          Major release featuring the new Sleep & Bedtime Monitoring system, interactive Showcase portal, Voice-first AI Coach with 5-turn memory & offline scheduling, and bedtime guardian protection.
 
-          #### 🚀 Highlights in v1.1.5:
-          - **🛠️ Fixed App Usage Breakdown List Rendering:**
-            - Resolved a JavaScript runtime initialization ordering issue where premature dashboard execution halted before rendering the app list.
-            - All individual apps and their live tracked usage times are now fully visible in the App & Website Breakdown section.
-          - **⏱️ App Daily Time Limits Enforcement:**
-            - Upgraded \`getAppTodayForegroundMs\` in \`WebAppInterface\` with multi-tier querying (OS rollup aggregation + \`UsageEvents\` stream) to ensure accurate live usage is always fed to \`ShortsReelsBlockerService\`.
-            - Full active enforcement of daily time limits, 10-minute grace window countdown, and frozen app state locks.
+          #### 🚀 Highlights in v1.1.6:
+          - **🌙 Sleep & Bedtime Monitoring Module:**
+            - Calibrated circadian sleep target (7.5h to 9h / 5-6 cycles) with real-time countdown.
+            - Brain Activation Smart Alarm requiring a 50-step physical walking routine to disarm.
+            - 15-Minute Night Distraction Cap with anti-dopamine grayscale enforcement and emergency pass.
+          - **✨ Interactive Showcase Portal:**
+            - Hardware and OS architecture documentation with interactive simulators (1-Reel Grace Rule, 48-slot swipe-paint matrix, and Net AP formula playground).
+          - **🤖 Voice-First AI Coach with 5-Turn Memory & Offline Scheduling:**
+            - Voice-first listening mode with instant switch to chat.
+            - 5-prompt rolling conversational memory for context-aware multi-turn task scheduling.
+            - Zero-latency offline action engine for scheduling, rescheduling, and category routing.
+          - **🛡️ Focus Shield & Accessibility Fixes:**
+            - Restored clean compilation in \`ShortsReelsBlockerService.java\` with night distraction tracking.
 
           #### 📦 Direct Download:
           - Click **\`Productometer.apk\`** under Assets below to download and install." || \
-          gh release upload v1.1.5 dist/Productometer.apk --clobber
+          gh release upload v1.1.6 dist/Productometer.apk --clobber
