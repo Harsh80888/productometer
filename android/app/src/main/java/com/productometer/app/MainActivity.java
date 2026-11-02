@@ -271,7 +271,22 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     protected void onResume() {
         super.onResume();
         AlarmReceiver.stopAlarm();
-        if (webView != null) webView.onResume();
+        if (webView != null) {
+            webView.onResume();
+            webView.post(() -> {
+                try {
+                    webView.evaluateJavascript(
+                        "(function() {" +
+                        "  try { if (typeof window.refreshDigitalWellbeingDashboard === 'function') window.refreshDigitalWellbeingDashboard(); } catch(e){}" +
+                        "  try { if (typeof window.syncFeatureCardLiveMetrics === 'function') window.syncFeatureCardLiveMetrics(); } catch(e){}" +
+                        "  try { window.dispatchEvent(new Event('focus')); } catch(e){}" +
+                        "  try { window.dispatchEvent(new Event('visibilitychange')); } catch(e){}" +
+                        "})();",
+                        null
+                    );
+                } catch (Throwable ignored) {}
+            });
+        }
         registerStepSensorListener();
     }
 

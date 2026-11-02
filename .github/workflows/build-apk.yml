@@ -65,26 +65,27 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create v1.1.7 dist/Productometer.apk \
-            --title "Productometer v1.1.7 - Android Release APK" \
-            --notes "### 📱 Productometer Android Release v1.1.7
+          gh release create v1.1.8 dist/Productometer.apk \
+            --title "Productometer v1.1.8 - Android Release APK" \
+            --notes "### 📱 Productometer Android Release v1.1.8
 
           Major release featuring the new Sleep & Bedtime Monitoring system, interactive Showcase portal, Voice-first AI Coach with 5-turn memory & offline scheduling, and bedtime guardian protection.
 
-          #### 🚀 Highlights in v1.1.7:
-          - **🌙 Sleep & Bedtime Monitoring Module:**
-            - Calibrated circadian sleep target (7.5h to 9h / 5-6 cycles) with real-time countdown.
-            - Brain Activation Smart Alarm requiring a 50-step physical walking routine to disarm.
-            - 15-Minute Night Distraction Cap with anti-dopamine grayscale enforcement and emergency pass.
-          - **✨ Interactive Showcase Portal:**
-            - Hardware and OS architecture documentation with interactive simulators (1-Reel Grace Rule, 48-slot swipe-paint matrix, and Net AP formula playground).
+          #### 🚀 Highlights in v1.1.8:
+          - **📊 Real Device Screen Management & Digital Wellbeing Rollup:**
+            - Resilient Android UsageStatsManager aggregation with multi-interval queries and rolling 24-hour fallback so device screen time never falsely reports zero.
+            - Automatic live UI refresh on onResume, focus, and visibilitychange when returning from Android System Settings.
+            - Protects cached non-zero screen time and sorts apps by foreground duration.
+          - **🥗 Offline AI Coach Diet & Nutrition Engine:**
+            - Natural language diet logger supporting number words (two rotis, three eggs, half a cup).
+            - Robust intent parser matching colloquial phrases like 'adding two rotis two my diet', 'add 2 rotis to my diet', 'two chapatis', etc.
+            - Comprehensive Indian staple nutrition database (roti, chapati, dal, paneer, curd, sabzi) updating Health Tracker macros in 0 ms offline.
           - **🤖 Voice-First AI Coach with 5-Turn Memory & Offline Scheduling:**
-            - Voice-first listening mode with instant switch to chat.
+            - Animated voice-first listening mode on open with one-tap 'Chat instead' transition.
             - 5-prompt rolling conversational memory for context-aware multi-turn task scheduling.
-            - Zero-latency offline action engine for scheduling, rescheduling, and category routing.
-          - **🛡️ Focus Shield & Accessibility Fixes:**
-            - Restored clean compilation in \`ShortsReelsBlockerService.java\` with night distraction tracking.
+          - **🌙 Sleep & Bedtime Monitoring Module:**
+            - Calibrated circadian sleep target with real-time countdown and 50-step walking alarm.
 
           #### 📦 Direct Download:
           - Click **\`Productometer.apk\`** under Assets below to download and install." || \
-          gh release upload v1.1.7 dist/Productometer.apk --clobber
+          gh release upload v1.1.8 dist/Productometer.apk --clobber

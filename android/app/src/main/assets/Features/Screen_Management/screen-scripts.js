@@ -205,39 +205,51 @@ document.addEventListener('DOMContentLoaded', () => {
         const specialPermCard = document.getElementById('screenSpecialPermCard');
 
         if (window.NativeBridge && window.NativeBridge.isAvailable()) {
-            const hasPerm = window.NativeBridge.hasUsageStatsPermission();
-            if (hasPerm) {
+            let androidStats = null;
+            try {
+                androidStats = window.NativeBridge.getRealAppUsageStats();
+            } catch (e) {}
+
+            const hasValidStats = (androidStats && Array.isArray(androidStats) && androidStats.length > 0);
+            let hasPerm = hasValidStats;
+            if (!hasPerm && window.NativeBridge.hasUsageStatsPermission) {
+                try {
+                    hasPerm = window.NativeBridge.hasUsageStatsPermission();
+                } catch (e) {}
+            }
+
+            if (hasValidStats) {
                 if (permBanner) permBanner.style.display = 'none';
                 if (specialPermCard) specialPermCard.style.display = 'none';
 
-                const androidStats = window.NativeBridge.getRealAppUsageStats();
-                if (androidStats && Array.isArray(androidStats) && androidStats.length > 0) {
-                    return androidStats.map(item => {
-                        const cleanTitle = formatCleanAppName(item.appName, item.packageName);
-                        const assignedCategory = savedOverrides[item.packageName] || item.category || 'others';
-                        return {
-                            id: item.packageName,
-                            name: cleanTitle,
-                            category: assignedCategory,
-                            seconds: item.totalSeconds || (item.minutes * 60) || 0,
-                            iconBase64: item.iconBase64 || null,
-                            icon: 'fa-solid fa-mobile-screen',
-                            bg: assignedCategory === 'productivity' ? '#00e5ff' : '#334155',
-                            color: '#fff',
-                            isNativeAndroid: true,
-                            isGame: !!item.isGame,
-                            isCompulsory: !!item.isCompulsory,
-                            limitMinutes: typeof item.limitMinutes === 'number' ? item.limitMinutes : (item.isCompulsory ? 30 : 0),
-                            isFrozen: !!item.isFrozen,
-                            isGrace: !!item.isGrace,
-                            graceRemaining: typeof item.graceRemaining === 'number' ? item.graceRemaining : 0,
-                            isUnchangeable: !!item.isUnchangeable
-                        };
-                    });
-                }
-            } else {
+                return androidStats.map(item => {
+                    const cleanTitle = formatCleanAppName(item.appName, item.packageName);
+                    const assignedCategory = savedOverrides[item.packageName] || item.category || 'others';
+                    return {
+                        id: item.packageName,
+                        name: cleanTitle,
+                        category: assignedCategory,
+                        seconds: item.totalSeconds || (item.minutes * 60) || 0,
+                        iconBase64: item.iconBase64 || null,
+                        icon: getAppFallbackIcon(cleanTitle, item.packageName),
+                        bg: assignedCategory === 'productivity' ? '#00e5ff' : '#334155',
+                        color: '#fff',
+                        isNativeAndroid: true,
+                        isGame: !!item.isGame,
+                        isCompulsory: !!item.isCompulsory,
+                        limitMinutes: typeof item.limitMinutes === 'number' ? item.limitMinutes : (item.isCompulsory ? 30 : 0),
+                        isFrozen: !!item.isFrozen,
+                        isGrace: !!item.isGrace,
+                        graceRemaining: typeof item.graceRemaining === 'number' ? item.graceRemaining : 0,
+                        isUnchangeable: !!item.isUnchangeable
+                    };
+                });
+            } else if (!hasPerm) {
                 if (permBanner) permBanner.style.display = 'flex';
                 if (specialPermCard) specialPermCard.style.display = 'flex';
+            } else {
+                if (permBanner) permBanner.style.display = 'none';
+                if (specialPermCard) specialPermCard.style.display = 'none';
             }
         } else {
             if (permBanner) permBanner.style.display = 'none';
@@ -439,16 +451,18 @@ document.addEventListener('DOMContentLoaded', () => {
             } catch (e) {}
         }
 
-        try {
-            localStorage.setItem(KEY_SCREEN_DATA, JSON.stringify({
-                totalScreenSecondsToday: totalSecs,
-                productiveSeconds: prodSecs,
-                othersSeconds: othersSecs,
-                date: todayStr
-            }));
-            localStorage.setItem('screen_total_hours', (totalSecs / 3600).toFixed(2));
-            localStorage.setItem('screen_nonprod_hours', (othersSecs / 3600).toFixed(2));
-        } catch (e) {}
+        if (totalSecs > 0) {
+            try {
+                localStorage.setItem(KEY_SCREEN_DATA, JSON.stringify({
+                    totalScreenSecondsToday: totalSecs,
+                    productiveSeconds: prodSecs,
+                    othersSeconds: othersSecs,
+                    date: todayStr
+                }));
+                localStorage.setItem('screen_total_hours', (totalSecs / 3600).toFixed(2));
+                localStorage.setItem('screen_nonprod_hours', (othersSecs / 3600).toFixed(2));
+            } catch (e) {}
+        }
 
         const totalMins = Math.round(totalSecs / 60);
 
@@ -1017,10 +1031,26 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnUnlockUsage) btnUnlockUsage.addEventListener('click', handleOpenAppDetails);
     if (btnProactiveUnlock) btnProactiveUnlock.addEventListener('click', handleOpenAppDetails);
 
+    // Expose globally for Android WebView onResume calls
+    window.refreshDigitalWellbeingDashboard = refreshDigitalWellbeingDashboard;
+
     // Auto-refresh when user returns to app from system settings
     window.addEventListener('focus', () => {
         refreshDigitalWellbeingDashboard();
         updateFocusShieldUI();
+    });
+
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) {
+            refreshDigitalWellbeingDashboard();
+            updateFocusShieldUI();
+        }
+    });
+
+    window.addEventListener('storage', (e) => {
+        if (e && e.key && (e.key.includes('screen') || e.key.includes('timeline') || e.key.includes('study'))) {
+            refreshDigitalWellbeingDashboard();
+        }
     });
 
     // --- 🛡️ FOCUS SHIELD & ACCESSIBILITY GUARDIAN HANDLERS ---

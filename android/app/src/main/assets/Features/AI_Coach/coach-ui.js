@@ -3795,6 +3795,35 @@ Could not reach Cloudflare AI agent (${err.message}). Please check your internet
     // =========================================================================
     // 🥗 1. OFFLINE FOOD & NUTRITION ACTION ENGINE
     // =========================================================================
+    const WORD_TO_NUMBER_MAP = {
+        "half a": 0.5,
+        "half": 0.5,
+        "a": 1,
+        "an": 1,
+        "one": 1,
+        "two": 2,
+        "three": 3,
+        "four": 4,
+        "five": 5,
+        "six": 6,
+        "seven": 7,
+        "eight": 8,
+        "nine": 9,
+        "ten": 10,
+        "couple": 2,
+        "few": 3
+    };
+
+    function parseWordQuantity(rawStr) {
+        if (!rawStr) return 1.0;
+        const clean = rawStr.trim().toLowerCase();
+        if (WORD_TO_NUMBER_MAP.hasOwnProperty(clean)) {
+            return WORD_TO_NUMBER_MAP[clean];
+        }
+        const parsed = parseFloat(clean);
+        return isNaN(parsed) ? 1.0 : parsed;
+    }
+
     const OFFLINE_FOOD_DATABASE = {
         "egg": { cal: 75, p: 6.5, c: 0.5, f: 5, unit: "egg", isVeg: false },
         "eggs": { cal: 75, p: 6.5, c: 0.5, f: 5, unit: "egg", isVeg: false },
@@ -3814,9 +3843,25 @@ Could not reach Cloudflare AI agent (${err.message}). Please check your internet
         "rotis": { cal: 110, p: 3.2, c: 20, f: 1.5, unit: "roti", isVeg: true },
         "chapati": { cal: 110, p: 3.2, c: 20, f: 1.5, unit: "roti", isVeg: true },
         "chapatis": { cal: 110, p: 3.2, c: 20, f: 1.5, unit: "roti", isVeg: true },
+        "phulka": { cal: 85, p: 2.5, c: 16, f: 1.0, unit: "phulka", isVeg: true },
+        "phulkas": { cal: 85, p: 2.5, c: 16, f: 1.0, unit: "phulka", isVeg: true },
+        "paratha": { cal: 220, p: 4.5, c: 30, f: 9.0, unit: "paratha", isVeg: true },
+        "parathas": { cal: 220, p: 4.5, c: 30, f: 9.0, unit: "paratha", isVeg: true },
+        "naan": { cal: 260, p: 8.0, c: 45, f: 5.0, unit: "naan", isVeg: true },
         "dal": { cal: 140, p: 8.5, c: 20, f: 2.5, unit: "bowl", isVeg: true },
         "lentils": { cal: 140, p: 8.5, c: 20, f: 2.5, unit: "bowl", isVeg: true },
         "paneer": { cal: 265, p: 18, c: 4, f: 20, unit: "100g", isVeg: true },
+        "paneer bhurji": { cal: 280, p: 19, c: 6, f: 20, unit: "bowl", isVeg: true },
+        "sabzi": { cal: 120, p: 3.0, c: 14, f: 6.0, unit: "bowl", isVeg: true },
+        "sabji": { cal: 120, p: 3.0, c: 14, f: 6.0, unit: "bowl", isVeg: true },
+        "khichdi": { cal: 180, p: 6.0, c: 32, f: 3.5, unit: "bowl", isVeg: true },
+        "biryani": { cal: 320, p: 14, c: 38, f: 12, unit: "bowl", isVeg: false },
+        "pulao": { cal: 190, p: 4.0, c: 34, f: 4.0, unit: "bowl", isVeg: true },
+        "idli": { cal: 65, p: 2.0, c: 12, f: 0.2, unit: "idli", isVeg: true },
+        "idlis": { cal: 65, p: 2.0, c: 12, f: 0.2, unit: "idli", isVeg: true },
+        "dosa": { cal: 135, p: 3.5, c: 22, f: 3.7, unit: "dosa", isVeg: true },
+        "poha": { cal: 180, p: 3.5, c: 32, f: 4.5, unit: "bowl", isVeg: true },
+        "upma": { cal: 190, p: 4.0, c: 30, f: 5.5, unit: "bowl", isVeg: true },
         "milk": { cal: 125, p: 8, c: 12, f: 5, unit: "glass", isVeg: true },
         "oats": { cal: 150, p: 5, c: 27, f: 2.5, unit: "bowl", isVeg: true },
         "oatmeal": { cal: 150, p: 5, c: 27, f: 2.5, unit: "bowl", isVeg: true },
@@ -3844,10 +3889,22 @@ Could not reach Cloudflare AI agent (${err.message}). Please check your internet
 
     function parseAndExecuteDietAction(rawQuery) {
         const q = rawQuery.toLowerCase();
-        const isDietIntent = /(?:\bate\b|\beat\b|\bhad\b|\bdrank\b|\blog\s+food\b|\blog\s+diet\b|\badd\s+to\s+diet\b|\bfor\s+(?:breakfast|lunch|dinner|snack)\b|\bcalories\b|\bprotein\b)/i.test(q);
+
+        // Check if user has diet logging intent (handles phrases like "adding two rotis two my diet", "add 2 rotis", etc.)
+        const hasFoodAction = /\b(?:ate|eat|eating|had|have|having|drank|drink|drinking|log|logging|logged|add|adding|added|consume|consumed|consuming|track|record)\b/i.test(q);
+        const hasDietTarget = /\b(?:to|two|too|in|into)\s+(?:my\s+)?diet\b|\b(?:in|into|to|two)\s+(?:health\s+tracker|food\s+log|diet\s+tracker|tracker)\b/i.test(q);
+        const hasMealTime = /\bfor\s+(?:breakfast|lunch|dinner|snack|supper|brunch)\b/i.test(q);
+        const hasMacroWords = /\b(?:calories?|cals?|kcal|protein|carbs?|fats?)\b/i.test(q);
+        const foodKeys = Object.keys(OFFLINE_FOOD_DATABASE).sort((a, b) => b.length - a.length);
+        const mentionsAnyFood = foodKeys.some(f => new RegExp('\\b' + f + '\\b', 'i').test(q));
+        const hasQtyWord = /\b(?:one|two|three|four|five|six|seven|eight|nine|ten|couple|few|half|\d+)\b/i.test(q);
+
+        const isDietIntent = hasDietTarget || hasMealTime || hasMacroWords || (hasFoodAction && mentionsAnyFood) || (mentionsAnyFood && hasQtyWord);
         if (!isDietIntent) return null;
 
-        // Skip pure informational questions
+        // Skip pure informational questions unless an explicit food action was given
+        const isInfoQuestion = /^(?:what|how\s+many|how\s+much|why|can\s+i|should\s+i|is\s+there)\b/i.test(q) && !hasDietTarget && !hasFoodAction;
+        if (isInfoQuestion) return null;
         if (q.includes("what should i eat") || q.includes("which diet") || q.includes("how much protein do i need") || q.includes("how many calories left")) {
             return null;
         }
@@ -3871,12 +3928,13 @@ Could not reach Cloudflare AI agent (${err.message}). Please check your internet
                 isVeg: true
             });
         } else {
-            // Food dictionary lookup
-            const foodKeys = Object.keys(OFFLINE_FOOD_DATABASE).sort((a, b) => b.length - a.length);
+            // Food dictionary lookup with support for number words ('two', 'one', 'three', etc.)
+            const numWords = 'half\\s+a|half|one|two|three|four|five|six|seven|eight|nine|ten|couple|few|a|an|\\d+(?:\\.\\d+)?';
+            const units = 'g|gm|grams|pcs|pieces|bowls?|cups?|scoops?|slices?|servings?|plates?|glasses?';
             const matchedRanges = [];
 
             for (const f of foodKeys) {
-                const pat = new RegExp('(?:(\\d+(?:\\.\\d+)?)\\s*(?:g|gm|grams|pcs|pieces|bowls?|cups?|scoops?|slices?)?\\s+)?\\b' + f + '\\b', 'gi');
+                const pat = new RegExp('(?:(?:(' + numWords + ')\\s*(?:' + units + ')?\\s*(?:of\\s+)?)|(?:a\\s+))?\\b' + f + '\\b', 'gi');
                 let match;
                 while ((match = pat.exec(q)) !== null) {
                     const start = match.index;
@@ -3885,7 +3943,7 @@ Could not reach Cloudflare AI agent (${err.message}). Please check your internet
                         continue;
                     }
                     matchedRanges.push([start, end]);
-                    let rawQty = match[1] ? parseFloat(match[1]) : 1.0;
+                    let rawQty = parseWordQuantity(match[1]);
                     const info = OFFLINE_FOOD_DATABASE[f];
 
                     // If unit is 100g and user entered >= 10, scale by 100 (e.g. 200g chicken = 2.0 portions)
@@ -3893,13 +3951,23 @@ Could not reach Cloudflare AI agent (${err.message}). Please check your internet
                         rawQty = rawQty / 100.0;
                     }
 
+                    const calcCal = Math.round(info.cal * rawQty);
+                    const calcPro = Math.round(info.p * rawQty * 10) / 10;
+                    const calcCarb = Math.round(info.c * rawQty);
+                    const calcFat = Math.round(info.f * rawQty * 10) / 10;
+
+                    let displayName = f.charAt(0).toUpperCase() + f.slice(1);
+                    if (rawQty > 1 && !displayName.endsWith('s')) {
+                        displayName += 's';
+                    }
+
                     itemsToAdd.push({
-                        name: f.charAt(0).toUpperCase() + f.slice(1),
+                        name: displayName,
                         qty: rawQty,
-                        calories: Math.round(info.cal * rawQty),
-                        protein: Math.round(info.p * rawQty),
-                        carbs: Math.round(info.c * rawQty),
-                        fat: Math.round(info.f * rawQty),
+                        calories: calcCal,
+                        protein: calcPro,
+                        carbs: calcCarb,
+                        fat: calcFat,
                         isVeg: info.isVeg
                     });
                 }
@@ -3939,8 +4007,8 @@ Could not reach Cloudflare AI agent (${err.message}). Please check your internet
         } catch (e) {}
 
         const totCal = itemsToAdd.reduce((sum, i) => sum + i.calories, 0);
-        const totPro = itemsToAdd.reduce((sum, i) => sum + i.protein, 0);
-        const totCarb = itemsToAdd.reduce((sum, i) => sum + i.carbs, 0);
+        const totPro = Math.round(itemsToAdd.reduce((sum, i) => sum + i.protein, 0) * 10) / 10;
+        const totCarb = Math.round(itemsToAdd.reduce((sum, i) => sum + i.carbs, 0));
 
         let breakdownList = itemsToAdd.map(i => `• **${i.qty > 1 ? i.qty + 'x ' : ''}${i.name}**: +${i.calories} kcal · ${i.protein}g protein · ${i.carbs}g carbs`).join('\n');
 

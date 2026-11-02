@@ -30,7 +30,9 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
@@ -123,21 +125,26 @@ public class WebAppInterface {
                 if (mode == AppOpsManager.MODE_ALLOWED) return true;
             }
 
-            // Secondary check: query today's usage stats to see if system permits usage stats
+            // Secondary check: query rolling 24-hour usage stats to see if system permits access
             UsageStatsManager usm = (UsageStatsManager) context.getSystemService(Context.USAGE_STATS_SERVICE);
             if (usm != null) {
                 long now = System.currentTimeMillis();
-                Calendar cal = Calendar.getInstance();
-                cal.set(Calendar.HOUR_OF_DAY, 0);
-                cal.set(Calendar.MINUTE, 0);
-                cal.set(Calendar.SECOND, 0);
-                cal.set(Calendar.MILLISECOND, 0);
-                long startOfDay = cal.getTimeInMillis();
-                List<UsageStats> list = usm.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, startOfDay, now);
-                if (list != null && !list.isEmpty()) return true;
+                long rolling24h = Math.max(0L, now - 86400000L);
+                List<UsageStats> list = usm.queryUsageStats(UsageStatsManager.INTERVAL_BEST, rolling24h, now);
+                if (list != null && !list.isEmpty()) {
+                    for (UsageStats u : list) {
+                        if (u != null && u.getTotalTimeInForeground() > 0) return true;
+                    }
+                }
+                Map<String, UsageStats> agg = usm.queryAndAggregateUsageStats(rolling24h, now);
+                if (agg != null && !agg.isEmpty()) {
+                    for (UsageStats u : agg.values()) {
+                        if (u != null && u.getTotalTimeInForeground() > 0) return true;
+                    }
+                }
             }
             return false;
-        } catch (Exception e) {
+        } catch (Throwable e) {
             return false;
         }
     }
@@ -378,10 +385,6 @@ public class WebAppInterface {
     @JavascriptInterface
     public String getRealAppUsageStats() {
         try {
-            if (!hasUsageStatsPermission()) {
-                return "[]";
-            }
-
             UsageStatsManager usageStatsManager = (UsageStatsManager) context.getSystemService(Context.USAGE_STATS_SERVICE);
             if (usageStatsManager == null) return "[]";
 
@@ -413,7 +416,7 @@ public class WebAppInterface {
                 if (defaultLauncher != null && defaultLauncher.activityInfo != null) {
                     launcherPackages.add(defaultLauncher.activityInfo.packageName);
                 }
-            } catch (Exception ignored) {}
+            } catch (Throwable ignored) {}
 
             // 1. Direct aggregated query (official Android OS rollup from midnight to now)
             try {
@@ -429,9 +432,25 @@ public class WebAppInterface {
                         }
                     }
                 }
-            } catch (Exception ignored) {}
+            } catch (Throwable ignored) {}
 
-            // 2. Daily interval query (supplements any packages that may have been omitted by rollup)
+            // 2. Best interval query for today (INTERVAL_BEST)
+            try {
+                List<UsageStats> bestList = usageStatsManager.queryUsageStats(UsageStatsManager.INTERVAL_BEST, startOfDay, now);
+                if (bestList != null && !bestList.isEmpty()) {
+                    for (UsageStats u : bestList) {
+                        if (u != null && u.getTotalTimeInForeground() > 0) {
+                            String pkg = u.getPackageName();
+                            long existing = foregroundTimeMap.containsKey(pkg) ? foregroundTimeMap.get(pkg) : 0L;
+                            if (u.getTotalTimeInForeground() > existing) {
+                                foregroundTimeMap.put(pkg, u.getTotalTimeInForeground());
+                            }
+                        }
+                    }
+                }
+            } catch (Throwable ignored) {}
+
+            // 3. Daily interval query (supplements any packages that may have been omitted by rollup)
             try {
                 List<UsageStats> statsList = usageStatsManager.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, startOfDay, now);
                 if (statsList != null) {
@@ -445,9 +464,42 @@ public class WebAppInterface {
                         }
                     }
                 }
-            } catch (Exception ignored) {}
+            } catch (Throwable ignored) {}
 
-            // 3. Live active session tracking: add elapsed time for the app currently in foreground
+            // 4. Fallback: If midnight-to-now has 0 stats, query the rolling 24-hour window
+            if (foregroundTimeMap.isEmpty()) {
+                long rolling24h = Math.max(0L, now - 86400000L);
+                try {
+                    Map<String, UsageStats> agg24 = usageStatsManager.queryAndAggregateUsageStats(rolling24h, now);
+                    if (agg24 != null && !agg24.isEmpty()) {
+                        for (Map.Entry<String, UsageStats> entry : agg24.entrySet()) {
+                            UsageStats u = entry.getValue();
+                            if (u != null && u.getTotalTimeInForeground() > 0) {
+                                foregroundTimeMap.put(entry.getKey(), u.getTotalTimeInForeground());
+                            }
+                        }
+                    }
+                } catch (Throwable ignored) {}
+
+                if (foregroundTimeMap.isEmpty()) {
+                    try {
+                        List<UsageStats> list24 = usageStatsManager.queryUsageStats(UsageStatsManager.INTERVAL_BEST, rolling24h, now);
+                        if (list24 != null && !list24.isEmpty()) {
+                            for (UsageStats u : list24) {
+                                if (u != null && u.getTotalTimeInForeground() > 0) {
+                                    String pkg = u.getPackageName();
+                                    long existing = foregroundTimeMap.containsKey(pkg) ? foregroundTimeMap.get(pkg) : 0L;
+                                    if (u.getTotalTimeInForeground() > existing) {
+                                        foregroundTimeMap.put(pkg, u.getTotalTimeInForeground());
+                                    }
+                                }
+                            }
+                        }
+                    } catch (Throwable ignored) {}
+                }
+            }
+
+            // 5. Live active session tracking: add elapsed time for the app currently in foreground
             try {
                 long queryStart = Math.max(0L, startOfDay - (15 * 60 * 1000L));
                 UsageEvents events = usageStatsManager.queryEvents(queryStart, now);
@@ -488,7 +540,15 @@ public class WebAppInterface {
                         }
                     }
                 }
-            } catch (Exception ignored) {}
+            } catch (Throwable ignored) {}
+
+            if (foregroundTimeMap.isEmpty()) {
+                return "[]";
+            }
+
+            // Sort apps by total foreground usage descending
+            List<Map.Entry<String, Long>> sortedEntries = new ArrayList<>(foregroundTimeMap.entrySet());
+            Collections.sort(sortedEntries, (a, b) -> Long.compare(b.getValue(), a.getValue()));
 
             // Load saved daily app limits
             SharedPreferences prefs = context.getSharedPreferences(ShortsReelsBlockerService.PREFS_NAME, Context.MODE_PRIVATE);
@@ -496,8 +556,9 @@ public class WebAppInterface {
             JSONObject limitsObj = new JSONObject(limitsJsonStr);
 
             JSONArray jsonArray = new JSONArray();
+            int iconRank = 0;
 
-            for (Map.Entry<String, Long> entry : foregroundTimeMap.entrySet()) {
+            for (Map.Entry<String, Long> entry : sortedEntries) {
                 String pkgName = entry.getKey();
                 long totalForegroundMs = entry.getValue();
 
@@ -509,7 +570,8 @@ public class WebAppInterface {
                 if (pkgName.contains("inputmethod")) continue;
 
                 String appLabel = getFriendlyAppName(pm, pkgName);
-                String iconBase64 = getAppIconBase64(pm, pkgName);
+                String iconBase64 = (iconRank < 20) ? getAppIconBase64(pm, pkgName) : null;
+                iconRank++;
 
                 boolean isGame = isGameApp(pm, pkgName, appLabel);
                 boolean isCompulsory = isCompulsoryApp(pm, pkgName, appLabel, isGame);
@@ -563,7 +625,7 @@ public class WebAppInterface {
             }
 
             return jsonArray.toString();
-        } catch (Exception e) {
+        } catch (Throwable e) {
             e.printStackTrace();
             return "[]";
         }

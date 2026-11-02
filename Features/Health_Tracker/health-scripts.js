@@ -9222,7 +9222,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
     }, 30000);
 
+    // Auto-sync diet HUD & list on storage change or app focus
+    window.addEventListener('storage', () => {
+        if (typeof updateDietHUD === 'function') updateDietHUD();
+        if (typeof renderDailyDietLogList === 'function') renderDailyDietLogList();
+        calculateActiveMetrics();
+    });
 
+    window.addEventListener('focus', () => {
+        if (typeof updateDietHUD === 'function') updateDietHUD();
+        if (typeof renderDailyDietLogList === 'function') renderDailyDietLogList();
+        calculateActiveMetrics();
+    });
+
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) {
+            if (typeof updateDietHUD === 'function') updateDietHUD();
+            if (typeof renderDailyDietLogList === 'function') renderDailyDietLogList();
+            calculateActiveMetrics();
+        }
+    });
 
 });
 

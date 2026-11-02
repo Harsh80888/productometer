@@ -78,7 +78,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    window.syncFeatureCardLiveMetrics = syncFeatureCardLiveMetrics;
     syncFeatureCardLiveMetrics();
+
+    window.addEventListener('focus', syncFeatureCardLiveMetrics);
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) syncFeatureCardLiveMetrics();
+    });
+    window.addEventListener('storage', syncFeatureCardLiveMetrics);
 
     // --- 🚀 BULLETPROOF INWARD FEATURE NAVIGATION CONTROLLER ---
     document.querySelectorAll('.feature-launcher-card').forEach(card => {
