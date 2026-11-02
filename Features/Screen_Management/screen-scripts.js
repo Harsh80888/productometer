@@ -776,9 +776,23 @@ document.addEventListener('DOMContentLoaded', () => {
             if (compulsoryNotice) compulsoryNotice.style.display = 'flex';
             if (btnNoLimit) btnNoLimit.style.display = 'none'; // Compulsory: cannot disable limit
             if (selectedLimitMinutes <= 0) selectedLimitMinutes = 30;
+            if (selectedLimitMinutes > 60) selectedLimitMinutes = 60; // Compulsory max 60 min limit cap
+
+            // Hide preset chips > 60m for compulsory apps
+            document.querySelectorAll('.limit-preset-chip').forEach(chip => {
+                const mins = parseInt(chip.dataset.mins, 10);
+                if (mins > 60) {
+                    chip.style.display = 'none';
+                } else if (chip !== btnNoLimit) {
+                    chip.style.display = '';
+                }
+            });
         } else {
             if (compulsoryNotice) compulsoryNotice.style.display = 'none';
-            if (btnNoLimit) btnNoLimit.style.display = 'block';
+            if (btnNoLimit) btnNoLimit.style.display = '';
+            document.querySelectorAll('.limit-preset-chip').forEach(chip => {
+                chip.style.display = '';
+            });
         }
 
         // Highlight active preset chip
@@ -821,9 +835,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const appId = selectedAppForLimit.id;
             const appName = selectedAppForLimit.name;
 
-            // Compulsory protection
-            if (selectedAppForLimit.isCompulsory && selectedLimitMinutes <= 0) {
-                selectedLimitMinutes = 30;
+            // Compulsory protection: default 30, max 60, min > 0
+            if (selectedAppForLimit.isCompulsory) {
+                if (selectedLimitMinutes <= 0) {
+                    selectedLimitMinutes = 30;
+                } else if (selectedLimitMinutes > 60) {
+                    selectedLimitMinutes = 60;
+                }
             }
 
             // Save locally
@@ -1233,6 +1251,20 @@ document.addEventListener('DOMContentLoaded', () => {
         const container = document.getElementById('activeLimitsCardsContainer');
         if (!container) return;
 
+        // Update compact summary banner subtext
+        const summarySubtext = document.getElementById('limitsSummarySubtext');
+        if (summarySubtext) {
+            const activeCount = apps.filter(a => a.limitMinutes > 0).length;
+            const frozenCount = apps.filter(a => a.isFrozen).length;
+            if (frozenCount > 0) {
+                summarySubtext.textContent = ${activeCount} limits active • ❄️  frozen app;
+            } else if (activeCount > 0) {
+                summarySubtext.textContent = ${activeCount} app limit active • Tap to manage;
+            } else {
+                summarySubtext.textContent = 'Tap to configure & manage app limits';
+            }
+        }
+
         let filtered = [];
         if (currentLimitsTab === 'active') {
             filtered = apps.filter(a => (a.limitMinutes > 0));
@@ -1335,6 +1367,50 @@ document.addEventListener('DOMContentLoaded', () => {
             renderActiveLimitsSection(getRealScreenApps());
         });
     });
+
+
+    // --- ⏱️ APP LIMITS OVERVIEW MODAL POPUP ---
+    const bannerOpenLimits = document.getElementById('bannerOpenLimitsOverview');
+    const btnTriggerLimitsModal = document.getElementById('btnTriggerLimitsModal');
+    const limitsOverviewModal = document.getElementById('appLimitsOverviewModal');
+    const btnCloseLimitsOverview = document.getElementById('btnCloseLimitsOverviewModal');
+
+    function openLimitsOverviewModal() {
+        if (!limitsOverviewModal) return;
+        renderActiveLimitsSection(getRealScreenApps());
+        if (typeof limitsOverviewModal.showModal === 'function') {
+            limitsOverviewModal.showModal();
+        } else {
+            limitsOverviewModal.style.display = 'block';
+        }
+    }
+
+    function closeLimitsOverviewModal() {
+        if (!limitsOverviewModal) return;
+        if (typeof limitsOverviewModal.close === 'function') {
+            limitsOverviewModal.close();
+        } else {
+            limitsOverviewModal.style.display = 'none';
+        }
+    }
+
+    if (bannerOpenLimits) {
+        bannerOpenLimits.addEventListener('click', openLimitsOverviewModal);
+    }
+    if (btnTriggerLimitsModal) {
+        btnTriggerLimitsModal.addEventListener('click', (e) => {
+            e.stopPropagation();
+            openLimitsOverviewModal();
+        });
+    }
+    if (btnCloseLimitsOverview) {
+        btnCloseLimitsOverview.addEventListener('click', closeLimitsOverviewModal);
+    }
+    if (limitsOverviewModal) {
+        limitsOverviewModal.addEventListener('click', (e) => {
+            if (e.target === limitsOverviewModal) closeLimitsOverviewModal();
+        });
+    }
 
     // App Picker Modal Setup
     const btnOpenPicker = document.getElementById('btnOpenAddLimitModal');

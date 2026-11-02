@@ -200,6 +200,7 @@ const NativeBridge = {
 
     setDistractionBlockerMasterEnabled: (enabled) => {
         try {
+            localStorage.setItem('productometer_distraction_blocker_master_enabled', enabled ? 'true' : 'false');
             if (typeof window.AndroidBridge !== 'undefined' && window.AndroidBridge.setDistractionBlockerMasterEnabled) {
                 window.AndroidBridge.setDistractionBlockerMasterEnabled(enabled);
             }
@@ -212,7 +213,53 @@ const NativeBridge = {
                 return window.AndroidBridge.isDistractionBlockerMasterEnabled();
             }
         } catch (e) {}
-        return false;
+        const val = localStorage.getItem('productometer_distraction_blocker_master_enabled');
+        return val === null ? true : (val === 'true');
+    },
+
+    // --- 🌙 BEDTIME & CIRCADIAN GUARDIAN METHODS ---
+    setBedtimeSchedule: (enabled, startStr, endStr) => {
+        try {
+            localStorage.setItem('productometer_bedtime_enabled', enabled ? 'true' : 'false');
+            if (startStr) localStorage.setItem('productometer_bedtime_start', startStr);
+            if (endStr) localStorage.setItem('productometer_bedtime_end', endStr);
+            if (typeof window.AndroidBridge !== 'undefined' && window.AndroidBridge.setBedtimeSchedule) {
+                window.AndroidBridge.setBedtimeSchedule(enabled, startStr, endStr);
+            }
+        } catch (e) {}
+    },
+
+    getBedtimeSchedule: () => {
+        try {
+            if (typeof window.AndroidBridge !== 'undefined' && window.AndroidBridge.getBedtimeSchedule) {
+                const res = window.AndroidBridge.getBedtimeSchedule();
+                if (res) return JSON.parse(res);
+            }
+        } catch (e) {}
+        return {
+            enabled: localStorage.getItem('productometer_bedtime_enabled') !== 'false',
+            start: localStorage.getItem('productometer_bedtime_start') || '22:30',
+            end: localStorage.getItem('productometer_bedtime_end') || '06:30'
+        };
+    },
+
+    getBedtimeDistractionMinutes: () => {
+        try {
+            if (typeof window.AndroidBridge !== 'undefined' && window.AndroidBridge.getBedtimeDistractionMinutes) {
+                return window.AndroidBridge.getBedtimeDistractionMinutes();
+            }
+        } catch (e) {}
+        return parseInt(localStorage.getItem('bedtime_distraction_mins_mock') || '0', 10);
+    },
+
+    grantBedtimeEmergencyPass: (minutes) => {
+        try {
+            const until = Date.now() + (minutes * 60000);
+            localStorage.setItem('bedtime_emergency_pass_until', until.toString());
+            if (typeof window.AndroidBridge !== 'undefined' && window.AndroidBridge.grantBedtimeEmergencyPass) {
+                window.AndroidBridge.grantBedtimeEmergencyPass(minutes);
+            }
+        } catch (e) {}
     },
 
     isFocusSessionOngoing: () => {

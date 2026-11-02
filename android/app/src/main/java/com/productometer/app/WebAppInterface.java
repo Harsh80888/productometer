@@ -535,10 +535,10 @@ public class WebAppInterface {
                 String pkgName = entry.getKey();
                 long totalForegroundMs = entry.getValue();
 
-                // Skip system internal daemons, default launcher, and productometer itself
+                // Skip system internal daemons, launchers, and keyboards
+                // (Note: Productometer itself IS counted so total screentime matches device wellbeing)
                 if (totalForegroundMs < 1000L) continue;
                 if (pkgName.equals("com.android.systemui") || pkgName.equals("android")) continue;
-                if (pkgName.equals(context.getPackageName())) continue;
                 if (launcherPackages.contains(pkgName)) continue;
                 if (pkgName.contains("inputmethod")) continue;
 
@@ -548,12 +548,17 @@ public class WebAppInterface {
                 boolean isGame = isGameApp(pm, pkgName, appLabel);
                 boolean isCompulsory = isCompulsoryApp(pm, pkgName, appLabel, isGame);
 
-                // Determine limit: compulsory apps default to 30 minutes if unconfigured
+                // Determine limit: compulsory apps (FB, IG, Games) strictly enforce 30m default, max 60m
                 int limitMinutes = 0;
                 if (limitsObj.has(pkgName)) {
                     limitMinutes = limitsObj.optInt(pkgName, 0);
-                } else if (isCompulsory) {
-                    limitMinutes = 30; // Default 30 min for compulsory apps (FB, IG, Games)
+                }
+                if (isCompulsory) {
+                    if (limitMinutes <= 0) {
+                        limitMinutes = 30; // Default 30 min mandatory limit
+                    } else if (limitMinutes > 60) {
+                        limitMinutes = 60; // Max 60m daily limit cap for compulsory apps
+                    }
                 }
 
                 int usedMinutes = Math.round(totalForegroundMs / 60000f);
@@ -634,9 +639,13 @@ public class WebAppInterface {
                 return false;
             }
 
-            // Compulsory apps cannot have 0 limit (no limit)
-            if (isCompulsory && limitMinutes <= 0) {
-                limitMinutes = 30;
+            // Compulsory apps cannot have 0 limit (no limit) and max 60 min limit
+            if (isCompulsory) {
+                if (limitMinutes <= 0) {
+                    limitMinutes = 30;
+                } else if (limitMinutes > 60) {
+                    limitMinutes = 60;
+                }
             }
 
             if (limitMinutes > 0) {
@@ -906,6 +915,30 @@ public class WebAppInterface {
         } catch (Exception e) {
             return "{\"enabled\":true,\"start\":\"22:30\",\"end\":\"06:30\"}";
         }
+    }
+
+    /**
+     * Gets total minutes accumulated on distracting apps tonight during bedtime.
+     */
+    @JavascriptInterface
+    public int getBedtimeDistractionMinutes() {
+        try {
+            SharedPreferences prefs = context.getSharedPreferences(ShortsReelsBlockerService.PREFS_NAME, Context.MODE_PRIVATE);
+            Calendar c = Calendar.getInstance();
+            String todayKey = c.get(Calendar.YEAR) + "-" + c.get(Calendar.DAY_OF_YEAR);
+            long ms = prefs.getLong("night_distraction_ms_" + todayKey, 0L);
+            return (int) (ms / 60000L);
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
+    /**
+     * Grants a 2-minute emergency pass during bedtime.
+     */
+    @JavascriptInterface
+    public void grantBedtimeEmergencyPass(int minutes) {
+        ShortsReelsBlockerService.bedtimeEmergencyPassUntilTimestamp = System.currentTimeMillis() + (minutes * 60000L);
     }
 
     /**

@@ -58,6 +58,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (document.getElementById('metric-health')) {
             document.getElementById('metric-health').textContent = "Ready";
         }
+        if (document.getElementById('metric-sleep')) {
+            const wakeTime = localStorage.getItem('productometer_bedtime_end') || '06:30';
+            const targetMins = parseInt(localStorage.getItem('productometer_target_sleep_minutes') || '480', 10);
+            const th = Math.floor(targetMins / 60);
+            const tm = targetMins % 60;
+            const targetStr = tm > 0 ? `${th}h ${tm}m` : `${th}h`;
+            document.getElementById('metric-sleep').textContent = `Alarm ${wakeTime} • ${targetStr}`;
+        }
     }
 
     syncFeatureCardLiveMetrics();
@@ -96,6 +104,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (folderIdentifier === "Screen_Management" || folderIdentifier === "Screen Management") {
                 window.location.href = "./Screen_Management/index.html";
+                return;
+            }
+
+            if (folderIdentifier === "Sleep_Monitoring" || folderIdentifier === "Sleep Monitoring") {
+                window.location.href = "./Sleep_Monitoring/index.html";
                 return;
             }
 

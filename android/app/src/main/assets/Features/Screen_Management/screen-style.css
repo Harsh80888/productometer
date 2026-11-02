@@ -1090,6 +1090,142 @@
     min-width: 0;
 }
 
+
+/* --- ⏱️ COMPACT APP LIMITS SUMMARY BANNER --- */
+.limits-summary-banner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 18px;
+    border: 1.5px solid rgba(0, 229, 255, 0.35);
+    background: linear-gradient(135deg, rgba(16, 24, 40, 0.95) 0%, rgba(5, 7, 13, 0.98) 100%);
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.limits-summary-banner:hover {
+    border-color: rgba(0, 229, 255, 0.6);
+    box-shadow: 0 0 20px rgba(0, 229, 255, 0.2);
+    transform: translateY(-1px);
+}
+
+.limits-summary-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+
+.limits-summary-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: rgba(0, 229, 255, 0.12);
+    border: 1px solid rgba(0, 229, 255, 0.3);
+    color: #00e5ff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.limits-summary-title {
+    font-size: 0.92rem;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1.25;
+}
+
+.limits-summary-subtext {
+    font-size: 0.74rem;
+    color: #94a3b8;
+    margin-top: 2px;
+}
+
+.btn-manage-limits-pill {
+    background: linear-gradient(135deg, #00e5ff, #00e676);
+    color: #030305;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 800;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 0 12px rgba(0, 229, 255, 0.25);
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+}
+
+.btn-manage-limits-pill:hover {
+    box-shadow: 0 0 18px rgba(0, 229, 255, 0.45);
+    transform: scale(1.03);
+}
+
+/* --- ⏱️ APP LIMITS OVERVIEW MODAL DIALOG --- */
+.limits-overview-dialog {
+    border: none;
+    background: transparent;
+    padding: 0;
+    max-width: 520px;
+    width: 94%;
+    margin: auto;
+}
+
+.limits-overview-dialog::backdrop {
+    background: rgba(3, 3, 5, 0.88);
+    backdrop-filter: blur(10px);
+}
+
+.limits-overview-card {
+    background: #0b0f19;
+    border: 1.5px solid rgba(0, 229, 255, 0.45);
+    border-radius: 22px;
+    padding: 20px;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.95), 0 0 35px rgba(0, 229, 255, 0.25);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    max-height: 85vh;
+}
+
+.limits-overview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+
+.btn-close-limits-modal {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #94a3b8;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-close-limits-modal:hover {
+    color: #fff;
+    background: rgba(255, 61, 113, 0.2);
+    border-color: #ff3d71;
+}
+
+.limits-overview-actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
 /* --- ⏱️ DEDICATED APP LIMITS SECTION --- */
 .limits-manager-card {
     border: 1.5px solid rgba(0, 229, 255, 0.35);

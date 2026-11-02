@@ -111,6 +111,9 @@ public class ShortsReelsBlockerService extends AccessibilityService {
 
     // 30-Second Emergency Pass Timestamp
     public static long emergencyPassUntilTimestamp = 0L;
+    // 2-Minute Bedtime Emergency Pass Timestamp
+    public static long bedtimeEmergencyPassUntilTimestamp = 0L;
+    private long lastBedtimeTrackTimestamp = 0L;
     private String activeCasualVideoSignature = "";
     private long casualVideoStartTimestamp = 0L;
     private Runnable casualVideoWarningRunnable = null;
@@ -131,6 +134,34 @@ public class ShortsReelsBlockerService extends AccessibilityService {
     private View overlayView;
     private CountDownTimer countdownTimer;
     private Handler mainHandler;
+
+    public static boolean isBedtimeActiveNow(Context context) {
+        try {
+            SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+            boolean enabled = prefs.getBoolean("productometer_bedtime_enabled", true);
+            if (!enabled) return false;
+
+            String startStr = prefs.getString("productometer_bedtime_start", "22:30");
+            String endStr = prefs.getString("productometer_bedtime_end", "06:30");
+
+            Calendar now = Calendar.getInstance();
+            int curMinutes = now.get(Calendar.HOUR_OF_DAY) * 60 + now.get(Calendar.MINUTE);
+
+            String[] sParts = startStr.split(":");
+            int sMinutes = Integer.parseInt(sParts[0].trim()) * 60 + Integer.parseInt(sParts[1].trim());
+
+            String[] eParts = endStr.split(":");
+            int eMinutes = Integer.parseInt(eParts[0].trim()) * 60 + Integer.parseInt(eParts[1].trim());
+
+            if (sMinutes <= eMinutes) {
+                return curMinutes >= sMinutes && curMinutes < eMinutes;
+            } else {
+                return curMinutes >= sMinutes || curMinutes < eMinutes;
+            }
+        } catch (Exception e) {
+            return false;
+        }
+    }
 
     @Override
     public void onCreate() {
@@ -178,8 +209,13 @@ public class ShortsReelsBlockerService extends AccessibilityService {
             int limitMinutes = 0;
             if (limitsObj.has(packageName)) {
                 limitMinutes = limitsObj.optInt(packageName, 0);
-            } else if (isCompulsory) {
-                limitMinutes = 30; // Compulsory default daily limit (30m)
+            }
+            if (isCompulsory) {
+                if (limitMinutes <= 0) {
+                    limitMinutes = 30; // Compulsory default daily limit (30m)
+                } else if (limitMinutes > 60) {
+                    limitMinutes = 60; // Max 60m daily limit cap for compulsory apps
+                }
             }
 
             if (limitMinutes > 0) {
@@ -201,6 +237,54 @@ public class ShortsReelsBlockerService extends AccessibilityService {
                     int graceRemaining = (limitMinutes + 10) - usedMinutes;
                     handleGracePeriodWarning(packageName, appLabel, graceRemaining);
                 }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        // --- 1.25 BEDTIME SLEEP GUARDIAN & 15-MINUTE DISTRACTIVE SCREEN CAP ---
+        try {
+            if (isBedtimeActiveNow(this)) {
+                SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+                boolean masterEnabled = isMasterBlockerEnabled || prefs.getBoolean(KEY_MASTER_ENABLED, false);
+
+                // User requirement: "Also if the user uses the phone while keeping the distraction blocker on, then allow him"
+                // If distraction blocker is ON, user is ALLOWED to use phone! Blocker guards shorts/reels as normal.
+                if (!masterEnabled) {
+                    boolean isDistracting = DISTRACTING_APPS.contains(packageName) || PKG_YOUTUBE.equals(packageName);
+                    if (!isDistracting) {
+                        PackageManager pm = getPackageManager();
+                        String label = getFriendlyName(packageName);
+                        isDistracting = WebAppInterface.isGameApp(pm, packageName, label);
+                    }
+
+                    if (isDistracting) {
+                        long now = System.currentTimeMillis();
+                        Calendar c = Calendar.getInstance();
+                        String todayKey = c.get(Calendar.YEAR) + "-" + c.get(Calendar.DAY_OF_YEAR);
+                        long currentNightDistractionMs = prefs.getLong("night_distraction_ms_" + todayKey, 0L);
+
+                        if (lastBedtimeTrackTimestamp > 0 && (now - lastBedtimeTrackTimestamp) < 15000L) {
+                            currentNightDistractionMs += (now - lastBedtimeTrackTimestamp);
+                            prefs.edit().putLong("night_distraction_ms_" + todayKey, currentNightDistractionMs).apply();
+                        }
+                        lastBedtimeTrackTimestamp = now;
+
+                        // 15 Minutes = 15 * 60 * 1000 = 900,000 ms
+                        if (currentNightDistractionMs >= 900000L) {
+                            if (now > bedtimeEmergencyPassUntilTimestamp) {
+                                if (!isOverlayActive) {
+                                    final int usedMins = (int) (currentNightDistractionMs / 60000L);
+                                    final String fLabel = getFriendlyName(packageName);
+                                    mainHandler.post(() -> showBedtimeDialog(packageName, fLabel, usedMins));
+                                }
+                                return;
+                            }
+                        }
+                    }
+                }
+            } else {
+                lastBedtimeTrackTimestamp = 0L;
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -469,31 +553,48 @@ public class ShortsReelsBlockerService extends AccessibilityService {
 
         WindowManager.LayoutParams params = new WindowManager.LayoutParams(
                 WindowManager.LayoutParams.MATCH_PARENT,
-                WindowManager.LayoutParams.WRAP_CONTENT,
+                WindowManager.LayoutParams.MATCH_PARENT,
                 windowType,
-                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL | WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
+                WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
                 PixelFormat.TRANSLUCENT
         );
         params.gravity = Gravity.CENTER;
 
+        // Fullscreen backdrop consuming all touch events
         LinearLayout rootLayout = new LinearLayout(this);
         rootLayout.setOrientation(LinearLayout.VERTICAL);
         rootLayout.setGravity(Gravity.CENTER);
+        rootLayout.setBackgroundColor(Color.parseColor("#E605070E"));
+        rootLayout.setClickable(true);
+        rootLayout.setFocusable(true);
+        rootLayout.setOnTouchListener((v, e) -> true);
+
+        // Centered modal card
+        LinearLayout cardLayout = new LinearLayout(this);
+        cardLayout.setOrientation(LinearLayout.VERTICAL);
+        cardLayout.setGravity(Gravity.CENTER);
         int pad = dpToPx(24);
-        rootLayout.setPadding(pad, pad, pad, pad);
+        cardLayout.setPadding(pad, pad, pad, pad);
 
         GradientDrawable bgShape = new GradientDrawable();
         bgShape.setColor(Color.parseColor("#EE0B0D17"));
         bgShape.setCornerRadius(dpToPx(22));
         bgShape.setStroke(dpToPx(2), Color.parseColor("#FF1744"));
-        rootLayout.setBackground(bgShape);
+        cardLayout.setBackground(bgShape);
+
+        LinearLayout.LayoutParams cardParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        cardParams.setMargins(dpToPx(24), dpToPx(24), dpToPx(24), dpToPx(24));
+        rootLayout.addView(cardLayout, cardParams);
 
         // Shield / Ban Icon
         TextView iconView = new TextView(this);
         iconView.setText("🚫");
         iconView.setTextSize(36);
         iconView.setGravity(Gravity.CENTER);
-        rootLayout.addView(iconView);
+        cardLayout.addView(iconView);
 
         // Title: Access Intercepted
         TextView titleView = new TextView(this);
@@ -503,7 +604,7 @@ public class ShortsReelsBlockerService extends AccessibilityService {
         titleView.setTextColor(Color.WHITE);
         titleView.setGravity(Gravity.CENTER);
         titleView.setPadding(0, dpToPx(8), 0, 0);
-        rootLayout.addView(titleView);
+        cardLayout.addView(titleView);
 
         // Reason box
         TextView reasonView = new TextView(this);
@@ -512,7 +613,7 @@ public class ShortsReelsBlockerService extends AccessibilityService {
         reasonView.setTextColor(Color.parseColor("#94A3B8"));
         reasonView.setGravity(Gravity.CENTER);
         reasonView.setPadding(dpToPx(12), dpToPx(10), dpToPx(12), dpToPx(18));
-        rootLayout.addView(reasonView);
+        cardLayout.addView(reasonView);
 
         // Primary Action: Return to Focus
         Button returnBtn = new Button(this);
@@ -530,7 +631,7 @@ public class ShortsReelsBlockerService extends AccessibilityService {
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 dpToPx(48)
         );
-        rootLayout.addView(returnBtn, btnParams);
+        cardLayout.addView(returnBtn, btnParams);
 
         // Override Action: Emergency Pass (30 Seconds)
         Button emergencyBtn = new Button(this);
@@ -550,7 +651,7 @@ public class ShortsReelsBlockerService extends AccessibilityService {
                 dpToPx(44)
         );
         emParams.setMargins(0, dpToPx(10), 0, 0);
-        rootLayout.addView(emergencyBtn, emParams);
+        cardLayout.addView(emergencyBtn, emParams);
 
         returnBtn.setOnClickListener(v -> performBackActionOnce());
 
@@ -608,32 +709,49 @@ public class ShortsReelsBlockerService extends AccessibilityService {
 
         WindowManager.LayoutParams params = new WindowManager.LayoutParams(
                 WindowManager.LayoutParams.MATCH_PARENT,
-                WindowManager.LayoutParams.WRAP_CONTENT,
+                WindowManager.LayoutParams.MATCH_PARENT,
                 windowType,
-                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL | WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
+                WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
                 PixelFormat.TRANSLUCENT
         );
         params.gravity = Gravity.CENTER;
 
+        // Fullscreen backdrop consuming all touch events
         LinearLayout rootLayout = new LinearLayout(this);
         rootLayout.setOrientation(LinearLayout.VERTICAL);
         rootLayout.setGravity(Gravity.CENTER);
+        rootLayout.setBackgroundColor(Color.parseColor("#F5050A14"));
+        rootLayout.setClickable(true);
+        rootLayout.setFocusable(true);
+        rootLayout.setOnTouchListener((v, e) -> true);
+
+        // Centered frost card
+        LinearLayout cardLayout = new LinearLayout(this);
+        cardLayout.setOrientation(LinearLayout.VERTICAL);
+        cardLayout.setGravity(Gravity.CENTER);
         int pad = dpToPx(24);
-        rootLayout.setPadding(pad, pad, pad, pad);
+        cardLayout.setPadding(pad, pad, pad, pad);
 
         // Cyberpunk Ice-Frost Theme
         GradientDrawable bgShape = new GradientDrawable();
         bgShape.setColor(Color.parseColor("#EE060D1A"));
         bgShape.setCornerRadius(dpToPx(22));
         bgShape.setStroke(dpToPx(2), Color.parseColor("#00E5FF"));
-        rootLayout.setBackground(bgShape);
+        cardLayout.setBackground(bgShape);
+
+        LinearLayout.LayoutParams cardParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        cardParams.setMargins(dpToPx(24), dpToPx(24), dpToPx(24), dpToPx(24));
+        rootLayout.addView(cardLayout, cardParams);
 
         // Frost Snowflake Icon
         TextView iconView = new TextView(this);
         iconView.setText("❄️");
         iconView.setTextSize(40);
         iconView.setGravity(Gravity.CENTER);
-        rootLayout.addView(iconView);
+        cardLayout.addView(iconView);
 
         // Title: App Frozen
         TextView titleView = new TextView(this);
@@ -643,18 +761,18 @@ public class ShortsReelsBlockerService extends AccessibilityService {
         titleView.setTextColor(Color.parseColor("#E0F2FE"));
         titleView.setGravity(Gravity.CENTER);
         titleView.setPadding(0, dpToPx(8), 0, 0);
-        rootLayout.addView(titleView);
+        cardLayout.addView(titleView);
 
         // Details
         TextView reasonView = new TextView(this);
-        reasonView.setText(appLabel + " has exceeded its " + limitMinutes + "m daily limit (10m grace period expired).\n\n🔒 Daily limits cannot be changed or increased while frozen.");
+        reasonView.setText(appLabel + " has reached its daily limit of " + limitMinutes + "m (" + usedMinutes + "m used today).\n\n🔒 This app is frozen for the remainder of today. Limits cannot be adjusted while an app is frozen.");
         reasonView.setTextSize(13);
         reasonView.setTextColor(Color.parseColor("#94A3B8"));
         reasonView.setGravity(Gravity.CENTER);
         reasonView.setPadding(dpToPx(12), dpToPx(10), dpToPx(12), dpToPx(20));
-        rootLayout.addView(reasonView);
+        cardLayout.addView(reasonView);
 
-        // Action: Return to Home
+        // Action 1: Return to Home
         Button returnBtn = new Button(this);
         returnBtn.setText("⬅️ Return to Home");
         returnBtn.setTextSize(14);
@@ -670,7 +788,27 @@ public class ShortsReelsBlockerService extends AccessibilityService {
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 dpToPx(48)
         );
-        rootLayout.addView(returnBtn, btnParams);
+        cardLayout.addView(returnBtn, btnParams);
+
+        // Action 2: Open Productometer
+        Button openAppBtn = new Button(this);
+        openAppBtn.setText("📱 Open Productometer");
+        openAppBtn.setTextSize(14);
+        openAppBtn.setTypeface(Typeface.DEFAULT_BOLD);
+        openAppBtn.setTextColor(Color.WHITE);
+
+        GradientDrawable openBg = new GradientDrawable();
+        openBg.setColor(Color.parseColor("#151D2A"));
+        openBg.setStroke(dpToPx(1), Color.parseColor("#334155"));
+        openBg.setCornerRadius(dpToPx(12));
+        openAppBtn.setBackground(openBg);
+
+        LinearLayout.LayoutParams openParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                dpToPx(44)
+        );
+        openParams.setMargins(0, dpToPx(10), 0, 0);
+        cardLayout.addView(openAppBtn, openParams);
 
         returnBtn.setOnClickListener(v -> {
             dismissOverlay();
@@ -678,8 +816,170 @@ public class ShortsReelsBlockerService extends AccessibilityService {
             performGlobalAction(AccessibilityService.GLOBAL_ACTION_HOME);
         });
 
+        openAppBtn.setOnClickListener(v -> {
+            dismissOverlay();
+            try {
+                Intent launchIntent = getPackageManager().getLaunchIntentForPackage(getPackageName());
+                if (launchIntent != null) {
+                    launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                    startActivity(launchIntent);
+                }
+            } catch (Exception ignored) {}
+        });
+
         overlayView = rootLayout;
 
+        try {
+            windowManager.addView(overlayView, params);
+        } catch (Exception e) {
+            e.printStackTrace();
+            isOverlayActive = false;
+            performBackActionOnce();
+            performGlobalAction(AccessibilityService.GLOBAL_ACTION_HOME);
+        }
+    }
+
+    @SuppressLint("SetTextI18n")
+    private void showBedtimeDialog(String pkgName, String appLabel, int distractionMinutes) {
+        if (isOverlayActive) return;
+        isOverlayActive = true;
+
+        int windowType;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
+            windowType = WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY;
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            windowType = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
+        } else {
+            windowType = WindowManager.LayoutParams.TYPE_PHONE;
+        }
+
+        WindowManager.LayoutParams params = new WindowManager.LayoutParams(
+                WindowManager.LayoutParams.MATCH_PARENT,
+                WindowManager.LayoutParams.MATCH_PARENT,
+                windowType,
+                WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
+                PixelFormat.TRANSLUCENT
+        );
+        params.gravity = Gravity.CENTER;
+
+        // Fullscreen dark celestial indigo backdrop consuming all touches
+        LinearLayout rootLayout = new LinearLayout(this);
+        rootLayout.setOrientation(LinearLayout.VERTICAL);
+        rootLayout.setGravity(Gravity.CENTER);
+        rootLayout.setBackgroundColor(Color.parseColor("#F5060A1A"));
+        rootLayout.setClickable(true);
+        rootLayout.setFocusable(true);
+        rootLayout.setOnTouchListener((v, e) -> true);
+
+        // Centered Night Card
+        LinearLayout cardLayout = new LinearLayout(this);
+        cardLayout.setOrientation(LinearLayout.VERTICAL);
+        cardLayout.setGravity(Gravity.CENTER);
+        int pad = dpToPx(24);
+        cardLayout.setPadding(pad, pad, pad, pad);
+
+        GradientDrawable bgShape = new GradientDrawable();
+        bgShape.setColor(Color.parseColor("#EE0B1226"));
+        bgShape.setCornerRadius(dpToPx(24));
+        bgShape.setStroke(dpToPx(2), Color.parseColor("#7C3AED")); // Purple accent
+        cardLayout.setBackground(bgShape);
+
+        LinearLayout.LayoutParams cardParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        cardParams.setMargins(dpToPx(24), dpToPx(24), dpToPx(24), dpToPx(24));
+        rootLayout.addView(cardLayout, cardParams);
+
+        // Glowing Moon Icon
+        TextView iconView = new TextView(this);
+        iconView.setText("🌙");
+        iconView.setTextSize(42);
+        iconView.setGravity(Gravity.CENTER);
+        cardLayout.addView(iconView);
+
+        // Title
+        TextView titleView = new TextView(this);
+        titleView.setText("Bedtime Wind-Down Alert");
+        titleView.setTextSize(18);
+        titleView.setTypeface(Typeface.DEFAULT_BOLD);
+        titleView.setTextColor(Color.parseColor("#E0E7FF"));
+        titleView.setGravity(Gravity.CENTER);
+        titleView.setPadding(0, dpToPx(8), 0, 0);
+        cardLayout.addView(titleView);
+
+        // Description
+        TextView reasonView = new TextView(this);
+        reasonView.setText("You have used 15+ minutes on distracting apps during your bedtime window (" + Math.max(15, distractionMinutes) + "m total).\n\n💡 You can freely use your phone for productive tasks or reading if the Distraction Blocker is turned ON.");
+        reasonView.setTextSize(13);
+        reasonView.setTextColor(Color.parseColor("#94A3B8"));
+        reasonView.setGravity(Gravity.CENTER);
+        reasonView.setPadding(dpToPx(10), dpToPx(10), dpToPx(10), dpToPx(16));
+        cardLayout.addView(reasonView);
+
+        // Action 1: Turn ON Distraction Blocker & Continue
+        Button enableBlockerBtn = new Button(this);
+        enableBlockerBtn.setText("🛡️ Turn ON Distraction Blocker & Continue");
+        enableBlockerBtn.setTextSize(13);
+        enableBlockerBtn.setTypeface(Typeface.DEFAULT_BOLD);
+        enableBlockerBtn.setTextColor(Color.BLACK);
+        GradientDrawable blockerBg = new GradientDrawable();
+        blockerBg.setColor(Color.parseColor("#00E5FF"));
+        blockerBg.setCornerRadius(dpToPx(12));
+        enableBlockerBtn.setBackground(blockerBg);
+        LinearLayout.LayoutParams bParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dpToPx(48));
+        cardLayout.addView(enableBlockerBtn, bParams);
+
+        enableBlockerBtn.setOnClickListener(v -> {
+            dismissOverlay();
+            isMasterBlockerEnabled = true;
+            SharedPreferences p = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+            p.edit().putBoolean(KEY_MASTER_ENABLED, true).apply();
+            performBackActionOnce();
+            Toast.makeText(getApplicationContext(), "🛡️ Distraction Blocker ON: Productive phone use is now allowed!", Toast.LENGTH_LONG).show();
+        });
+
+        // Action 2: 2-Minute Emergency Pass
+        Button emergencyBtn = new Button(this);
+        emergencyBtn.setText("⏱️ 2-Minute Emergency Pass");
+        emergencyBtn.setTextSize(12);
+        emergencyBtn.setTypeface(Typeface.DEFAULT_BOLD);
+        emergencyBtn.setTextColor(Color.parseColor("#CBD5E1"));
+        GradientDrawable emBg = new GradientDrawable();
+        emBg.setColor(Color.parseColor("#1E1B4B"));
+        emBg.setStroke(dpToPx(1), Color.parseColor("#4338CA"));
+        emBg.setCornerRadius(dpToPx(12));
+        emergencyBtn.setBackground(emBg);
+        LinearLayout.LayoutParams emParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dpToPx(44));
+        emParams.setMargins(0, dpToPx(10), 0, 0);
+        cardLayout.addView(emergencyBtn, emParams);
+
+        emergencyBtn.setOnClickListener(v -> {
+            dismissOverlay();
+            bedtimeEmergencyPassUntilTimestamp = System.currentTimeMillis() + 120000L; // 2 minutes
+            Toast.makeText(getApplicationContext(), "⏱️ Bedtime Emergency Pass: 2 minutes granted", Toast.LENGTH_SHORT).show();
+        });
+
+        // Action 3: Go to Sleep (Exit to Home)
+        Button sleepBtn = new Button(this);
+        sleepBtn.setText("😴 Go to Sleep (Exit to Home)");
+        sleepBtn.setTextSize(12);
+        sleepBtn.setTextColor(Color.parseColor("#94A3B8"));
+        GradientDrawable sleepBg = new GradientDrawable();
+        sleepBg.setColor(Color.parseColor("#0F172A"));
+        sleepBg.setCornerRadius(dpToPx(12));
+        sleepBtn.setBackground(sleepBg);
+        LinearLayout.LayoutParams sParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dpToPx(42));
+        sParams.setMargins(0, dpToPx(8), 0, 0);
+        cardLayout.addView(sleepBtn, sParams);
+
+        sleepBtn.setOnClickListener(v -> {
+            dismissOverlay();
+            performBackActionOnce();
+            performGlobalAction(AccessibilityService.GLOBAL_ACTION_HOME);
+        });
+
+        overlayView = rootLayout;
         try {
             windowManager.addView(overlayView, params);
         } catch (Exception e) {
@@ -706,24 +1006,41 @@ public class ShortsReelsBlockerService extends AccessibilityService {
 
         WindowManager.LayoutParams params = new WindowManager.LayoutParams(
                 WindowManager.LayoutParams.MATCH_PARENT,
-                WindowManager.LayoutParams.WRAP_CONTENT,
+                WindowManager.LayoutParams.MATCH_PARENT,
                 windowType,
-                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL | WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
+                WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
                 PixelFormat.TRANSLUCENT
         );
         params.gravity = Gravity.CENTER;
 
+        // Fullscreen backdrop consuming all touch events
         LinearLayout rootLayout = new LinearLayout(this);
         rootLayout.setOrientation(LinearLayout.VERTICAL);
         rootLayout.setGravity(Gravity.CENTER);
+        rootLayout.setBackgroundColor(Color.parseColor("#E605070E"));
+        rootLayout.setClickable(true);
+        rootLayout.setFocusable(true);
+        rootLayout.setOnTouchListener((v, e) -> true);
+
+        // Centered warning card
+        LinearLayout cardLayout = new LinearLayout(this);
+        cardLayout.setOrientation(LinearLayout.VERTICAL);
+        cardLayout.setGravity(Gravity.CENTER);
         int pad = dpToPx(20);
-        rootLayout.setPadding(pad, pad, pad, pad);
+        cardLayout.setPadding(pad, pad, pad, pad);
 
         GradientDrawable bgShape = new GradientDrawable();
         bgShape.setColor(Color.parseColor("#EE0B0D17"));
         bgShape.setCornerRadius(dpToPx(20));
         bgShape.setStroke(dpToPx(2), Color.parseColor("#FF1744"));
-        rootLayout.setBackground(bgShape);
+        cardLayout.setBackground(bgShape);
+
+        LinearLayout.LayoutParams cardParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        cardParams.setMargins(dpToPx(24), dpToPx(24), dpToPx(24), dpToPx(24));
+        rootLayout.addView(cardLayout, cardParams);
 
         TextView titleView = new TextView(this);
         titleView.setText("🛡️ DOOMSCROLL GUARDIAN");
@@ -731,7 +1048,7 @@ public class ShortsReelsBlockerService extends AccessibilityService {
         titleView.setTypeface(Typeface.DEFAULT_BOLD);
         titleView.setTextColor(Color.parseColor("#00E5FF"));
         titleView.setGravity(Gravity.CENTER);
-        rootLayout.addView(titleView);
+        cardLayout.addView(titleView);
 
         TextView subtitleView = new TextView(this);
         subtitleView.setText(label + " Detected!");
@@ -740,7 +1057,7 @@ public class ShortsReelsBlockerService extends AccessibilityService {
         subtitleView.setTextColor(Color.WHITE);
         subtitleView.setGravity(Gravity.CENTER);
         subtitleView.setPadding(0, dpToPx(6), 0, 0);
-        rootLayout.addView(subtitleView);
+        cardLayout.addView(subtitleView);
 
         TextView descView = new TextView(this);
         descView.setText("Returning to your previous screen to protect your focus.");
@@ -748,7 +1065,7 @@ public class ShortsReelsBlockerService extends AccessibilityService {
         descView.setTextColor(Color.parseColor("#94A3B8"));
         descView.setGravity(Gravity.CENTER);
         descView.setPadding(0, dpToPx(4), 0, dpToPx(14));
-        rootLayout.addView(descView);
+        cardLayout.addView(descView);
 
         final TextView countdownNumberView = new TextView(this);
         countdownNumberView.setText("5");
@@ -766,7 +1083,7 @@ public class ShortsReelsBlockerService extends AccessibilityService {
 
         LinearLayout.LayoutParams circleParams = new LinearLayout.LayoutParams(dpToPx(64), dpToPx(64));
         circleParams.gravity = Gravity.CENTER;
-        rootLayout.addView(countdownNumberView, circleParams);
+        cardLayout.addView(countdownNumberView, circleParams);
 
         Button returnBtn = new Button(this);
         returnBtn.setText("↩️ Return Now");
@@ -784,7 +1101,7 @@ public class ShortsReelsBlockerService extends AccessibilityService {
                 dpToPx(46)
         );
         btnParams.setMargins(0, dpToPx(16), 0, 0);
-        rootLayout.addView(returnBtn, btnParams);
+        cardLayout.addView(returnBtn, btnParams);
 
         returnBtn.setOnClickListener(v -> performBackActionOnce());
 

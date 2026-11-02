@@ -50,6 +50,19 @@ export default {
         const body = await request.json();
         const userPrompt = body.prompt || body.query || body.message || "";
         const userContext = body.context || {};
+        const rawHistory = Array.isArray(body.history) ? body.history : [];
+
+        // Build history array with last 5 user turns and assistant responses
+        const conversationHistory = [];
+        for (const msg of rawHistory.slice(-10)) {
+            if (msg && msg.role && msg.content) {
+                const r = (msg.role === 'user' || msg.role === 'human') ? 'user' : 'assistant';
+                conversationHistory.push({
+                    role: r,
+                    content: String(msg.content).slice(0, 600)
+                });
+            }
+        }
 
         if (!userPrompt.trim()) {
           return new Response(
@@ -60,7 +73,14 @@ export default {
 
         const systemPrompt = `You are Producto, the elite cognitive productivity & lifestyle AI coach for the Productometer app.
 You provide encouraging, science-backed, concise advice formatted in clean GitHub Markdown with bullet points.
-Keep your response focused, empathetic, and under 150 words.
+Keep your response focused, empathetic, and under 160 words.
+
+Productometer App Architecture & Rules:
+- Scoring: Net Daily Score = Academics (+100n pts) + Health (150 - 30n pts) + Other Prod (+50n pts) - Screen Time Penalty (50 + 50n pts).
+- Day Planner: 48 half-hour chronological slots, customizable sessions (Academics, Health, Skills, Other), active alarm reminders.
+- Academics: Live countdown timer loops, self-report distraction deduction penalties.
+- Screen Management: Entertainment limit boundaries, Focus Shield (Shorts & Reels accessibility blocker).
+- Health Tracker: Caloric intake vs workout burn, dynamic protein target (1.6g - 2.2g per kg body weight).
 
 User's Live Performance Context:
 - Weight: ${userContext.weight ?? 70} kg, Goal: ${userContext.goal ?? 'maintain'}
@@ -70,7 +90,7 @@ User's Live Performance Context:
 - Tasks Completed: ${userContext.completedTasksCount ?? 0}/${userContext.totalTasksCount ?? 0}
 - Longest Break Today: ${userContext.longestBreakMins ?? 0}m
 
-Answer the user's out-of-the-box question warmly and guide them toward sustainable momentum.`;
+Answer the user's question warmly and guide them toward sustainable momentum.`;
 
         if (!env.AI) {
           return new Response(
@@ -97,6 +117,7 @@ Answer the user's out-of-the-box question warmly and guide them toward sustainab
             const aiResponse = await env.AI.run(model, {
               messages: [
                 { role: "system", content: systemPrompt },
+                ...conversationHistory,
                 { role: "user", content: userPrompt }
               ],
               max_tokens: 350,

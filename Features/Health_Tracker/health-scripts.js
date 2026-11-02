@@ -2821,6 +2821,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // 🏆 DEDICATED ACTIVITY SECTION MODALS (WORKOUT, RUNNING, HIIT)
+    // Handle URL parameters to auto-open sections (e.g. from Sleep Guardian wake-up mission)
+    try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const sec = urlParams.get('section') || urlParams.get('openSection');
+        if (sec === 'run' || sec === 'running') {
+            setTimeout(() => {
+                const m = document.getElementById('runningSectionModal');
+                if (m) m.showModal();
+            }, 300);
+        }
+    } catch (e) {}
+
     function openDisciplineSection(discipline) {
         if (discipline === 'workout') {
             renderMyExercises();
@@ -2834,6 +2846,12 @@ document.addEventListener('DOMContentLoaded', () => {
             renderHIITBucket();
             const m = document.getElementById('hiitSectionModal');
             if (m) m.showModal();
+        } else if (discipline === 'sleep') {
+            const m = document.getElementById('sleepSectionModal');
+            if (m) {
+                updateSleepHUD();
+                m.showModal();
+            }
         }
     }
 
@@ -2866,6 +2884,288 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
     }
+
+    // ==========================================================================
+    // 🌙 SLEEP & BEDTIME MONITORING CONTROLLER
+    // ==========================================================================
+    const tileSleep = document.getElementById('tileSleepMonitoring');
+    if (tileSleep) {
+        tileSleep.addEventListener('click', () => { window.location.href = '../Sleep_Monitoring/index.html'; });
+        tileSleep.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                openDisciplineSection('sleep');
+            }
+        });
+    }
+
+    function updateSleepHUD() {
+        let bedtimeStart = '22:30';
+        let bedtimeEnd = '06:30';
+
+        if (window.NativeBridge && window.NativeBridge.getBedtimeSchedule) {
+            try {
+                const schedule = JSON.parse(window.NativeBridge.getBedtimeSchedule());
+                if (schedule) {
+                    bedtimeStart = schedule.start || '22:30';
+                    bedtimeEnd = schedule.end || '06:30';
+                }
+            } catch (e) {}
+        } else {
+            bedtimeStart = localStorage.getItem('productometer_bedtime_start') || '22:30';
+            bedtimeEnd = localStorage.getItem('productometer_bedtime_end') || '06:30';
+        }
+
+        const inputStart = document.getElementById('sleepInputBedtimeStart');
+        const inputEnd = document.getElementById('sleepInputBedtimeEnd');
+        const targetDisplay = document.getElementById('sleepTargetHoursDisplay');
+        const remainingText = document.getElementById('sleepRemainingText');
+        const distractionFill = document.getElementById('sleepDistractionProgressFill');
+        const distractionLabel = document.getElementById('sleepDistractionUsedLabel');
+        const distractionBadge = document.getElementById('sleepDistractionStatusBadge');
+        const toggleNightBlocker = document.getElementById('toggleNightDistractionBlocker');
+
+        if (inputStart) inputStart.value = bedtimeStart;
+        if (inputEnd) inputEnd.value = bedtimeEnd;
+
+        // Calculate target sleep hours
+        const [sh, sm] = (bedtimeStart || '22:30').split(':').map(Number);
+        const [eh, em] = (bedtimeEnd || '06:30').split(':').map(Number);
+        let durationMins = (eh * 60 + em) - (sh * 60 + sm);
+        if (durationMins <= 0) durationMins += 24 * 60;
+        const targetHrs = Math.floor(durationMins / 60);
+        const targetRemMins = durationMins % 60;
+        if (targetDisplay) targetDisplay.textContent = `${targetHrs}h ${targetRemMins.toString().padStart(2, '0')}m`;
+
+        // Check if currently inside bedtime window
+        const now = new Date();
+        const curMins = now.getHours() * 60 + now.getMinutes();
+        const startMins = sh * 60 + sm;
+        const endMins = eh * 60 + em;
+        let isBedtimeNow = false;
+        if (startMins <= endMins) {
+            isBedtimeNow = (curMins >= startMins && curMins < endMins);
+        } else {
+            isBedtimeNow = (curMins >= startMins || curMins < endMins);
+        }
+
+        if (remainingText) {
+            if (isBedtimeNow) {
+                remainingText.textContent = `🌙 Bedtime Guardian Active: Wind-down in progress (Ends at ${bedtimeEnd})`;
+            } else {
+                let minsUntil = startMins - curMins;
+                if (minsUntil < 0) minsUntil += 24 * 60;
+                const hUntil = Math.floor(minsUntil / 60);
+                const mUntil = minsUntil % 60;
+                remainingText.textContent = `Bedtime starts in ${hUntil}h ${mUntil}m (at ${bedtimeStart})`;
+            }
+        }
+
+        // Distraction minutes tonight
+        let distMins = 0;
+        if (window.NativeBridge && window.NativeBridge.getBedtimeDistractionMinutes) {
+            distMins = window.NativeBridge.getBedtimeDistractionMinutes();
+        } else {
+            distMins = parseInt(localStorage.getItem('bedtime_distraction_mins_mock') || '0', 10);
+        }
+
+        const cap = 15;
+        const pct = Math.min(100, Math.round((distMins / cap) * 100));
+        if (distractionFill) {
+            distractionFill.style.width = `${pct}%`;
+            if (distMins >= cap) {
+                distractionFill.style.background = '#ff3d71';
+            } else if (distMins >= 10) {
+                distractionFill.style.background = '#ffd600';
+            } else {
+                distractionFill.style.background = '#00e676';
+            }
+        }
+        if (distractionLabel) distractionLabel.textContent = `${distMins}m used tonight`;
+        if (distractionBadge) {
+            if (distMins >= cap) {
+                distractionBadge.style.background = 'rgba(255, 61, 113, 0.15)';
+                distractionBadge.style.color = '#ff3d71';
+                distractionBadge.style.borderColor = 'rgba(255, 61, 113, 0.35)';
+                distractionBadge.textContent = '15m Cap Exceeded';
+            } else {
+                distractionBadge.style.background = 'rgba(0, 230, 118, 0.15)';
+                distractionBadge.style.color = '#00e676';
+                distractionBadge.style.borderColor = 'rgba(0, 230, 118, 0.35)';
+                distractionBadge.textContent = `${distMins}m / 15m Used`;
+            }
+        }
+
+        // Distraction blocker switch sync
+        if (toggleNightBlocker && window.NativeBridge && window.NativeBridge.isDistractionBlockerMasterEnabled) {
+            toggleNightBlocker.checked = window.NativeBridge.isDistractionBlockerMasterEnabled();
+        }
+        updateSmartAlarmUI();
+    }
+
+    const inputBedtimeStart = document.getElementById('sleepInputBedtimeStart');
+    const inputBedtimeEnd = document.getElementById('sleepInputBedtimeEnd');
+    if (inputBedtimeStart && inputBedtimeEnd) {
+        const handleBedtimeScheduleChange = () => {
+            const startVal = inputBedtimeStart.value || '22:30';
+            const endVal = inputBedtimeEnd.value || '06:30';
+            localStorage.setItem('productometer_bedtime_start', startVal);
+            localStorage.setItem('productometer_bedtime_end', endVal);
+
+            // Dynamically calculate and update target sleep
+            const [sh, sm] = startVal.split(':').map(Number);
+            const [eh, em] = endVal.split(':').map(Number);
+            let diff = (eh * 60 + em) - (sh * 60 + sm);
+            if (diff <= 0) diff += 24 * 60;
+            const targetDisplay = document.getElementById('sleepTargetHoursDisplay');
+            if (targetDisplay) {
+                const th = Math.floor(diff / 60);
+                const tm = diff % 60;
+                targetDisplay.textContent = `${th}h ${tm.toString().padStart(2, '0')}m`;
+            }
+            localStorage.setItem('productometer_target_sleep_minutes', diff.toString());
+
+            if (window.NativeBridge && window.NativeBridge.setBedtimeSchedule) {
+                window.NativeBridge.setBedtimeSchedule(true, startVal, endVal);
+            }
+            updateSleepHUD();
+        };
+        inputBedtimeStart.addEventListener('input', handleBedtimeScheduleChange);
+        inputBedtimeStart.addEventListener('change', handleBedtimeScheduleChange);
+        inputBedtimeEnd.addEventListener('input', handleBedtimeScheduleChange);
+        inputBedtimeEnd.addEventListener('change', handleBedtimeScheduleChange);
+    }
+
+    const toggleNightBlockerEl = document.getElementById('toggleNightDistractionBlocker');
+    if (toggleNightBlockerEl) {
+        toggleNightBlockerEl.addEventListener('change', () => {
+            const isChecked = toggleNightBlockerEl.checked;
+            localStorage.setItem('productometer_distraction_blocker_master_enabled', isChecked ? 'true' : 'false');
+            if (window.NativeBridge && window.NativeBridge.setDistractionBlockerMasterEnabled) {
+                window.NativeBridge.setDistractionBlockerMasterEnabled(isChecked);
+            }
+        });
+    }
+
+    // ==========================================================================
+    // ⏰ BRAIN ACTIVATION SMART ALARM CONTROLLER
+    // ==========================================================================
+    const toggleSmartAlarm = document.getElementById('toggleSmartWakeupAlarm');
+    const displayAlarmTime = document.getElementById('smartAlarmDisplayTime');
+    const countdownAlarmText = document.getElementById('smartAlarmCountdownText');
+    const btnSkipToday = document.getElementById('btnSkipTodayAlarm');
+    const btnResumeToday = document.getElementById('btnResumeTodayAlarm');
+    const skippedBanner = document.getElementById('alarmSkippedNoticeBanner');
+    const skippedNoticeText = document.getElementById('alarmSkippedNoticeText');
+
+    function formatTime12h(timeStr) {
+        if (!timeStr) return '06:30 AM';
+        const [h, m] = timeStr.split(':').map(Number);
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        const h12 = h % 12 || 12;
+        return `${h12.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')} ${ampm}`;
+    }
+
+    function getUpcomingAlarmDetailsModal() {
+        const now = new Date();
+        const inputEnd = document.getElementById('sleepInputBedtimeEnd');
+        const wakeTime = (inputEnd ? inputEnd.value : null) || localStorage.getItem('productometer_bedtime_end') || '06:30';
+        const parts = wakeTime.split(':').map(Number);
+        const wh = parts[0] || 0;
+        const wm = parts[1] || 0;
+
+        let target = new Date();
+        target.setHours(wh, wm, 0, 0);
+
+        let isTomorrow = false;
+        if (now >= target) {
+            target.setDate(target.getDate() + 1);
+            isTomorrow = true;
+        }
+
+        const targetDateStr = `${target.getFullYear()}-${(target.getMonth() + 1).toString().padStart(2, '0')}-${target.getDate().toString().padStart(2, '0')}`;
+        const dayLabel = isTomorrow ? 'Tomorrow' : 'Today';
+        const dateFormatted = target.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+
+        return { wakeTime, target, isTomorrow, dayLabel, targetDateStr, dateFormatted };
+    }
+
+    function updateSmartAlarmUI() {
+        const upcoming = getUpcomingAlarmDetailsModal();
+
+        if (displayAlarmTime) displayAlarmTime.textContent = formatTime12h(upcoming.wakeTime);
+
+        // Check if alarm is enabled
+        const isAlarmOn = localStorage.getItem('productometer_smart_alarm_enabled') !== 'false';
+        if (toggleSmartAlarm) toggleSmartAlarm.checked = isAlarmOn;
+
+        // Check if upcoming alarm was skipped
+        const skippedDate = localStorage.getItem('wakeup_alarm_skipped_date');
+        const isSkipped = (skippedDate === upcoming.targetDateStr);
+
+        if (skippedBanner) {
+            skippedBanner.style.display = isSkipped ? 'flex' : 'none';
+        }
+        if (skippedNoticeText) {
+            skippedNoticeText.innerHTML = `Alarm is <strong>skipped</strong> for ${upcoming.dayLabel}. Resumes automatically the next day.`;
+        }
+        if (btnSkipToday) {
+            btnSkipToday.style.display = isSkipped ? 'none' : 'flex';
+            btnSkipToday.innerHTML = `<i class="fa-solid fa-forward-step"></i> Skip ${upcoming.dayLabel}'s Alarm (${formatTime12h(upcoming.wakeTime)})`;
+        }
+
+        // Calculate hours and minutes until next alarm
+        if (countdownAlarmText) {
+            if (!isAlarmOn) {
+                countdownAlarmText.textContent = 'Alarm is turned OFF';
+            } else if (isSkipped) {
+                countdownAlarmText.textContent = `Skipped for ${upcoming.dayLabel} • Next alarm rings at ${formatTime12h(upcoming.wakeTime)}`;
+            } else {
+                const now = new Date();
+                const diffMs = upcoming.target - now;
+                const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
+                const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+                countdownAlarmText.textContent = `Rings ${upcoming.dayLabel.toLowerCase()} in ${diffHrs}h ${diffMins}m (${formatTime12h(upcoming.wakeTime)})`;
+            }
+        }
+    }
+
+    if (toggleSmartAlarm) {
+        toggleSmartAlarm.addEventListener('change', () => {
+            const isEnabled = toggleSmartAlarm.checked;
+            localStorage.setItem('productometer_smart_alarm_enabled', isEnabled ? 'true' : 'false');
+            if (window.NativeBridge && window.NativeBridge.showToast) {
+                window.NativeBridge.showToast(isEnabled ? '⏰ Wakeup Smart Alarm Enabled' : '⏸️ Wakeup Smart Alarm Disabled');
+            }
+            updateSmartAlarmUI();
+        });
+    }
+
+    if (btnSkipToday) {
+        btnSkipToday.addEventListener('click', () => {
+            const upcoming = getUpcomingAlarmDetailsModal();
+            localStorage.setItem('wakeup_alarm_skipped_date', upcoming.targetDateStr);
+            if (window.NativeBridge && window.NativeBridge.cancelAlarm) {
+                window.NativeBridge.cancelAlarm('wakeup_smart_alarm');
+            }
+            if (window.NativeBridge && window.NativeBridge.showToast) {
+                window.NativeBridge.showToast(`⏸️ ${upcoming.dayLabel}'s wakeup alarm skipped (${upcoming.dateFormatted})`);
+            }
+            updateSmartAlarmUI();
+        });
+    }
+
+    if (btnResumeToday) {
+        btnResumeToday.addEventListener('click', () => {
+            localStorage.removeItem('wakeup_alarm_skipped_date');
+            if (window.NativeBridge && window.NativeBridge.showToast) {
+                window.NativeBridge.showToast("⏰ Today's wakeup alarm resumed");
+            }
+            updateSmartAlarmUI();
+        });
+    }
+
+
 
 
     // ==========================================================================

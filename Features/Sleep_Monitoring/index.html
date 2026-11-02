@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Productometer - Sleep & Bedtime Monitoring</title>
+    <!-- Google Fonts Framework Links -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons Framework Asset -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="../../style.css">
+    <link rel="stylesheet" href="./sleep-style.css">
+    <link rel="stylesheet" href="../AI_Coach/coach-style.css">
+</head>
+<body class="cyberpunk-portal-body">
+
+    <!-- Top Fixed Status Ribbon HUD Header (No Diamonds) -->
+    <header class="portal-top-hud">
+        <div class="nav-branding-title">Productometer</div>
+        <button id="themeToggleBtn" class="theme-toggle-btn" aria-label="Toggle Light/Dark Mode" title="Toggle Light/Dark Theme">
+            <i class="fa-solid fa-sun" id="themeToggleIcon"></i>
+            <span id="themeToggleLabel">Light</span>
+        </button>
+        <div class="nav-diamond-hud" style="display: none !important;">💎 <span id="globalDiamondWallet">0</span></div>
+    </header>
+
+    <!-- Main Content Workspace Area Frame -->
+    <main class="portal-main-content">
+        <div class="sleep-container">
+
+            <!-- Top Back Navigation Bar -->
+            <div class="module-top-bar">
+                <a href="../index.html" class="back-to-features-btn">
+                    <i class="fa-solid fa-arrow-left"></i> Features
+                </a>
+                <span style="font-size: 0.78rem; font-weight: 700; color: #a855f7;">
+                    <i class="fa-solid fa-moon"></i> Sleep Guardian
+                </span>
+            </div>
+
+            <!-- 🌙 HERO GUARDIAN CARD -->
+            <section class="sleep-hero-card">
+                <div class="sleep-hero-header">
+                    <div>
+                        <h2 class="sleep-hero-title">Circadian Sleep Guardian</h2>
+                        <span style="font-size: 0.76rem; color: #c084fc; font-weight: 700; display: block; margin-top: 2px;">
+                            Sleep Hygiene &amp; Nighttime Device Protection
+                        </span>
+                    </div>
+                    <div class="sleep-hero-icon-halo">
+                        <i class="fa-solid fa-moon"></i>
+                    </div>
+                </div>
+                <p class="sleep-hero-desc">
+                    Protects your circadian sleep cycle by enforcing a 15-minute distraction cap on doomscroll apps while keeping productive tools unlocked.
+                </p>
+            </section>
+
+            <!-- 🕒 SECTION 1: BEDTIME & WAKE-UP SCHEDULE & FLEXIBLE SLEEP TARGET -->
+            <section class="sleep-card">
+                <div class="sleep-card-header">
+                    <h3 class="sleep-card-title">
+                        <i class="fa-solid fa-clock" style="color: #c084fc;"></i> Bedtime &amp; Wake-up Schedule
+                    </h3>
+                    <span id="sleepScheduleStatusBadge" class="sleep-status-badge badge-green">Schedule Active</span>
+                </div>
+
+                <div class="schedule-grid">
+                    <!-- Bedtime Start Box -->
+                    <div class="schedule-input-box">
+                        <label for="sleepInputBedtimeStart" class="schedule-box-label">
+                            <span><i class="fa-solid fa-bed" style="color: #a855f7;"></i> Bedtime Start</span>
+                        </label>
+                        <input type="time" id="sleepInputBedtimeStart" class="schedule-time-input" value="22:30">
+                    </div>
+
+                    <!-- Wake Up Time Box (Smart Alarm Synced) -->
+                    <div class="schedule-input-box">
+                        <label for="sleepInputBedtimeEnd" class="schedule-box-label">
+                            <span><i class="fa-solid fa-sun" style="color: #ffd600;"></i> Wake Up Time</span>
+                            <span style="font-size: 0.65rem; color: #00e5ff; font-weight: 800; background: rgba(0, 229, 255, 0.12); border: 1px solid rgba(0, 229, 255, 0.3); padding: 1px 5px; border-radius: 4px;">Alarm</span>
+                        </label>
+                        <input type="time" id="sleepInputBedtimeEnd" class="schedule-time-input" value="06:30">
+                    </div>
+                </div>
+
+                <!-- 🎛️ FLEXIBLE SLEEP TARGET CONTROLLER -->
+                <div class="target-sleep-box">
+                    <div class="target-header-row">
+                        <div>
+                            <span style="font-size: 0.72rem; color: #94a3b8; display: block; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
+                                <i class="fa-solid fa-hourglass-half" style="color: #c084fc;"></i> Flexible Sleep Target
+                            </span>
+                            <div id="sleepTargetHoursDisplay" class="target-hero-val">8h 00m</div>
+                        </div>
+
+                        <!-- Stepper Adjustment Controls -->
+                        <div class="target-stepper-btn-group">
+                            <button type="button" class="target-stepper-btn" id="btnSleepTargetMinus" title="Decrease Sleep Goal by 30 mins" aria-label="Decrease Sleep Target">
+                                <i class="fa-solid fa-minus"></i>
+                            </button>
+                            <button type="button" class="target-stepper-btn" id="btnSleepTargetPlus" title="Increase Sleep Goal by 30 mins" aria-label="Increase Sleep Target">
+                                <i class="fa-solid fa-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Quick Target Presets Chips -->
+                    <div style="font-size: 0.68rem; color: #94a3b8; margin-top: 4px;">Quick Goal Presets:</div>
+                    <div class="target-chips-row" id="targetChipsRow">
+                        <button type="button" class="target-chip" data-mins="360">6h 00m</button>
+                        <button type="button" class="target-chip" data-mins="390">6h 30m</button>
+                        <button type="button" class="target-chip" data-mins="420">7h 00m</button>
+                        <button type="button" class="target-chip" data-mins="450">7h 30m</button>
+                        <button type="button" class="target-chip active" data-mins="480">8h 00m</button>
+                        <button type="button" class="target-chip" data-mins="510">8h 30m</button>
+                        <button type="button" class="target-chip" data-mins="540">9h 00m</button>
+                    </div>
+
+                    <div style="font-size: 0.7rem; color: #cbd5e1; margin-top: 8px; line-height: 1.4;">
+                        <i class="fa-solid fa-sliders" style="color: #a855f7;"></i>
+                        <span id="targetSleepModeDesc">Target sleep adjusts flexibly with your schedule or custom sleep goal.</span>
+                    </div>
+                </div>
+
+                <!-- Bedtime Status / Countdown Banner -->
+                <div class="countdown-banner" id="sleepTimeRemainingBanner">
+                    <i class="fa-solid fa-moon"></i>
+                    <span id="sleepRemainingText">Calculating bedtime window...</span>
+                </div>
+            </section>
+
+            <!-- ⏰ SECTION 2: BRAIN ACTIVATION SMART ALARM -->
+            <section class="sleep-card smart-alarm-card">
+                <div class="sleep-card-header">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <i class="fa-solid fa-bell text-cyan" style="font-size: 1.2rem; color: #00e5ff;"></i>
+                        <div>
+                            <h3 class="sleep-card-title" style="margin: 0; color: #fff;">Brain Activation Smart Alarm</h3>
+                            <span style="font-size: 0.72rem; color: #94a3b8; display: block; margin-top: 1px;">
+                                10 Hard Shakes &rarr; 50 Steps in Running Module
+                            </span>
+                        </div>
+                    </div>
+                    <label class="switch-toggle" title="Enable/Disable Smart Alarm">
+                        <input type="checkbox" id="toggleSmartWakeupAlarm" checked>
+                        <span class="switch-slider"></span>
+                    </label>
+                </div>
+
+                <div class="smart-alarm-body">
+                    <div>
+                        <div style="font-size: 0.74rem; color: #94a3b8; font-weight: 600;">Wake-up Alarm rings at:</div>
+                        <div id="smartAlarmDisplayTime" class="alarm-time-display">06:30 AM</div>
+                        <div id="smartAlarmCountdownText" class="alarm-countdown-subtext">Syncs in real-time with wake-up time</div>
+                    </div>
+
+                    <!-- Dynamic Today vs Tomorrow Skip Button -->
+                    <div>
+                        <button type="button" id="btnSkipUpcomingAlarm" class="btn-skip-alarm">
+                            <i class="fa-solid fa-forward-step"></i>
+                            <span id="skipAlarmBtnLabel">Skip Tomorrow's Alarm (06:30 AM)</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Skipped Notice Banner (Displayed when skipped) -->
+                <div id="alarmSkippedNoticeBanner" class="skipped-notice-banner">
+                    <i class="fa-solid fa-circle-exclamation" style="color: #ffd600; font-size: 1.1rem; flex-shrink: 0;"></i>
+                    <div style="flex: 1;">
+                        <span id="alarmSkippedNoticeText" style="font-size: 0.76rem; color: #cbd5e1; display: block;">
+                            Alarm is skipped for Tomorrow. Resumes automatically the next day.
+                        </span>
+                    </div>
+                    <button type="button" id="btnResumeUpcomingAlarm" class="btn-resume-alarm">
+                        <i class="fa-solid fa-rotate-left"></i> Resume
+                    </button>
+                </div>
+            </section>
+
+            <!-- 🛡️ SECTION 3: 15-MINUTE NIGHT DISTRACTION CAP -->
+            <section class="sleep-card" style="border-color: rgba(255, 61, 113, 0.3);">
+                <div class="sleep-card-header">
+                    <h3 class="sleep-card-title">
+                        <i class="fa-solid fa-shield-halved" style="color: #ff3d71;"></i> 15-Minute Night Distraction Cap
+                    </h3>
+                    <span id="sleepDistractionStatusBadge" class="sleep-status-badge badge-green">0m / 15m Used</span>
+                </div>
+                <p style="font-size: 0.8rem; color: #cbd5e1; margin: 0 0 10px 0; line-height: 1.45;">
+                    During bedtime hours, using distractive apps (social media, shorts/reels, games) without the Distraction Blocker is capped at 15 minutes.
+                </p>
+
+                <div class="limit-progress-bar">
+                    <div id="sleepDistractionProgressFill" class="limit-progress-fill"></div>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 0.74rem; color: #94a3b8; margin-top: 6px; font-weight: 600;">
+                    <span id="sleepDistractionUsedLabel">0m used tonight</span>
+                    <span>15m limit</span>
+                </div>
+            </section>
+
+            <!-- 📋 SECTION 4: GUARDIAN RULES & DISTRACTION BLOCKER MASTER SWITCH -->
+            <section class="sleep-card">
+                <div class="sleep-card-header">
+                    <h3 class="sleep-card-title">
+                        <i class="fa-solid fa-circle-info" style="color: #00e5ff;"></i> Guardian Rules &amp; Productive Phone Use
+                    </h3>
+                </div>
+
+                <div class="rules-list">
+                    <div class="rule-item">
+                        <span class="rule-icon">📱</span>
+                        <div class="rule-text">
+                            <strong style="color: #00e5ff;">Productive Phone Use Allowed:</strong> You are freely permitted to read e-books, check notes, study, or use utilities at night as long as the <strong>Distraction Blocker is turned ON</strong>.
+                        </div>
+                    </div>
+
+                    <div class="rule-item">
+                        <span class="rule-icon">⏱️</span>
+                        <div class="rule-text">
+                            <strong style="color: #ffd600;">2-Minute Emergency Pass:</strong> If the 15-minute distractive cap triggers the full-screen wind-down notification, you can tap the 2-minute pass button for urgent tasks.
+                            <div style="margin-top: 6px;">
+                                <button type="button" id="btnTestEmergencyPass" style="background: rgba(255, 214, 0, 0.12); border: 1px solid rgba(255, 214, 0, 0.35); color: #ffd600; font-size: 0.72rem; font-weight: 700; padding: 4px 10px; border-radius: 6px; cursor: pointer;">
+                                    <i class="fa-solid fa-bolt"></i> Grant 2m Emergency Pass
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="rule-item">
+                        <span class="rule-icon">🏃‍♂️</span>
+                        <div class="rule-text">
+                            <strong style="color: #00e676;">Morning Wakeup Mission:</strong> When your alarm fires at wake-up time, deliver 10 hard shakes to mute the siren, which then auto-activates the <strong>Running Section</strong> to complete 50 steps!
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Distraction Blocker Master Switch Row -->
+                <div class="blocker-switch-row">
+                    <div>
+                        <div style="font-size: 0.86rem; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 8px;">
+                            <span>Distraction Blocker Master Switch</span>
+                            <span id="blockerSwitchStateBadge" style="font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; background: rgba(0, 230, 118, 0.15); color: #00e676; font-weight: 800;">ACTIVE</span>
+                        </div>
+                        <div style="font-size: 0.72rem; color: #94a3b8; margin-top: 2px;">
+                            Keep ON at night to freely use productive apps without bedtime interruption
+                        </div>
+                    </div>
+                    <label class="switch-toggle" title="Toggle Distraction Blocker">
+                        <input type="checkbox" id="toggleNightDistractionBlocker" checked>
+                        <span class="switch-slider"></span>
+                    </label>
+                </div>
+
+                <!-- Shortcut to Running Module -->
+                <a href="../Health_Tracker/index.html?section=run" class="running-module-link-card">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <i class="fa-solid fa-person-running" style="font-size: 1.2rem; color: #00e676;"></i>
+                        <div>
+                            <div style="font-size: 0.82rem; font-weight: 800; color: #fff;">Health Tracker: Running Section</div>
+                            <div style="font-size: 0.7rem; color: #94a3b8;">50-Step Wakeup Routine &amp; Step Counter</div>
+                        </div>
+                    </div>
+                    <i class="fa-solid fa-arrow-right" style="color: #00e676; font-size: 0.85rem;"></i>
+                </a>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- Sticky Bottom Navigation Bar Layout -->
+    <nav class="portal-bottom-nav">
+        <a href="../../index.html" class="bottom-nav-btn">
+            <i class="fa-solid fa-house"></i>
+            <span>Home</span>
+        </a>
+        <a href="../index.html" class="bottom-nav-btn active">
+            <i class="fa-solid fa-cubes"></i>
+            <span>Features</span>
+        </a>
+        <a href="../../Me/index.html" class="bottom-nav-btn">
+            <i class="fa-solid fa-user-astronaut"></i>
+            <span>Me</span>
+        </a>
+    </nav>
+
+    <script src="../../native-bridge.js"></script>
+    <script src="../../main-portal.js"></script>
+    <script src="./sleep-scripts.js"></script>
+    <script src="../AI_Coach/coach-brain.js"></script>
+    <script src="../AI_Coach/coach-ui.js"></script>
+</body>
+</html>

@@ -124,6 +124,16 @@ body.theme-light .tile-card-bg-layer {
     box-shadow: 0 0 24px rgba(255, 179, 0, 0.25), inset 0 0 14px rgba(255, 179, 0, 0.15);
 }
 
+/* 6. Sleep & Bedtime Monitoring (Theme: Celestial Indigo / Violet) */
+.sleep-theme {
+    border-color: rgba(168, 85, 247, 0.35) !important;
+    box-shadow: 0 0 16px rgba(168, 85, 247, 0.14), inset 0 0 10px rgba(168, 85, 247, 0.08);
+}
+.sleep-theme:hover {
+    border-color: #a855f7 !important;
+    box-shadow: 0 0 26px rgba(168, 85, 247, 0.3), inset 0 0 14px rgba(168, 85, 247, 0.18);
+}
+
 /* --- 🎯 BOXED HEADING CONTAINER STYLE --- */
 .card-heading-box {
     background: rgba(0, 0, 0, 0.65);

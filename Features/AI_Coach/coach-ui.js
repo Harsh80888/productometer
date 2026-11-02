@@ -588,6 +588,30 @@ var ProductoBrain = (function() {
     // --- 4. EXHAUSTIVE KNOWLEDGE BASE (200 CURRICULUM TOPICS) ---
     const KNOWLEDGE_BASE = [
         {
+            id: "chronotype_architecture",
+            category: "Day Planner / Biology",
+            title: "Understanding Your Chronotype & Peak Cognitive Windows",
+            keywords: ["chronotype", "chronotypes", "what is my chronotype", "my chronotype", "peak energy", "circadian rhythm", "morning lark", "night owl", "bear chronotype", "wolf chronotype"],
+            answer: (d) => `### 🦉 Chronotype & Peak Cognitive Windows\n\n` +
+                           `Productometer aligns your daily blocks with your biological chronotype:\n` +
+                           `• **Lions / Early Risers (15%)**: Peak analytical focus: 8:00 AM – 12:00 PM. Schedule deep analytical tasks (Math, Code, Architecture) in morning blocks.\n` +
+                           `• **Bears (55%)**: Natural circadian rhythm tracking the sun. Peak cognitive window: 10:00 AM – 2:00 PM. Post-lunch slump (2–4 PM) is best for physical workouts or admin.\n` +
+                           `• **Wolves / Night Owls (15%)**: Peak creative & deep work focus: 5:00 PM – 11:00 PM.\n` +
+                           `• **Dolphins (10%)**: Fragmented sleep; peak bursts: 3:00 PM – 7:00 PM.\n\n` +
+                           `💡 **Action Tip**: Open the **Day Planner** and arrange high-focus tasks during your personal peak energy block!`
+        },
+        {
+            id: "export_backup_data",
+            category: "App Controls / Settings",
+            title: "Exporting, Backing Up & Transferring Data",
+            keywords: ["export data", "backup data", "transfer data", "download data", "export", "backup", "save my data", "how do i export", "how do i backup"],
+            answer: (d) => `### 💾 Data Export & Privacy\n\n` +
+                           `Your data is stored 100% locally on your device for absolute privacy:\n` +
+                           `• **JSON Backup**: Go to **Settings** (or tap your profile in the top-right) and tap **"Export Data / Backup"**.\n` +
+                           `• **Format**: Generates a clean JSON file containing your health logs, planner tasks, study sessions, and screen metrics.\n` +
+                           `• **Restoring**: Tap **"Import Backup"** on any new phone to restore your historical streak instantly!`
+        },
+        {
             id: "score_calculation_overview",
             category: "Scoring & Math",
             title: "How is the Productivity Score calculated?",
@@ -1701,7 +1725,7 @@ The 24-hour bar at the top of your dashboard represents your day broken down int
             id: "schedule_sessions_planner",
             category: "Day Planner",
             title: "How do I schedule sessions in Day Planner?",
-            keywords: ["schedule sessions planner", "how to schedule", "add task in planner", "create plan", "day planner add"],
+            keywords: ["how to schedule", "how do i schedule", "how to add task in planner", "guide to day planner", "day planner instructions"],
             answer: function(liveData) {
                 return `### 📅 How to Schedule Tasks in Day Planner
 
@@ -3506,8 +3530,13 @@ True productivity is not working until you collapse:
         },
         {
             name: "sleep_circadian",
-            triggers: ["sleep", "circadian", "caffeine", "melatonin", "nsdr", "cortisol", "insomnia", "worry"],
+            triggers: ["sleep", "circadian", "chronotype", "chronotypes", "peak energy", "caffeine", "melatonin", "nsdr", "cortisol", "insomnia", "worry"],
             boostIds: ["sleep_cycle_architecture", "target_sleep_duration", "caffeine_curfew_rule", "morning_cortisol_spike", "nsdr_deep_rest_guide"]
+        },
+        {
+            name: "data_export_backup",
+            triggers: ["export", "backup", "transfer", "download data", "save data", "export data", "backup data", "sync data"],
+            boostIds: ["export_backup_data"]
         },
         {
             name: "habits_mindset",
@@ -3579,9 +3608,10 @@ True productivity is not working until you collapse:
         }
     }
 
-    async function dispatchCloudAI(userQuery, liveData) {
+    async function dispatchCloudAI(userQuery, liveData, history) {
         const cfUrl = getCloudflareUrl().trim() || 'https://producto-ai.harshitgupta8088.workers.dev';
         const p = liveData.userProfile;
+        history = history || getConversationMemory();
 
         try {
             const controller = new AbortController();
@@ -3592,6 +3622,7 @@ True productivity is not working until you collapse:
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     prompt: userQuery,
+                    history: history.slice(-10),
                     context: {
                         netScore: liveData.netScore,
                         nAcad: liveData.nAcad,
@@ -3633,40 +3664,843 @@ Could not reach Cloudflare AI agent (${err.message}). Please check your internet
     }
 
     // --- 7. UNIFIED MATCHER & INTELLIGENT ROUTER ---
-    // --- 7. UNIFIED MATCHER & INTELLIGENT DUAL-MODE ROUTER ---
-    function findBestMatch(userQuery, mode) {
-        mode = mode || (typeof localStorage !== 'undefined' ? (localStorage.getItem('producto_coach_query_mode') || 'app') : 'app');
-        const liveData = extractLiveMetrics();
+    // =========================================================================
+    // 🥗 1. OFFLINE FOOD & NUTRITION ACTION ENGINE
+    // =========================================================================
+    const OFFLINE_FOOD_DATABASE = {
+        "egg": { cal: 75, p: 6.5, c: 0.5, f: 5, unit: "egg", isVeg: false },
+        "eggs": { cal: 75, p: 6.5, c: 0.5, f: 5, unit: "egg", isVeg: false },
+        "boiled egg": { cal: 75, p: 6.5, c: 0.5, f: 5, unit: "egg", isVeg: false },
+        "boiled eggs": { cal: 75, p: 6.5, c: 0.5, f: 5, unit: "egg", isVeg: false },
+        "omelette": { cal: 155, p: 12, c: 1, f: 11, unit: "serving", isVeg: false },
+        "banana": { cal: 105, p: 1.3, c: 27, f: 0.3, unit: "banana", isVeg: true },
+        "bananas": { cal: 105, p: 1.3, c: 27, f: 0.3, unit: "banana", isVeg: true },
+        "apple": { cal: 95, p: 0.5, c: 25, f: 0.3, unit: "apple", isVeg: true },
+        "apples": { cal: 95, p: 0.5, c: 25, f: 0.3, unit: "apple", isVeg: true },
+        "chicken breast": { cal: 165, p: 31, c: 0, f: 3.6, unit: "100g", isVeg: false },
+        "chicken": { cal: 165, p: 31, c: 0, f: 3.6, unit: "100g", isVeg: false },
+        "rice": { cal: 130, p: 2.7, c: 28, f: 0.3, unit: "bowl", isVeg: true },
+        "white rice": { cal: 130, p: 2.7, c: 28, f: 0.3, unit: "bowl", isVeg: true },
+        "brown rice": { cal: 115, p: 2.5, c: 24, f: 0.8, unit: "bowl", isVeg: true },
+        "roti": { cal: 110, p: 3.2, c: 20, f: 1.5, unit: "roti", isVeg: true },
+        "rotis": { cal: 110, p: 3.2, c: 20, f: 1.5, unit: "roti", isVeg: true },
+        "chapati": { cal: 110, p: 3.2, c: 20, f: 1.5, unit: "roti", isVeg: true },
+        "chapatis": { cal: 110, p: 3.2, c: 20, f: 1.5, unit: "roti", isVeg: true },
+        "dal": { cal: 140, p: 8.5, c: 20, f: 2.5, unit: "bowl", isVeg: true },
+        "lentils": { cal: 140, p: 8.5, c: 20, f: 2.5, unit: "bowl", isVeg: true },
+        "paneer": { cal: 265, p: 18, c: 4, f: 20, unit: "100g", isVeg: true },
+        "milk": { cal: 125, p: 8, c: 12, f: 5, unit: "glass", isVeg: true },
+        "oats": { cal: 150, p: 5, c: 27, f: 2.5, unit: "bowl", isVeg: true },
+        "oatmeal": { cal: 150, p: 5, c: 27, f: 2.5, unit: "bowl", isVeg: true },
+        "bread": { cal: 80, p: 3, c: 15, f: 1, unit: "slice", isVeg: true },
+        "toast": { cal: 80, p: 3, c: 15, f: 1, unit: "slice", isVeg: true },
+        "whey": { cal: 130, p: 25, c: 3, f: 1.5, unit: "scoop", isVeg: true },
+        "protein shake": { cal: 160, p: 26, c: 5, f: 2, unit: "shake", isVeg: true },
+        "peanut butter": { cal: 95, p: 4, c: 3, f: 8, unit: "tbsp", isVeg: true },
+        "salad": { cal: 50, p: 1.5, c: 8, f: 1, unit: "bowl", isVeg: true },
+        "coffee": { cal: 5, p: 0.2, c: 0.5, f: 0, unit: "cup", isVeg: true },
+        "black coffee": { cal: 5, p: 0.2, c: 0.5, f: 0, unit: "cup", isVeg: true },
+        "tea": { cal: 50, p: 1.5, c: 8, f: 1.5, unit: "cup", isVeg: true },
+        "chai": { cal: 60, p: 2, c: 9, f: 2, unit: "cup", isVeg: true },
+        "fish": { cal: 140, p: 22, c: 0, f: 5, unit: "100g", isVeg: false },
+        "potato": { cal: 130, p: 3, c: 30, f: 0.2, unit: "potato", isVeg: true },
+        "potatoes": { cal: 130, p: 3, c: 30, f: 0.2, unit: "potato", isVeg: true },
+        "curd": { cal: 100, p: 6, c: 9, f: 4, unit: "bowl", isVeg: true },
+        "yogurt": { cal: 100, p: 6, c: 9, f: 4, unit: "bowl", isVeg: true },
+        "dahi": { cal: 100, p: 6, c: 9, f: 4, unit: "bowl", isVeg: true },
+        "nuts": { cal: 160, p: 6, c: 6, f: 14, unit: "handful", isVeg: true },
+        "almonds": { cal: 160, p: 6, c: 6, f: 14, unit: "handful", isVeg: true },
+        "pizza": { cal: 285, p: 12, c: 36, f: 10, unit: "slice", isVeg: true },
+        "burger": { cal: 350, p: 16, c: 33, f: 15, unit: "burger", isVeg: false }
+    };
 
-        // 0. Conversational biometrics update: "my weight is 65 kg"
+    function parseAndExecuteDietAction(rawQuery) {
+        const q = rawQuery.toLowerCase();
+        const isDietIntent = /(?:\bate\b|\beat\b|\bhad\b|\bdrank\b|\blog\s+food\b|\blog\s+diet\b|\badd\s+to\s+diet\b|\bfor\s+(?:breakfast|lunch|dinner|snack)\b|\bcalories\b|\bprotein\b)/i.test(q);
+        if (!isDietIntent) return null;
+
+        // Skip pure informational questions
+        if (q.includes("what should i eat") || q.includes("which diet") || q.includes("how much protein do i need") || q.includes("how many calories left")) {
+            return null;
+        }
+
+        // Direct numeric calories/protein entry: e.g. "log 450 calories and 35g protein"
+        const mCal = q.match(/(\d{2,4})\s*(?:cal|cals|calories|kcal)/i);
+        const mPro = q.match(/(\d{1,3})\s*(?:g|gm|grams)?\s*(?:pro|protein)/i);
+
+        let itemsToAdd = [];
+
+        if (mCal) {
+            const cal = parseInt(mCal[1], 10);
+            const pro = mPro ? parseInt(mPro[1], 10) : Math.round(cal * 0.05);
+            itemsToAdd.push({
+                name: "Custom Logged Meal",
+                qty: 1,
+                calories: cal,
+                protein: pro,
+                carbs: Math.round(cal * 0.1),
+                fat: Math.round(cal * 0.03),
+                isVeg: true
+            });
+        } else {
+            // Food dictionary lookup
+            const foodKeys = Object.keys(OFFLINE_FOOD_DATABASE).sort((a, b) => b.length - a.length);
+            const matchedRanges = [];
+
+            for (const f of foodKeys) {
+                const pat = new RegExp('(?:(\\d+(?:\\.\\d+)?)\\s*(?:g|gm|grams|pcs|pieces|bowls?|cups?|scoops?|slices?)?\\s+)?\\b' + f + '\\b', 'gi');
+                let match;
+                while ((match = pat.exec(q)) !== null) {
+                    const start = match.index;
+                    const end = pat.lastIndex;
+                    if (matchedRanges.some(r => (start >= r[0] && start < r[1]) || (end > r[0] && end <= r[1]))) {
+                        continue;
+                    }
+                    matchedRanges.push([start, end]);
+                    let rawQty = match[1] ? parseFloat(match[1]) : 1.0;
+                    const info = OFFLINE_FOOD_DATABASE[f];
+
+                    // If unit is 100g and user entered >= 10, scale by 100 (e.g. 200g chicken = 2.0 portions)
+                    if (info.unit === "100g" && rawQty >= 10) {
+                        rawQty = rawQty / 100.0;
+                    }
+
+                    itemsToAdd.push({
+                        name: f.charAt(0).toUpperCase() + f.slice(1),
+                        qty: rawQty,
+                        calories: Math.round(info.cal * rawQty),
+                        protein: Math.round(info.p * rawQty),
+                        carbs: Math.round(info.c * rawQty),
+                        fat: Math.round(info.f * rawQty),
+                        isVeg: info.isVeg
+                    });
+                }
+            }
+        }
+
+        if (itemsToAdd.length === 0) return null;
+
+        // Execute save to localStorage
+        let existingLog = [];
+        try {
+            const raw = localStorage.getItem('productometer_daily_diet_log');
+            if (raw) existingLog = JSON.parse(raw);
+        } catch (e) {}
+
+        const nowTimeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        itemsToAdd.forEach(item => {
+            existingLog.push({
+                id: 'diet_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+                name: item.name,
+                qty: item.qty,
+                unit: 'servings',
+                calories: item.calories,
+                protein: item.protein,
+                carbs: item.carbs,
+                fat: item.fat,
+                isVeg: item.isVeg,
+                timestamp: nowTimeStr
+            });
+        });
+
+        try {
+            localStorage.setItem('productometer_daily_diet_log', JSON.stringify(existingLog));
+            if (typeof window !== 'undefined') {
+                window.dispatchEvent(new Event('storage'));
+            }
+        } catch (e) {}
+
+        const totCal = itemsToAdd.reduce((sum, i) => sum + i.calories, 0);
+        const totPro = itemsToAdd.reduce((sum, i) => sum + i.protein, 0);
+        const totCarb = itemsToAdd.reduce((sum, i) => sum + i.carbs, 0);
+
+        let breakdownList = itemsToAdd.map(i => `• **${i.qty > 1 ? i.qty + 'x ' : ''}${i.name}**: +${i.calories} kcal · ${i.protein}g protein · ${i.carbs}g carbs`).join('\n');
+
+        return `### 🥗 Food Logged to Health Tracker!\n\n` +
+               `${breakdownList}\n\n` +
+               `---\n` +
+               `🔥 **Total Added**: **+${totCal} kcal** · 🥩 **+${totPro}g Protein** · 🍚 **+${totCarb}g Carbs**\n` +
+               `*📊 Your Health Tracker daily calories & macros are now updated in real-time!*`;
+    }
+
+    // =========================================================================
+    // 📅 2. OFFLINE DAY PLANNER SCHEDULER & RESCHEDULER
+    // =========================================================================
+    // --- CONVERSATIONAL MEMORY & CONTEXT (LAST 5 PROMPTS) ---
+    const CHAT_MEMORY_KEY = 'producto_coach_memory_v1';
+
+    function getConversationMemory() {
+        try {
+            if (typeof localStorage === 'undefined') return [];
+            const raw = localStorage.getItem(CHAT_MEMORY_KEY);
+            return raw ? JSON.parse(raw) : [];
+        } catch (e) {
+            return [];
+        }
+    }
+
+    function saveConversationMemory(memory) {
+        try {
+            if (typeof localStorage === 'undefined') return;
+            const trimmed = memory.slice(-10);
+            localStorage.setItem(CHAT_MEMORY_KEY, JSON.stringify(trimmed));
+        } catch (e) {}
+    }
+
+    function recordUserPromptInMemory(userQuery) {
+        try {
+            if (typeof localStorage === 'undefined') return;
+            let mem = getConversationMemory();
+            mem.push({ role: 'user', content: userQuery, timestamp: Date.now() });
+            saveConversationMemory(mem);
+        } catch (e) {}
+    }
+
+    function recordBotReplyInMemory(botReply) {
+        try {
+            if (typeof localStorage === 'undefined' || !botReply || typeof botReply !== 'string') return;
+            let mem = getConversationMemory();
+            if (mem.length > 0 && mem[mem.length - 1].role === 'user') {
+                mem.push({ role: 'assistant', content: botReply, timestamp: Date.now() });
+                saveConversationMemory(mem);
+            }
+        } catch (e) {}
+    }
+
+    function analyzeRecentMemory(history) {
+        history = history || getConversationMemory();
+        const userTurns = history.filter(m => m.role === 'user').slice(-5);
+
+        let lastSubject = null;
+        let lastCategory = null;
+        let lastTaskTitle = null;
+
+        // 1. Scan user turns from newest to oldest
+        for (let i = userTurns.length - 1; i >= 0; i--) {
+            const text = userTurns[i].content;
+
+            // Detect subject
+            const mSubj = text.match(/\b(chemistry|physics|math|mathematics|calculus|algebra|biology|history|geography|english|literature|economics|computer\s+science|coding|programming|python|javascript|dsa|organic\s+chem)\b/i);
+            if (mSubj && !lastSubject) {
+                lastSubject = mSubj[1].toUpperCase();
+                lastCategory = 'academics';
+            }
+
+            // Detect fitness / health
+            const mFit = text.match(/\b(gym|workout|running|run|cardio|pushups|yoga|swimming|cycling|chest\s+day|leg\s+day|exercise|fitness)\b/i);
+            if (mFit && !lastSubject) {
+                lastSubject = mFit[1].toUpperCase();
+                lastCategory = 'health';
+            }
+
+            // Category detection
+            if (/academic|study|revision|homework|assignment|class/i.test(text) && !lastCategory) {
+                lastCategory = 'academics';
+            } else if (/health|fitness|gym|workout|exercise/i.test(text) && !lastCategory) {
+                lastCategory = 'health';
+            } else if (/skill|design|guitar|language/i.test(text) && !lastCategory) {
+                lastCategory = 'skills';
+            }
+        }
+
+        // 2. Scan assistant replies in memory to check if a task was recently scheduled/rescheduled
+        for (let i = history.length - 1; i >= 0; i--) {
+            if (history[i].role === 'assistant') {
+                const c = history[i].content || '';
+                const mTitle = c.match(/\*\*Title\*\*:\s*`([^`]+)`/i) || c.match(/\*\*Task\*\*:\s*\*\*([^\*]+)\*\*/i);
+                if (mTitle) {
+                    lastTaskTitle = mTitle[1].trim();
+                    break;
+                }
+            }
+        }
+
+        // 3. Fallback to latest planner task in localStorage today
+        let latestPlannerTask = null;
+        try {
+            const todayKey = getTodayDateKey();
+            const raw = localStorage.getItem('productometer_planner_tasks_' + todayKey) || localStorage.getItem('productometer_chrono_planner_list');
+            if (raw) {
+                const tasks = JSON.parse(raw);
+                if (tasks.length > 0) {
+                    latestPlannerTask = tasks[tasks.length - 1];
+                    if (!lastTaskTitle) {
+                        lastTaskTitle = latestPlannerTask.title;
+                    }
+                }
+            }
+        } catch (e) {}
+
+        let wasLastPromptScheduling = false;
+        if (userTurns.length >= 2) {
+            const prevPrompt = userTurns[userTurns.length - 2].content;
+            wasLastPromptScheduling = /(?:schedule|reschedule|add|plan|book|move|shift|task|session)/i.test(prevPrompt);
+        } else if (userTurns.length === 1) {
+            wasLastPromptScheduling = /(?:schedule|reschedule|add|plan|book|move|shift|task|session)/i.test(userTurns[0].content);
+        }
+
+        return {
+            lastSubject: lastSubject,
+            lastCategory: lastCategory,
+            lastTaskTitle: lastTaskTitle,
+            latestPlannerTask: latestPlannerTask,
+            recentUserPrompts: userTurns.map(m => m.content),
+            wasLastPromptScheduling: wasLastPromptScheduling
+        };
+    }
+
+    // --- TIME & DURATION PARSING UTILITIES ---
+    function parseDurationInMinutes(text) {
+        if (!text) return null;
+        const t = text.toLowerCase();
+        if (t.includes("half an hour") || t.includes("half hour")) return 30;
+        if (t.includes("one and a half hour") || t.includes("1.5 hour") || t.includes("1.5 hr") || t.includes("1.5h")) return 90;
+        if (t.includes("an hour") || t.includes("1 hour") || t.includes("1 hr") || t.includes("1h")) return 60;
+        const m = t.match(/(\d+(?:\.\d+)?)\s*(hours?|hrs?|h|minutes?|mins?|m)\b/i);
+        if (m) {
+            const val = parseFloat(m[1]);
+            const unit = m[2].toLowerCase();
+            if (unit.startsWith('h')) {
+                return Math.round(val * 60);
+            } else {
+                return Math.round(val);
+            }
+        }
+        return null;
+    }
+
+    function parseTimeToMinutes(str) {
+        if (!str) return null;
+        str = str.trim().toLowerCase();
+
+        // Natural phrases: "half past 6", "quarter past 4", "quarter to 5"
+        const mHalf = str.match(/half\s+past\s+(\d{1,2})\s*(am|pm)?/i);
+        if (mHalf) {
+            let h = parseInt(mHalf[1], 10);
+            const ampm = mHalf[2];
+            if (ampm === 'pm' && h < 12) h += 12;
+            else if (ampm === 'am' && h === 12) h = 0;
+            else if (!ampm && h <= 6) h += 12;
+            return h * 60 + 30;
+        }
+        const mQtrPast = str.match(/quarter\s+past\s+(\d{1,2})\s*(am|pm)?/i);
+        if (mQtrPast) {
+            let h = parseInt(mQtrPast[1], 10);
+            const ampm = mQtrPast[2];
+            if (ampm === 'pm' && h < 12) h += 12;
+            else if (ampm === 'am' && h === 12) h = 0;
+            else if (!ampm && h <= 6) h += 12;
+            return h * 60 + 15;
+        }
+        const mQtrTo = str.match(/quarter\s+to\s+(\d{1,2})\s*(am|pm)?/i);
+        if (mQtrTo) {
+            let h = parseInt(mQtrTo[1], 10) - 1;
+            const ampm = mQtrTo[2];
+            if (ampm === 'pm' && h < 12) h += 12;
+            else if (ampm === 'am' && h === 12) h = 0;
+            else if (!ampm && h <= 6) h += 12;
+            return h * 60 + 45;
+        }
+
+        // 4-digit military time e.g. "1830", "1600", "0900"
+        const mMilitary = str.match(/^(\d{2})(\d{2})$/);
+        if (mMilitary) {
+            const h = parseInt(mMilitary[1], 10);
+            const mins = parseInt(mMilitary[2], 10);
+            if (h >= 0 && h < 24 && mins >= 0 && mins < 60) {
+                return h * 60 + mins;
+            }
+        }
+
+        // Standard time: "18:30", "18 30", "18.30", "6 30 pm", "6:30 pm", "18", "6 pm"
+        const m = str.match(/(\d{1,2})(?:[:.\s]+(\d{2}))?\s*(am|pm)?/i);
+        if (!m) return null;
+
+        let h = parseInt(m[1], 10);
+        const mins = m[2] ? parseInt(m[2], 10) : 0;
+        const ampm = m[3] ? m[3].toLowerCase() : null;
+
+        if (ampm === 'pm' && h < 12) {
+            h += 12;
+        } else if (ampm === 'am' && h === 12) {
+            h = 0;
+        } else if (!ampm) {
+            if (h >= 1 && h <= 6) {
+                h += 12;
+            }
+        }
+
+        if (h >= 0 && h < 24 && mins >= 0 && mins < 60) {
+            return h * 60 + mins;
+        }
+        return null;
+    }
+
+    function formatMinutesToTime(totalMins) {
+        let h = Math.floor(totalMins / 60) % 24;
+        let m = totalMins % 60;
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        let displayH = h % 12;
+        if (displayH === 0) displayH = 12;
+        const militaryH = String(h).padStart(2, '0');
+        const militaryM = String(m).padStart(2, '0');
+        return `${String(displayH).padStart(2, '0')}:${String(m).padStart(2, '0')} ${ampm} (${militaryH}:${militaryM})`;
+    }
+
+    function getTodayDateKey() {
+        const d = new Date();
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+    }
+
+    function parseAndExecuteScheduleAction(rawQuery, memoryContext) {
+        const q = rawQuery.trim();
+        memoryContext = memoryContext || analyzeRecentMemory();
+
+        const isScheduleIntent = /(?:\bschedule\b|\badd\b|\bcreate\b|\bplan\b|\bbook\b|\bset\b)/i.test(q) &&
+            (/(?:from\s+[0-9]|at\s+[0-9]|for\s+[0-9]+\s*(?:min|hour|h|hr))/i.test(q) || /(?:task|session|workout|gym|study|class|meeting|revision|deep\s+work)/i.test(q));
+        if (!isScheduleIntent) return null;
+
+        if (/how\s+(?:do|to|can)\s+(?:i\s+)?schedule/i.test(q)) return null;
+
+        // 1. Explicit Category Extraction ("under skills section", "in health category", etc.)
+        let explicitCategory = null;
+        let explicitColor = null;
+        const mCat = q.match(/(?:under|in|into|category(?:\s+is)?|section(?:\s+is)?)\s+(academics?|skills?|health|fitness|other)\b/i);
+        if (mCat) {
+            const rc = mCat[1].toLowerCase();
+            if (rc.startsWith('skill')) { explicitCategory = 'skills'; explicitColor = '#ffb300'; }
+            else if (rc.startsWith('health') || rc.startsWith('fit')) { explicitCategory = 'health'; explicitColor = '#00e676'; }
+            else if (rc.startsWith('acad')) { explicitCategory = 'academics'; explicitColor = '#00e5ff'; }
+            else if (rc.startsWith('other')) { explicitCategory = 'other'; explicitColor = '#d500f9'; }
+        }
+
+        // 2. Explicit Comment / Note Extraction (with comment "Python", comment: "Python", etc.)
+        let explicitComment = null;
+        const mComment = q.match(/(?:with\s+comment|comment|with\s+note|note|named|titled|title)\s+["']?([^"']+)["']?(?:\s+(?:under|in|at|from|$))/i) ||
+                         q.match(/["']([^"']+)["']/);
+        if (mComment) {
+            explicitComment = mComment[1].trim();
+        }
+
+        let taskTitle = "";
+        let startMin = null;
+        let durationMin = 60;
+
+        const TIME_REGEX = '(?:[0-9]{4}|[0-9]{1,2}(?:[:.\\s][0-9]{2})?\\s*(?:am|pm)?)';
+
+        // Pattern A: [intent] [task] from [start] to [end]
+        const mFromTo = q.match(new RegExp('(?:schedule|add|create|plan|book|set)(?:\\s+(?:a\\s+|an\\s+|my\\s+|task\\s+|session\\s+))?\\s*(.*?)\\s+from\\s+(' + TIME_REGEX + ')\\s+to\\s+(' + TIME_REGEX + ')', 'i'));
+        if (mFromTo) {
+            taskTitle = mFromTo[1].replace(/^(?:a\s+|an\s+|my\s+|task\s+|session\s+)/i, '').trim();
+            startMin = parseTimeToMinutes(mFromTo[2]);
+            const endMin = parseTimeToMinutes(mFromTo[3]);
+            if (startMin !== null && endMin !== null) {
+                durationMin = endMin > startMin ? (endMin - startMin) : 60;
+            }
+        } else {
+            // Pattern B: [intent] [task] at [start] (for [X] mins/hours)?
+            const mAt = q.match(new RegExp('(?:schedule|add|create|plan|book|set)(?:\\s+(?:a\\s+|an\\s+|my\\s+|task\\s+|session\\s+))?\\s*(.*?)\\s+at\\s+(' + TIME_REGEX + ')(?:.*?(?:and\\s+)?(?:for\\s+duration\\s+|for\\s+|duration\\s+)?(\\d+(?:\\.\\d+)?\\s*(?:hours?|hrs?|h|minutes?|mins?|m)?))?', 'i'));
+            if (mAt) {
+                taskTitle = mAt[1].replace(/^(?:a\s+|an\s+|my\s+|task\s+|session\s+)/i, '').trim();
+                startMin = parseTimeToMinutes(mAt[2]);
+                if (mAt[3]) {
+                    const parsedDur = parseDurationInMinutes(mAt[3]);
+                    if (parsedDur) durationMin = parsedDur;
+                }
+            }
+        }
+
+        if (startMin === null) return null;
+
+        // Clean taskTitle using conversational memory and comment
+        let cleanTitle = taskTitle.replace(/^(?:a\s+|an\s+|my\s+|the\s+)/i, '').trim();
+
+        let category = explicitCategory || 'academics';
+        let color = explicitColor || '#00e5ff';
+
+        const isGenericTitle = !cleanTitle ||
+            cleanTitle.toLowerCase() === 'task' ||
+            cleanTitle.toLowerCase() === 'session' ||
+            cleanTitle.toLowerCase() === 'a session' ||
+            cleanTitle.toLowerCase() === 'a task' ||
+            cleanTitle.toLowerCase() === 'it' ||
+            cleanTitle.toLowerCase() === 'an academics task' ||
+            cleanTitle.toLowerCase() === 'academics task' ||
+            cleanTitle.toLowerCase() === 'academic task' ||
+            cleanTitle.toLowerCase() === 'study task' ||
+            cleanTitle.toLowerCase() === 'study session';
+
+        if (explicitComment) {
+            cleanTitle = explicitComment;
+        } else if (isGenericTitle) {
+            if (explicitCategory === 'skills') {
+                cleanTitle = "SKILLS PRACTICE";
+            } else if (explicitCategory === 'health') {
+                cleanTitle = "HEALTH WORKOUT";
+            } else if (explicitCategory === 'other') {
+                cleanTitle = "PRODUCTIVITY SESSION";
+            } else if (memoryContext && memoryContext.lastSubject) {
+                cleanTitle = `${memoryContext.lastSubject} REVISION`;
+                category = memoryContext.lastCategory || 'academics';
+            } else if (cleanTitle.toLowerCase().includes('academic')) {
+                cleanTitle = "ACADEMICS STUDY SESSION";
+                category = 'academics';
+            } else if (cleanTitle.toLowerCase().includes('study')) {
+                cleanTitle = "DEEP STUDY SESSION";
+                category = 'academics';
+            } else {
+                cleanTitle = "FOCUS SESSION";
+            }
+        } else if (!explicitCategory) {
+            const tLower = cleanTitle.toLowerCase();
+            if (/(?:gym|workout|run|running|cardio|walk|exercise|yoga|stretch|fitness)/i.test(tLower)) {
+                category = 'health';
+                color = '#00e676';
+            } else if (/(?:read|reading|book|skill|code|coding|design|practice|guitar|music|language|python|javascript)/i.test(tLower)) {
+                category = 'skills';
+                color = '#ffb300';
+            } else if (/(?:break|lunch|dinner|nap|meditate|relax)/i.test(tLower)) {
+                category = 'other';
+                color = '#d500f9';
+            }
+        }
+
+        if (category === 'health') color = '#00e676';
+        else if (category === 'skills') color = '#ffb300';
+        else if (category === 'other') color = '#d500f9';
+        else color = '#00e5ff';
+
+        const formattedTime = `${formatMinutesToTime(startMin)} - ${formatMinutesToTime(startMin + durationMin)}`;
+        const todayKey = getTodayDateKey();
+        const storageKey = 'productometer_planner_tasks_' + todayKey;
+
+        let tasks = [];
+        try {
+            const raw = localStorage.getItem(storageKey) || localStorage.getItem('productometer_chrono_planner_list');
+            if (raw) tasks = JSON.parse(raw);
+        } catch (e) {}
+
+        const newTask = {
+            id: 'task_' + Date.now(),
+            title: cleanTitle.toUpperCase(),
+            category: category,
+            startMin: startMin,
+            durationMin: durationMin,
+            durationMinutes: durationMin,
+            timeDisplayStr: formattedTime,
+            time: formattedTime,
+            color: color,
+            comment: explicitComment || undefined,
+            completed: false,
+            createdAt: new Date().toISOString()
+        };
+
+        tasks.push(newTask);
+        tasks.sort((a, b) => (a.startMin || 0) - (b.startMin || 0));
+
+        try {
+            localStorage.setItem(storageKey, JSON.stringify(tasks));
+            localStorage.setItem('productometer_chrono_planner_list', JSON.stringify(tasks));
+            if (typeof window !== 'undefined') {
+                window.dispatchEvent(new Event('storage'));
+            }
+        } catch (e) {
+            console.error("[Producto Coach] Error saving task:", e);
+        }
+
+        let reply = `### 🗓️ Task Scheduled Successfully!\n\n` +
+                    `• **Title**: \`${newTask.title}\`\n` +
+                    `• **Category**: ${category.toUpperCase()} (${color})\n` +
+                    `• **Time Window**: \`${formattedTime}\`\n` +
+                    `• **Duration**: **${durationMin} minutes** (${(durationMin / 60).toFixed(1).replace('.0', '')} hr)\n`;
+        if (explicitComment) {
+            reply += `• **Comment**: "${explicitComment}"\n`;
+        }
+        reply += `\n✅ Synced to your **Day Planner** and 24h timeline. Tap the circle on your timeline to mark it complete for **+50 bonus score**!`;
+        return reply;
+    }
+
+    function parseAndExecuteRescheduleAction(rawQuery, memoryContext) {
+        const q = rawQuery.trim();
+        memoryContext = memoryContext || analyzeRecentMemory();
+
+        const isExplicitResched = /(?:\breschedule\b|\bmove\s+task\b|\bmove\b|\bshift\b|\bpush\b|\bpostpone\b|\bchange\s+duration\b|\bmake\s+it\b|\bextend\b|\bchange\s+time\b|\bchange\s+to\b)/i.test(q);
+        
+        // Follow-up prompt detection: if previous turn in memory was a schedule or reschedule,
+        // and current prompt is just duration or just time:
+        const isFollowupDuration = memoryContext.wasLastPromptScheduling && /^(?:and\s+)?(?:for\s+)?\d+(?:\.\d+)?\s*(?:hours?|hrs?|h|minutes?|mins?|m)$/i.test(q);
+        const isFollowupTime = memoryContext.wasLastPromptScheduling && /^(?:and\s+)?(?:to\s+|at\s+)?[0-9]{1,2}(?:[:.\s][0-9]{2})?\s*(?:am|pm)?$/i.test(q);
+
+        if (!isExplicitResched && !isFollowupDuration && !isFollowupTime) return null;
+
+        const TIME_REGEX = '(?:[0-9]{4}|[0-9]{1,2}(?:[:.\\s][0-9]{2})?\\s*(?:am|pm)?)';
+
+        let targetTitle = "";
+        let newStartMin = null;
+        let newDurationMin = null;
+
+        if (isFollowupDuration) {
+            newDurationMin = parseDurationInMinutes(q);
+        } else if (isFollowupTime) {
+            newStartMin = parseTimeToMinutes(q);
+        } else {
+            // Pattern 1: reschedule [task/it]? to [time] (and)? (for [duration])?
+            const mReschedTo = q.match(new RegExp('(?:reschedule|move|shift|push|postpone|change\\s+to)(?:\\s+(?:my\\s+|task\\s+|session\\s+))?\\s*(.*?)\\s+to\\s+(' + TIME_REGEX + ')(?:.*?(?:and\\s+)?(?:for\\s+duration\\s+|for\\s+|duration\\s+)?(\\d+(?:\\.\\d+)?\\s*(?:hours?|hrs?|h|minutes?|mins?|m)?))?', 'i'));
+            
+            // Pattern 2: reschedule [task/it]? (and)? for [duration] (without 'to [time]')
+            const mReschedForOnly = q.match(new RegExp('(?:reschedule|change\\s+duration|make\\s+it|extend|shorten|set\\s+duration)(?:\\s+(?:my\\s+|task\\s+|session\\s+))?\\s*(.*?)\\s+(?:and\\s+)?(?:for\\s+duration\\s+|for\\s+|to\\s+duration\\s+|to\\s+)?(\\d+(?:\\.\\d+)?\\s*(?:hours?|hrs?|h|minutes?|mins?|m))\\b', 'i'));
+
+            if (mReschedTo) {
+                targetTitle = (mReschedTo[1] || '').trim().toLowerCase();
+                newStartMin = parseTimeToMinutes(mReschedTo[2]);
+                if (mReschedTo[3]) {
+                    newDurationMin = parseDurationInMinutes(mReschedTo[3]);
+                }
+            } else if (mReschedForOnly) {
+                targetTitle = (mReschedForOnly[1] || '').trim().toLowerCase();
+                newDurationMin = parseDurationInMinutes(mReschedForOnly[2]);
+            } else {
+                const mMove = q.match(new RegExp('(?:move|shift|push)\\s+(.*?)\\s+to\\s+(' + TIME_REGEX + ')', 'i'));
+                if (mMove) {
+                    targetTitle = (mMove[1] || '').trim().toLowerCase();
+                    newStartMin = parseTimeToMinutes(mMove[2]);
+                } else {
+                    return null;
+                }
+            }
+        }
+
+        if (newStartMin === null && newDurationMin === null) return null;
+
+        const todayKey = getTodayDateKey();
+        const storageKey = 'productometer_planner_tasks_' + todayKey;
+
+        let tasks = [];
+        try {
+            const raw = localStorage.getItem(storageKey) || localStorage.getItem('productometer_chrono_planner_list');
+            if (raw) tasks = JSON.parse(raw);
+        } catch (e) {}
+
+        if (tasks.length === 0) {
+            return `### ⚠️ No Tasks Found Today\n\nCould not find any scheduled sessions for today to reschedule. Say *\"Schedule a session at 18:00\" to create one!`;
+        }
+
+        // Clean targetTitle
+        targetTitle = targetTitle.replace(/^(?:a\s+|an\s+|my\s+|the\s+)/i, '').trim();
+
+        // Resolve Target Task using Memory Context:
+        let foundTask = null;
+        const isGenericOrPronoun = !targetTitle || 
+            targetTitle === 'it' || 
+            targetTitle === 'task' || 
+            targetTitle === 'session' || 
+            targetTitle === 'that' ||
+            targetTitle === 'to' || 
+            targetTitle.includes('academic') || 
+            targetTitle.includes('study');
+
+        if (isGenericOrPronoun) {
+            // If user mentioned academic, prioritize academic tasks
+            if (targetTitle.includes('academic') || targetTitle.includes('study')) {
+                foundTask = tasks.slice().reverse().find(t => (t.category === 'academics') || (t.title && (t.title.toLowerCase().includes('academic') || t.title.toLowerCase().includes('study'))));
+            }
+            // If memory has lastTaskTitle, check if it exists in tasks
+            if (!foundTask && memoryContext && memoryContext.lastTaskTitle) {
+                foundTask = tasks.slice().reverse().find(t => (t.title || '').toLowerCase() === memoryContext.lastTaskTitle.toLowerCase());
+            }
+            // Fallback: pick the latest task in planner
+            if (!foundTask) {
+                foundTask = tasks[tasks.length - 1];
+            }
+        } else {
+            // Search by exact/partial title
+            for (const t of tasks) {
+                const tTitle = (t.title || '').toLowerCase();
+                if (tTitle.includes(targetTitle) || targetTitle.includes(tTitle)) {
+                    foundTask = t;
+                    break;
+                }
+            }
+            // Check memory for lastSubject
+            if (!foundTask && memoryContext && memoryContext.lastSubject) {
+                const subj = memoryContext.lastSubject.toLowerCase();
+                foundTask = tasks.slice().reverse().find(t => (t.title || '').toLowerCase().includes(subj));
+            }
+            // Fallback: pick the latest task
+            if (!foundTask) {
+                foundTask = tasks[tasks.length - 1];
+            }
+        }
+
+        if (!foundTask) {
+            return `### ⚠️ Task Not Found\n\nCould not find a task on today's schedule.\n\n💡 **Your current tasks today:**\n` +
+                   tasks.map(t => `• ${t.title} (\`${t.timeDisplayStr || t.time}\`)`).join('\n');
+        }
+
+        // Apply new start time (or keep existing)
+        if (newStartMin !== null) {
+            foundTask.startMin = newStartMin;
+        }
+
+        // Apply new duration (or keep existing)
+        const finalDuration = (newDurationMin !== null) ? newDurationMin : (foundTask.durationMin || foundTask.durationMinutes || 60);
+        foundTask.durationMin = finalDuration;
+        foundTask.durationMinutes = finalDuration;
+
+        const finalStart = foundTask.startMin || 0;
+        const newFormattedTime = `${formatMinutesToTime(finalStart)} - ${formatMinutesToTime(finalStart + finalDuration)}`;
+        foundTask.timeDisplayStr = newFormattedTime;
+        foundTask.time = newFormattedTime;
+
+        tasks.sort((a, b) => (a.startMin || 0) - (b.startMin || 0));
+
+        try {
+            localStorage.setItem(storageKey, JSON.stringify(tasks));
+            localStorage.setItem('productometer_chrono_planner_list', JSON.stringify(tasks));
+            if (typeof window !== 'undefined') {
+                window.dispatchEvent(new Event('storage'));
+            }
+        } catch (e) {
+            console.error("[Producto Coach] Error saving rescheduled task:", e);
+        }
+
+        return `### 🔄 Task Rescheduled!\n\n` +
+               `• **Task**: **${foundTask.title}**\n` +
+               `• **New Time Window**: \`${newFormattedTime}\`\n` +
+               `• **Duration**: **${finalDuration} minutes** (${(finalDuration / 60).toFixed(1).replace('.0', '')} hr)\n` +
+               `• **Category**: ${(foundTask.category || 'ACADEMICS').toUpperCase()}\n\n` +
+               `✅ Successfully synchronized to your 24-hour timeline and Day Planner!`;
+    }
+
+    function parseAndExecuteCategoryChangeAction(rawQuery, memoryContext) {
+        const q = rawQuery.trim();
+        memoryContext = memoryContext || analyzeRecentMemory();
+
+        // Check if query is asking to change or set category:
+        // e.g. "schedule it under skills", "move it under skills", "change category to skills", "put it under skills", "make it skills", "under skills section"
+        const isCategoryChangeIntent = /(?:(?:schedule|reschedule|move|put|shift|change|set|categorize|make)(?:\s+(?:it|that|task|session|my\s+task))?\s*(?:under|in|into|to|as)?\s+(?:the\s+)?(academics?|skills?|health|fitness|other)(?:\s+(?:category|section))?|(?:change|set)\s+(?:the\s+)?category\s+(?:of\s+it\s+)?(?:to|as|under)\s+(academics?|skills?|health|fitness|other)|^(?:under|in)\s+(academics?|skills?|health|fitness|other)(?:\s+(?:category|section))?$)/i;
+
+        const m = q.match(isCategoryChangeIntent);
+        if (!m) return null;
+
+        const rawCat = (m[1] || m[2] || m[3] || '').toLowerCase();
+        let newCategory = 'skills';
+        let newColor = '#ffb300';
+
+        if (rawCat.startsWith('skill')) {
+            newCategory = 'skills';
+            newColor = '#ffb300';
+        } else if (rawCat.startsWith('health') || rawCat.startsWith('fit')) {
+            newCategory = 'health';
+            newColor = '#00e676';
+        } else if (rawCat.startsWith('acad')) {
+            newCategory = 'academics';
+            newColor = '#00e5ff';
+        } else if (rawCat.startsWith('other')) {
+            newCategory = 'other';
+            newColor = '#d500f9';
+        }
+
+        const todayKey = getTodayDateKey();
+        const storageKey = 'productometer_planner_tasks_' + todayKey;
+
+        let tasks = [];
+        try {
+            const raw = localStorage.getItem(storageKey) || localStorage.getItem('productometer_chrono_planner_list');
+            if (raw) tasks = JSON.parse(raw);
+        } catch (e) {}
+
+        if (tasks.length === 0) {
+            return `### ⚠️ No Tasks Found Today\n\nCould not find any scheduled sessions for today to recategorize. Say *\"Schedule a session at 8 PM under ${newCategory}\"* to create one!`;
+        }
+
+        // Target the most recently added or discussed task
+        let targetTask = tasks[tasks.length - 1];
+        if (memoryContext && memoryContext.lastTaskTitle) {
+            const matching = tasks.slice().reverse().find(t => (t.title || '').toLowerCase() === memoryContext.lastTaskTitle.toLowerCase());
+            if (matching) targetTask = matching;
+        }
+
+        targetTask.category = newCategory;
+        targetTask.color = newColor;
+
+        try {
+            localStorage.setItem(storageKey, JSON.stringify(tasks));
+            localStorage.setItem('productometer_chrono_planner_list', JSON.stringify(tasks));
+            if (typeof window !== 'undefined') {
+                window.dispatchEvent(new Event('storage'));
+            }
+        } catch (e) {
+            console.error("[Producto Coach] Error saving recategorized task:", e);
+        }
+
+        return `### 🗂️ Task Category Updated!\n\n` +
+               `• **Task**: **${targetTask.title}**\n` +
+               `• **New Category**: **${newCategory.toUpperCase()}** (${newColor})\n` +
+               `• **Time Window**: \`${targetTask.timeDisplayStr || targetTask.time}\`\n` +
+               `• **Duration**: **${targetTask.durationMin || 60} minutes**\n\n` +
+               `✅ Successfully moved under the **${newCategory.toUpperCase()}** section on your Day Planner and timeline!`;
+    }
+
+    function findBestMatch(userQuery, mode, customHistory) {
+        mode = mode || (typeof localStorage !== 'undefined' ? (localStorage.getItem('producto_coach_query_mode') || 'auto') : 'auto');
+        recordUserPromptInMemory(userQuery);
+        const liveData = extractLiveMetrics();
+        const memoryContext = analyzeRecentMemory(customHistory);
+
+        // 0. Check Category Change Action (e.g. "schedule it under skills", "move under skills")
+        const catChangeReply = parseAndExecuteCategoryChangeAction(userQuery, memoryContext);
+        if (catChangeReply) {
+            recordBotReplyInMemory(catChangeReply);
+            return catChangeReply;
+        }
+
+        // 1. Check Diet Logging Action (0 ms, 100% Offline)
+        const dietActionReply = parseAndExecuteDietAction(userQuery);
+        if (dietActionReply) {
+            recordBotReplyInMemory(dietActionReply);
+            return dietActionReply;
+        }
+
+        // 2. Check Task Rescheduling Action (0 ms, 100% Offline)
+        const rescheduleReply = parseAndExecuteRescheduleAction(userQuery, memoryContext);
+        if (rescheduleReply) {
+            recordBotReplyInMemory(rescheduleReply);
+            return rescheduleReply;
+        }
+
+        // 3. Check Task Scheduling Action (0 ms, 100% Offline)
+        const scheduleReply = parseAndExecuteScheduleAction(userQuery, memoryContext);
+        if (scheduleReply) {
+            recordBotReplyInMemory(scheduleReply);
+            return scheduleReply;
+        }
+
+        // 4. Check Conversational Biometrics Update ("my weight is 68 kg")
         const bioUpdateReply = checkAndHandleBiometricUpdate(userQuery);
         if (bioUpdateReply) {
             return bioUpdateReply;
         }
 
-        // =====================================================================
-        // MODE 2: "Other queries" (Handled 100% by Cloudflare Workers AI Agent)
-        // =====================================================================
+        // Force Cloud AI if explicitly in 'other' mode
         if (mode === 'other') {
             const isOnline = (typeof navigator !== 'undefined' && typeof navigator.onLine === 'boolean') ? navigator.onLine : true;
             if (!isOnline) {
-                return `### 🌐 Internet Required for Cloud AI Agent
-
-` +
-                       `You are in **"Other queries"** mode, which connects directly to our **Cloud AI Agent (Meta Llama)**.
-
-` +
-                       `⚠️ Please check your internet connection, or toggle to **"Ask about app"** to query app features 100% offline!`;
+                return `### 🌐 Internet Required for Cloud AI Agent\n\n` +
+                       `You are in **"Other queries"** mode, which connects directly to our **Cloud AI Agent (Meta Llama)**.\n\n` +
+                       `⚠️ Please check your internet connection, or use offline commands like *"Schedule study at 4 PM"* or *"Log 2 eggs"*!`;
             }
-            return dispatchCloudAI(userQuery, liveData);
+            const p = dispatchCloudAI(userQuery, liveData, customHistory);
+            p.then(r => recordBotReplyInMemory(r)).catch(() => {});
+            return p;
         }
 
-        // =====================================================================
-        // MODE 1: "Ask about app" (Handled 100% by Offline Bot: Controls & Math)
-        // =====================================================================
         const queryNorm = normalizeText(userQuery);
 
-        // A. Health Tab Biometrics Retrieval Intent
+        // 5. Health Tab Biometrics Retrieval Intent
         const isBiometricQuery = 
             queryNorm.includes("biometric") ||
             queryNorm.includes("biometrics") ||
@@ -3680,7 +4514,7 @@ Could not reach Cloudflare AI agent (${err.message}). Please check your internet
             return generateBiometricsReport();
         }
 
-        // B. Direct triggers for Daily Analysis / Summary / Debrief
+        // 6. Direct triggers for Daily Analysis / Summary / Debrief
         if (
             queryNorm.includes("analyze") ||
             queryNorm.includes("summary") ||
@@ -3702,11 +4536,10 @@ Could not reach Cloudflare AI agent (${err.message}). Please check your internet
             return generateDailyDebrief();
         }
 
-        // C. Meaningful words extraction (strip stop words)
+        // 7. Match against 200 Knowledge Base Curriculum Items
         const rawWords = queryNorm.split(' ');
         const meaningfulWords = rawWords.filter(w => !STOP_WORDS.has(w) && w.length > 1);
 
-        // D. Topic Clusters Boost
         const boostedIds = new Set();
         TOPIC_CLUSTERS.forEach(cluster => {
             let matched = false;
@@ -3720,14 +4553,11 @@ Could not reach Cloudflare AI agent (${err.message}). Please check your internet
             }
         });
 
-        // E. Match against 200 Knowledge Base Curriculum Items
         let bestItem = null;
         let highestScore = 0;
 
         KNOWLEDGE_BASE.forEach(item => {
             let score = 0;
-
-            // 1. Exact keyword matching
             item.keywords.forEach(kw => {
                 const kwNorm = normalizeText(kw);
                 if (queryNorm === kwNorm) {
@@ -3742,14 +4572,12 @@ Could not reach Cloudflare AI agent (${err.message}). Please check your internet
                 }
             });
 
-            // 2. Title match with meaningful words
             const titleNorm = normalizeText(item.title);
             const titleTokens = titleNorm.split(' ');
             meaningfulWords.forEach(w => {
                 if (titleTokens.includes(w)) score += 12;
             });
 
-            // 3. Topic Cluster Boost (+30 points)
             if (boostedIds.has(item.id)) {
                 score += 30;
             }
@@ -3760,35 +4588,36 @@ Could not reach Cloudflare AI agent (${err.message}). Please check your internet
             }
         });
 
-        // F. High-Confidence Offline Match (Confidence >= 15)
-        if (bestItem && highestScore >= 15) {
+        // High-Certainty Local Match (Confidence >= 35)
+        if (bestItem && highestScore >= 35) {
             return bestItem.answer(liveData);
         }
 
-        // G. Query is NOT about app controls or functions in "Ask about app" mode
-        const cleanQuery = userQuery.replace(/["'\`]/g, '');
-        return `### 📱 App Assistant Mode
+        // Strict Local Mode Check
+        if (mode === 'app') {
+            const cleanQuery = userQuery.replace(/["'\`]/g, '');
+            return `### 📱 App Assistant Mode\n\n` +
+                   `I am currently set to **"Ask about app"** mode. I answer all questions regarding **Productometer controls, functions, and formulas**:\n` +
+                   `• **Score Math**: Health ($150 - 30n$), Academics ($100n$), Other ($50n$), Screen penalty\n` +
+                   `• **Day Planner**: Upcoming sessions, slider-free checklists, time blocks\n` +
+                   `• **Academics**: Real-time timer countdowns & distraction penalties\n` +
+                   `• **Health & Diet**: Caloric targets & protein formulas for your ${liveData.userProfile.weight} kg weight\n\n` +
+                   `💡 **Want our Cloud AI Agent (Meta Llama) to answer this general question?**\n` +
+                   `<button type="button" class="coach-chip" style="margin-top: 8px; border-color: #00e5ff; color: #00e5ff; padding: 6px 12px; font-weight: 600;" onclick="if(window.ProductoUI){window.ProductoUI.setMode('other');window.ProductoUI.ask('${cleanQuery}');}">⚡ Ask Cloud Agent Now</button>`;
+        }
 
-` +
-               `I am currently set to **"Ask about app"** mode, so I answer questions exclusively regarding **Productometer controls, functions, and formulas**:
-` +
-               `• **Score Math**: Health ($150 - 30n$), Academics ($100n$), Other ($50n$), Screen penalty
-` +
-               `• **Day Planner**: Upcoming sessions, slider-free checklists, time blocks
-` +
-               `• **Academics**: Real-time timer countdowns & distraction penalties
-` +
-               `• **Health & Diet**: Caloric targets & protein formulas for your ${liveData.userProfile.weight} kg weight
-` +
-               `• **Daily Debrief**: Performance evaluation and today's slip points
+        // =====================================================================
+        // 8. AUTO CLOUD DISPATCH (Smart Auto-Classifier)
+        // Question is open-ended, creative, general, or complex: auto-call Cloud AI!
+        // =====================================================================
+        const isOnline = (typeof navigator !== 'undefined' && typeof navigator.onLine === 'boolean') ? navigator.onLine : true;
+        if (!isOnline) {
+            return `### 🌐 Internet Required for Open-Ended Query\n\n` +
+                   `This is a custom question that requires our **Cloud AI Agent (Meta Llama)** to provide an accurate, nuanced answer.\n\n` +
+                   `⚠️ Please turn on your Wi-Fi or mobile data, or ask about your app score, schedule, or diet which run 100% offline!`;
+        }
 
-` +
-               `💡 **Want our Cloud AI Agent (Meta Llama) to answer this general question?**
-` +
-               `Switch the toggle at the top of the chat to **"Other queries"**, or tap below:
-
-` +
-               `<button type="button" class="coach-chip" style="margin-top: 8px; border-color: #00e5ff; color: #00e5ff; padding: 6px 12px; font-weight: 600;" onclick="if(window.ProductoUI){window.ProductoUI.setMode('other');window.ProductoUI.ask('${cleanQuery}');}">⚡ Ask Cloud Agent Now</button>`;
+        return dispatchCloudAI(userQuery, liveData);
     }
 
     // Public API
@@ -4012,18 +4841,21 @@ if (typeof globalThis !== 'undefined') {
                 </div>
             </div>
 
-            <!-- Dual Mode Segmented Toggle Bar ("Ask about app" vs "Other queries") -->
+            <!-- Smart Triple-Mode Segmented Toggle Bar -->
             <div class="coach-mode-toggle-bar">
                 <div class="coach-mode-segmented-control">
-                    <button type="button" class="coach-mode-toggle-btn active" id="coachModeAppBtn" data-mode="app">
-                        <i class="fa-solid fa-mobile-screen"></i> Ask about app
+                    <button type="button" class="coach-mode-toggle-btn active" id="coachModeAutoBtn" data-mode="auto">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> Auto
+                    </button>
+                    <button type="button" class="coach-mode-toggle-btn" id="coachModeAppBtn" data-mode="app">
+                        <i class="fa-solid fa-mobile-screen"></i> App Only
                     </button>
                     <button type="button" class="coach-mode-toggle-btn" id="coachModeOtherBtn" data-mode="other">
-                        <i class="fa-solid fa-cloud-bolt"></i> Other queries
+                        <i class="fa-solid fa-cloud-bolt"></i> Cloud AI
                     </button>
                 </div>
                 <div class="coach-mode-subtext" id="coachModeSubtext">
-                    <span class="mode-dot"></span> <span id="coachModeSubtextLabel">🤖 Offline Local Bot · Answers app controls & formulas</span>
+                    <span class="mode-dot"></span> <span id="coachModeSubtextLabel">✨ Auto Classifier: Local for app actions, Cloud for open questions</span>
                 </div>
             </div>
 
@@ -4033,13 +4865,16 @@ if (typeof globalThis !== 'undefined') {
             <!-- Message Feed -->
             <div class="coach-feed" id="chronoCoachFeed"></div>
 
-            <!-- Input Bar -->
+            <!-- Input Bar with Voice Dictation Button -->
             <form class="coach-input-bar" id="chronoCoachForm">
+                <button type="button" class="coach-mic-btn" id="chronoCoachMicBtn" title="Speak to Producto" aria-label="Voice Input">
+                    <i class="fa-solid fa-microphone"></i>
+                </button>
                 <input 
                     type="text" 
                     id="chronoCoachInput" 
                     class="coach-input" 
-                    placeholder="Ask about math, habits, or 'my weight is 65 kg'..." 
+                    placeholder="Type or tap mic to speak..." 
                     autocomplete="off" 
                 />
                 <button type="submit" class="coach-send-btn" id="chronoCoachSendBtn" aria-label="Send Message">
@@ -4048,6 +4883,42 @@ if (typeof globalThis !== 'undefined') {
             </form>
         `;
         document.body.appendChild(modal);
+
+        // B2. Voice-First Listening Overlay
+        const voiceOverlay = document.createElement('div');
+        voiceOverlay.id = 'chronoCoachVoiceOverlay';
+        voiceOverlay.className = 'chrono-coach-voice-overlay';
+        voiceOverlay.style.display = 'none';
+        voiceOverlay.innerHTML = `
+            <div class="voice-backdrop" id="voiceBackdrop"></div>
+            <div class="voice-card">
+                <button type="button" class="voice-close-btn" id="voiceCloseBtn" aria-label="Close Voice"><i class="fa-solid fa-xmark"></i></button>
+                
+                <div class="voice-avatar-box">
+                    <div class="voice-ripple r1"></div>
+                    <div class="voice-ripple r2"></div>
+                    <div class="voice-ripple r3"></div>
+                    <div class="voice-mic-circle" id="voiceMicCircle">
+                        <i class="fa-solid fa-microphone voice-mic-icon"></i>
+                    </div>
+                </div>
+
+                <div class="voice-status-title" id="voiceStatusTitle">Listening...</div>
+                <p class="voice-hint-subtitle" id="voiceHintSubtitle">Speak a task to schedule, food eaten, or any question</p>
+
+                <div class="voice-transcript-bubble" id="voiceTranscriptBubble">
+                    <span class="transcript-placeholder" id="transcriptPlaceholder">"Schedule Physics at 4 PM" or "I ate 2 eggs"...</span>
+                    <span class="transcript-live-text" id="transcriptLiveText" style="display: none;"></span>
+                </div>
+
+                <div class="voice-actions-row">
+                    <button type="button" class="voice-switch-chat-btn" id="voiceSwitchToChatBtn">
+                        <i class="fa-solid fa-keyboard"></i> Chat instead
+                    </button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(voiceOverlay);
 
         // C. Dual-Mode Query Controller & Quick Chips
         // (Uses module-level currentQueryMode)
@@ -4107,16 +4978,51 @@ if (typeof globalThis !== 'undefined') {
         }
 
         // Mode toggle event listeners
+        const autoModeBtn = document.getElementById('coachModeAutoBtn');
         const appModeBtn = document.getElementById('coachModeAppBtn');
         const otherModeBtn = document.getElementById('coachModeOtherBtn');
+        if (autoModeBtn) autoModeBtn.addEventListener('click', () => setQueryMode('auto'));
         if (appModeBtn) appModeBtn.addEventListener('click', () => setQueryMode('app'));
         if (otherModeBtn) otherModeBtn.addEventListener('click', () => setQueryMode('other'));
 
         // Initialize active mode & chips
         setQueryMode(currentQueryMode);
 
-        // D. Bind Event Listeners
-        fab.addEventListener('click', toggleCoachModal);
+        // D2. Bind Event Listeners
+        // Default action on FAB: Voice-First listening mode!
+        fab.addEventListener('click', () => {
+            const modal = document.getElementById('chronoCoachModal');
+            if (modal && modal.classList.contains('active')) {
+                closeCoachModal();
+            } else {
+                openVoiceMode();
+            }
+        });
+
+        // "Chat instead" button switches smoothly to chat modal
+        const switchChatBtn = document.getElementById('voiceSwitchToChatBtn');
+        if (switchChatBtn) {
+            switchChatBtn.addEventListener('click', () => {
+                closeVoiceMode();
+                openCoachModal();
+            });
+        }
+
+        const voiceClose = document.getElementById('voiceCloseBtn');
+        if (voiceClose) voiceClose.addEventListener('click', closeVoiceMode);
+
+        const voiceBackdrop = document.getElementById('voiceBackdrop');
+        if (voiceBackdrop) voiceBackdrop.addEventListener('click', closeVoiceMode);
+
+        // In-chat mic button
+        const inChatMicBtn = document.getElementById('chronoCoachMicBtn');
+        if (inChatMicBtn) {
+            inChatMicBtn.addEventListener('click', () => {
+                closeCoachModal();
+                openVoiceMode();
+            });
+        }
+
         document.getElementById('chronoCoachCloseBtn').addEventListener('click', closeCoachModal);
         document.getElementById('chronoCoachClearBtn').addEventListener('click', clearChatFeed);
 
@@ -4250,7 +5156,108 @@ if (typeof globalThis !== 'undefined') {
         updateCoachHeaderStatus();
     }
 
-    // --- 4. TOGGLE / OPEN / CLOSE ---
+// D. Voice Recognition Engine & Controller
+    let speechRecognizer = null;
+    let isVoiceActive = false;
+
+    function getSpeechRecognizer() {
+        if (speechRecognizer) return speechRecognizer;
+        const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRec) return null;
+        try {
+            const sr = new SpeechRec();
+            sr.continuous = false;
+            sr.interimResults = true;
+            sr.lang = 'en-US';
+            return sr;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function openVoiceMode() {
+        const overlay = document.getElementById('chronoCoachVoiceOverlay');
+        const chatModal = document.getElementById('chronoCoachModal');
+        if (chatModal) chatModal.classList.remove('active');
+
+        const sr = getSpeechRecognizer();
+        if (!sr) {
+            // Speech recognition not supported or unavailable -> fallback to chat modal
+            openCoachModal();
+            return;
+        }
+
+        if (overlay) overlay.style.display = 'flex';
+        if (window.NativeBridge && window.NativeBridge.vibrate) {
+            window.NativeBridge.vibrate(25);
+        }
+
+        const title = document.getElementById('voiceStatusTitle');
+        const placeholder = document.getElementById('transcriptPlaceholder');
+        const liveText = document.getElementById('transcriptLiveText');
+        if (title) title.textContent = "Listening...";
+        if (placeholder) placeholder.style.display = 'inline';
+        if (liveText) { liveText.style.display = 'none'; liveText.textContent = ''; }
+
+        speechRecognizer = sr;
+        isVoiceActive = true;
+
+        sr.onresult = function(event) {
+            let interim = '';
+            let finalTrans = '';
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+                if (event.results[i].isFinal) {
+                    finalTrans += event.results[i][0].transcript;
+                } else {
+                    interim += event.results[i][0].transcript;
+                }
+            }
+            const currentText = finalTrans || interim;
+            if (currentText && liveText && placeholder) {
+                placeholder.style.display = 'none';
+                liveText.style.display = 'inline';
+                liveText.textContent = `"${currentText}"`;
+            }
+
+            if (finalTrans) {
+                closeVoiceMode();
+                openCoachModal();
+                handleUserQuery(finalTrans);
+            }
+        };
+
+        sr.onerror = function(event) {
+            console.warn("[Producto Voice] Error:", event.error);
+            if (event.error === 'not-allowed') {
+                closeVoiceMode();
+                openCoachModal();
+                appendBotMessage("⚠️ **Microphone permission was not granted.** You can type your request directly here!");
+            } else if (event.error === 'no-speech') {
+                if (title) title.textContent = "Didn't catch that";
+            }
+        };
+
+        sr.onend = function() {
+            isVoiceActive = false;
+        };
+
+        try {
+            sr.start();
+        } catch (e) {
+            console.warn("[Producto Voice] Start error:", e);
+        }
+    }
+
+    function closeVoiceMode() {
+        const overlay = document.getElementById('chronoCoachVoiceOverlay');
+        if (overlay) overlay.style.display = 'none';
+        if (speechRecognizer) {
+            try { speechRecognizer.stop(); } catch (e) {}
+        }
+        isVoiceActive = false;
+    }
+
+        // --- 4. TOGGLE / OPEN / CLOSE ---
     function toggleCoachModal() {
         const modal = document.getElementById('chronoCoachModal');
         if (!modal) return;
@@ -4375,6 +5382,9 @@ if (typeof globalThis !== 'undefined') {
             feed.innerHTML = '';
             renderWelcomeMessage();
         }
+        try {
+            localStorage.removeItem('producto_coach_memory_v1');
+        } catch(e) {}
     }
 
     function escapeHTML(str) {
@@ -4452,7 +5462,9 @@ if (typeof globalThis !== 'undefined') {
 
     // Expose Global Helper
     window.ProductoUI = {
-        open: openCoachModal,
+        open: openVoiceMode,
+        openVoice: openVoiceMode,
+        openChat: openCoachModal,
         close: closeCoachModal,
         toggle: toggleCoachModal,
         ask: handleUserQuery,

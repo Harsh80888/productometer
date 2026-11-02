@@ -183,81 +183,21 @@
                 </div>
             </section>
 
-            <!-- SECTION 3.3: ⏱️ APP DAILY LIMITS & PARENTAL CONTROLS -->
-            <section class="sm-card limits-manager-card" id="appLimitsManagerCard">
-                <div class="limits-card-header">
+            <!-- SECTION 3.3: COMPACT APP LIMITS SUMMARY BANNER -->
+            <section class="sm-card limits-summary-banner" id="bannerOpenLimitsOverview">
+                <div class="limits-summary-left">
+                    <div class="limits-summary-icon">
+                        <i class="fa-solid fa-stopwatch-20"></i>
+                    </div>
                     <div>
-                        <div class="sm-title" style="color: #00e5ff;">
-                            <i class="fa-solid fa-stopwatch-20"></i> App Daily Limits &amp; Boundaries
-                        </div>
-                        <span style="font-size: 0.72rem; color: #94a3b8;">Enforce hard boundaries on addictive apps</span>
-                    </div>
-                    <button type="button" class="btn-add-app-limit" id="btnOpenAddLimitModal">
-                        <i class="fa-solid fa-plus"></i> Set App Limit
-                    </button>
-                </div>
-
-                <div class="limits-tab-row">
-                    <button type="button" class="limit-tab-btn active" data-tab="active">Active Limits</button>
-                    <button type="button" class="limit-tab-btn" data-tab="compulsory">Compulsory (FB/IG/Games)</button>
-                    <button type="button" class="limit-tab-btn" data-tab="all">All Apps</button>
-                </div>
-
-                <!-- Dynamic Active Limits Cards Container -->
-                <div class="active-limits-container" id="activeLimitsCardsContainer">
-                    <!-- Populated dynamically by screen-scripts.js -->
-                </div>
-            </section>
-
-            <!-- SECTION 3.5: FOCUS SHIELD (SHORTS & REELS BLOCKER - ACCESSIBILITY) -->
-            <section class="sm-card focus-shield-card" id="focusShieldCard" style="border: 1.5px solid rgba(0, 229, 255, 0.35); background: linear-gradient(180deg, rgba(16, 24, 40, 0.95) 0%, rgba(5, 7, 13, 0.98) 100%);">
-                <div class="sm-card-header">
-                    <div class="sm-title" style="color: #00e5ff;">
-                        <i class="fa-solid fa-shield-halved"></i> Focus Shield (Shorts &amp; Reels Blocker)
-                    </div>
-                    <span id="shieldServiceStatusBadge" style="font-size: 0.72rem; font-weight: 800; padding: 4px 10px; border-radius: 12px; background: rgba(255, 61, 113, 0.15); color: #ff3d71; border: 1px solid rgba(255, 61, 113, 0.3); display: inline-flex; align-items: center; gap: 5px;">
-                        <i class="fa-solid fa-circle-exclamation"></i> Service Disabled
-                    </span>
-                </div>
-                <p style="font-size: 0.8rem; color: #94a3b8; margin: 4px 0 14px 0; line-height: 1.45;">
-                    Automatically detects and blocks algorithmic doomscroll feeds (YouTube Shorts &amp; Instagram Reels) to keep you in flow state.
-                </p>
-
-                <!-- Toggles Row -->
-                <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 12px;">
-                        <div style="display: flex; align-items: center; gap: 10px;">
-                            <i class="fa-brands fa-youtube" style="color: #ff0000; font-size: 1.2rem;"></i>
-                            <span style="font-size: 0.84rem; font-weight: 700; color: #fff;">Block YouTube Shorts</span>
-                        </div>
-                        <label class="switch-toggle" style="position: relative; display: inline-block; width: 44px; height: 24px; margin: 0;">
-                            <input type="checkbox" id="toggleBlockYouTubeShorts" checked style="opacity: 0; width: 0; height: 0;">
-                            <span class="slider round" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #00e676; transition: .3s; border-radius: 24px;"></span>
-                        </label>
-                    </div>
-
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 12px;">
-                        <div style="display: flex; align-items: center; gap: 10px;">
-                            <i class="fa-brands fa-instagram" style="color: #e1306c; font-size: 1.2rem;"></i>
-                            <span style="font-size: 0.84rem; font-weight: 700; color: #fff;">Block Instagram Reels</span>
-                        </div>
-                        <label class="switch-toggle" style="position: relative; display: inline-block; width: 44px; height: 24px; margin: 0;">
-                            <input type="checkbox" id="toggleBlockInstaReels" checked style="opacity: 0; width: 0; height: 0;">
-                            <span class="slider round" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #00e676; transition: .3s; border-radius: 24px;"></span>
-                        </label>
+                        <div class="limits-summary-title">App Daily Limits &amp; Boundaries</div>
+                        <div class="limits-summary-subtext" id="limitsSummarySubtext">Tap to configure &amp; manage app limits</div>
                     </div>
                 </div>
-
-                <!-- Action & Guidance Buttons -->
-                <div style="display: flex; flex-direction: column; gap: 8px;">
-                    <button type="button" id="btnToggleAccessibilityService" class="btn-perm-primary" style="background: linear-gradient(135deg, #00e5ff, #00e676); color: #030305; font-weight: 800; border: none; padding: 12px 16px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.86rem; box-shadow: 0 0 15px rgba(0, 229, 255, 0.3);">
-                        <i class="fa-solid fa-power-off"></i> Enable Focus Shield in Accessibility
-                    </button>
-                    
-                    <button type="button" id="btnShowRestrictedGuide" class="btn-perm-secondary" style="background: rgba(255, 214, 0, 0.1); border: 1px solid rgba(255, 214, 0, 0.4); color: #ffd600; font-weight: 700; padding: 10px 14px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.8rem;">
-                        <i class="fa-solid fa-triangle-exclamation"></i> Android 13/14/15: "Restricted Setting"? Tap to Unlock
-                    </button>
-                </div>
+                <button type="button" class="btn-manage-limits-pill" id="btnTriggerLimitsModal">
+                    <span>Manage Limits</span>
+                    <i class="fa-solid fa-chevron-right"></i>
+                </button>
             </section>
 
             <!-- SECTION 4: REAL WORKING APP BREAKDOWN & CLASSIFICATION -->
@@ -369,7 +309,39 @@
 
 
 
-        <!-- 📱 APP SELECTOR PICKER MODAL (FOR SETTING APP LIMITS) -->
+    <!-- ⏱️ APP LIMITS OVERVIEW POPUP MODAL -->
+    <dialog id="appLimitsOverviewModal" class="limits-overview-dialog">
+        <div class="limits-overview-card">
+            <div class="limits-overview-header">
+                <div>
+                    <div class="sm-title" style="color: #00e5ff; font-size: 1.05rem;">
+                        <i class="fa-solid fa-stopwatch-20"></i> App Daily Limits &amp; Boundaries
+                    </div>
+                    <span style="font-size: 0.72rem; color: #94a3b8;">Enforce hard boundaries on addictive apps</span>
+                </div>
+                <button type="button" class="btn-close-limits-modal" id="btnCloseLimitsOverviewModal" aria-label="Close">&times;</button>
+            </div>
+
+            <div class="limits-overview-actions">
+                <button type="button" class="btn-add-app-limit" id="btnOpenAddLimitModal">
+                    <i class="fa-solid fa-plus"></i> Set App Limit
+                </button>
+            </div>
+
+            <div class="limits-tab-row">
+                <button type="button" class="limit-tab-btn active" data-tab="active">Active Limits</button>
+                <button type="button" class="limit-tab-btn" data-tab="compulsory">Compulsory (FB/IG/Games)</button>
+                <button type="button" class="limit-tab-btn" data-tab="all">All Apps</button>
+            </div>
+
+            <!-- Dynamic Active Limits Cards Container -->
+            <div class="active-limits-container" id="activeLimitsCardsContainer">
+                <!-- Populated dynamically by screen-scripts.js -->
+            </div>
+        </div>
+    </dialog>
+
+    <!-- 📱 APP SELECTOR PICKER MODAL (FOR SETTING APP LIMITS) -->
     <dialog id="appPickerModal" class="app-picker-dialog">
         <div class="app-picker-card">
             <div style="display: flex; justify-content: space-between; align-items: center;">
