@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Productometer — Hardware-Integrated Anti-Doomscroll & Discipline OS</title>
+    
+    <!-- SEO & Metadata -->
+    <meta name="description" content="Productometer is the world's first hardware-integrated anti-doomscroll and discipline operating system featuring the 1-Reel Grace Rule, 48-slot swipe-paint scheduling, and Net AP scoring.">
+    <meta name="keywords" content="Productivity, Screen Time, Doomscroll Blocker, YouTube Shorts Blocker, Instagram Reels Blocker, Day Planner, Focus Timer">
+    <meta name="theme-color" content="#030305">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <!-- FontAwesome 6 Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Showcase Stylesheet -->
+    <link rel="stylesheet" href="./showcase-style.css">
+</head>
+<body class="showcase-body">
+
+    <!-- Ambient Glowing HUD Grid Canvas -->
+    <canvas id="ambientCanvas" class="ambient-canvas"></canvas>
+
+    <!-- ========================================================
+         NAVIGATION HEADER (FLOATING GLASS HUD)
+         ======================================================== -->
+    <header class="showcase-header">
+        <div class="nav-container">
+            <a href="#" class="brand-logo">
+                <div class="brand-hex"><i class="fa-solid fa-shield-halved"></i></div>
+                <span class="brand-text">PRODUCTOMETER</span>
+                <span class="brand-tag">OS v1.0</span>
+            </a>
+
+            <nav class="nav-links" id="navLinks">
+                <a href="#features" class="nav-link"><i class="fa-solid fa-cubes"></i> Features</a>
+                <a href="#simulators" class="nav-link"><i class="fa-solid fa-gamepad"></i> Interactive Lab</a>
+                <a href="#formula" class="nav-link"><i class="fa-solid fa-calculator"></i> Net AP Engine</a>
+                <a href="#architecture" class="nav-link"><i class="fa-solid fa-microchip"></i> Hardware Bridge</a>
+                <a href="#comparison" class="nav-link"><i class="fa-solid fa-bolt"></i> Why It Wins</a>
+            </nav>
+
+            <div class="nav-actions">
+                <button id="soundToggleBtn" class="sound-toggle-btn" title="Toggle Interactive Simulator Audio" aria-label="Toggle Simulator Audio">
+                    <i class="fa-solid fa-volume-high" id="soundIcon"></i>
+                    <span class="sound-label">Audio ON</span>
+                </button>
+                <a href="../index.html" class="btn-launch-portal" title="Open the live Productometer Web Portal">
+                    <span>Launch Portal</span>
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                </a>
+                <button class="mobile-nav-toggle" id="mobileNavToggle" aria-label="Open Mobile Menu">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ========================================================
+         HERO SECTION (3D PHONE FRAME + TELEMETRY HUD)
+         ======================================================== -->
+    <section class="hero-section">
+        <div class="hero-container">
+            <div class="hero-text-content">
+                <div class="hero-badge">
+                    <span class="pulse-dot"></span>
+                    <span>HARDWARE-INTEGRATED DISCIPLINE PLATFORM</span>
+                </div>
+                
+                <h1 class="hero-title">
+                    Stop Fighting Your Phone.<br>
+                    <span class="gradient-text">Let Architecture</span> Protect Your Focus.
+                </h1>
+
+                <p class="hero-description">
+                    The world’s first discipline engine built on Android Accessibility Service, 
+                    real-time doomscroll interception, tactile 48-slot swipe-paint scheduling, 
+                    and a mathematically balanced Net AP scoring system.
+                </p>
+
+                <div class="hero-cta-group">
+                    <a href="#simulators" class="btn-primary-hero">
+                        <i class="fa-solid fa-play"></i>
+                        <span>Test Guardian Simulator</span>
+                    </a>
+                    <a href="../index.html" class="btn-secondary-hero">
+                        <i class="fa-solid fa-desktop"></i>
+                        <span>Live Web Portal</span>
+                    </a>
+                    <a href="#download" class="btn-ghost-hero">
+                        <i class="fa-brands fa-android"></i>
+                        <span>Android APK</span>
+                    </a>
+                </div>
+
+                <!-- Hero Live Telemetry Row -->
+                <div class="hero-telemetry-row">
+                    <div class="telemetry-pill">
+                        <i class="fa-solid fa-shield-virus text-cyan"></i>
+                        <div>
+                            <span class="pill-val">1-Reel Grace</span>
+                            <span class="pill-lbl">Zero Lockout Shock</span>
+                        </div>
+                    </div>
+                    <div class="telemetry-pill">
+                        <i class="fa-solid fa-clock text-amber"></i>
+                        <div>
+                            <span class="pill-val">48-Slot Matrix</span>
+                            <span class="pill-lbl">Swipe-Paint Scheduling</span>
+                        </div>
+                    </div>
+                    <div class="telemetry-pill">
+                        <i class="fa-solid fa-chart-line text-emerald"></i>
+                        <div>
+                            <span class="pill-val">Ground Truth</span>
+                            <span class="pill-lbl">UsageEvents Stream</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hero Interactive Phone Frame Stage -->
+            <div class="hero-visual-stage">
+                <div class="phone-mockup-wrapper">
+                    <div class="phone-glow"></div>
+                    <div class="phone-bezel">
+                        <div class="phone-speaker"></div>
+                        <div class="phone-screen">
+                            
+                            <!-- Internal App Header HUD -->
+                            <div class="app-hud-header">
+                                <div class="app-hud-time" id="mockTime">10:42 PM</div>
+                                <div class="app-hud-branding">PRODUCTOMETER</div>
+                                <div class="app-hud-status">
+                                    <i class="fa-solid fa-shield-halved text-cyan"></i>
+                                    <i class="fa-solid fa-wifi"></i>
+                                    <i class="fa-solid fa-battery-full text-emerald"></i>
+                                </div>
+                            </div>
+
+                            <!-- Live Upcoming Session Banner inside Phone -->
+                            <div class="mock-upcoming-banner">
+                                <div class="mock-up-left">
+                                    <i class="fa-solid fa-graduation-cap text-cyan"></i>
+                                    <div>
+                                        <span class="mock-up-title">Physics &amp; Calculus</span>
+                                        <span class="mock-up-time">Next at 11:00 PM · Day Planner</span>
+                                    </div>
+                                </div>
+                                <span class="mock-guardian-chip">ARMED</span>
+                            </div>
+
+                            <!-- Mock Productivity Score Hero Display -->
+                            <div class="mock-score-card">
+                                <div class="mock-score-meta">
+                                    <span class="mock-card-tag">DAILY PRODUCTIVITY CURVE</span>
+                                    <span class="mock-rank-badge"><i class="fa-solid fa-bolt"></i> TITANIUM</span>
+                                </div>
+                                <div class="mock-score-number-row">
+                                    <span class="mock-big-score" id="mockHeroScore">480</span>
+                                    <div class="mock-score-units">
+                                        <span>NET AP</span>
+                                        <span class="text-emerald">+120 today</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Canvas Curve Preview -->
+                                <div class="mock-chart-container">
+                                    <canvas id="mockHeroCanvas" width="280" height="70"></canvas>
+                                </div>
+
+                                <!-- Formula Micro Chips -->
+                                <div class="mock-chips-row">
+                                    <span class="mock-chip acad">+300 Acad</span>
+                                    <span class="mock-chip health">+90 Health</span>
+                                    <span class="mock-chip tasks">+150 Tasks</span>
+                                </div>
+                            </div>
+
+                            <!-- Mock Dual Metric Tiles -->
+                            <div class="mock-metrics-row">
+                                <div class="mock-metric-tile">
+                                    <i class="fa-solid fa-mobile-screen text-cyan"></i>
+                                    <span class="mock-tile-val">1h 14m</span>
+                                    <span class="mock-tile-lbl">Screen Time</span>
+                                </div>
+                                <div class="mock-metric-tile">
+                                    <i class="fa-solid fa-film text-emerald"></i>
+                                    <span class="mock-tile-val">0 Swipes</span>
+                                    <span class="mock-tile-lbl">Shorts / Reels</span>
+                                </div>
+                            </div>
+
+                            <!-- Floating Guardian Shield Toast -->
+                            <div class="mock-floating-shield">
+                                <i class="fa-solid fa-shield-heart text-cyan"></i>
+                                <span>Doomscroll Guardian: 0 Interceptions</span>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- Floating Ambient HUD Cards -->
+                    <div class="floating-hud-card card-top-right">
+                        <div class="card-icon-hex"><i class="fa-solid fa-bolt"></i></div>
+                        <div>
+                            <div class="f-title">Smart 1-Reel Grace</div>
+                            <div class="f-sub text-emerald">Allows 1st · Blocks 2nd</div>
+                        </div>
+                    </div>
+
+                    <div class="floating-hud-card card-bottom-left">
+                        <div class="card-icon-hex"><i class="fa-solid fa-fingerprint"></i></div>
+                        <div>
+                            <div class="f-title">48-Slot Matrix</div>
+                            <div class="f-sub text-cyan">Swipe-Paint Scheduling</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========================================================
+         SECTION: INTERACTIVE WORKING MECHANISM LAB (LIVE SIMULATORS)
+         ======================================================== -->
+    <section class="section-container" id="simulators">
+        <div class="section-header">
+            <span class="section-tag"><i class="fa-solid fa-flask"></i> INTERACTIVE MECHANISM LAB</span>
+            <h2 class="section-title">Experience the Guardian Engine in Your Browser</h2>
+            <p class="section-subtitle">
+                Don't just read about our architecture. Test the authentic 1-Reel Grace Rule, swipe-paint matrix, and back-navigation triggers right here.
+            </p>
+        </div>
+
+        <div class="simulators-grid">
+            
+            <!-- SIMULATOR 1: THE 1-REEL GRACE RULE SIMULATOR -->
+            <div class="sim-card doomscroll-sim">
+                <div class="sim-card-header">
+                    <div class="sim-badge-row">
+                        <span class="sim-badge"><i class="fa-solid fa-shield-virus"></i> LIVE SIMULATOR 01</span>
+                        <span class="sim-state-badge state-safe" id="simGuardianStatus">STANDBY</span>
+                    </div>
+                    <h3 class="sim-title">The 1-Reel Grace &amp; Interception Flow</h3>
+                    <p class="sim-desc">
+                        Conventional blockers fail because they lock you out instantly. Productometer grants <strong>1 Short/Reel grace</strong>, but if you swipe into a 2nd consecutive Short, the <strong>Doomscroll Guardian HUD</strong> fires and executes an automatic gesture back to your focus.
+                    </p>
+                </div>
+
+                <div class="sim-body">
+                    <!-- Virtual Mobile Simulator Screen -->
+                    <div class="virtual-phone">
+                        <div class="vp-notch"></div>
+                        <div class="vp-screen" id="vpScreen">
+                            
+                            <!-- VIEW A: PRODUCTIVE LECTURE / FOCUS APP -->
+                            <div class="vp-view vp-study-view active" id="vpStudyView">
+                                <div class="vp-study-header">
+                                    <i class="fa-solid fa-atom text-cyan"></i>
+                                    <span>Quantum Physics Lecture · Chapter 4</span>
+                                </div>
+                                <div class="vp-study-mock-content">
+                                    <div class="study-progress-bar">
+                                        <div class="study-progress-fill" style="width: 65%;"></div>
+                                    </div>
+                                    <p class="study-text">Focus block in progress: 35 minutes completed.</p>
+                                    <div class="distraction-prompt-box">
+                                        <span>Curious about a trending Short or Reel?</span>
+                                        <button class="btn-sim-distraction" id="btnLaunchShorts">
+                                            <i class="fa-brands fa-youtube"></i> Open YouTube Shorts
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- VIEW B: SHORTS / REELS FEED -->
+                            <div class="vp-view vp-shorts-view" id="vpShortsView">
+                                <div class="vp-shorts-top">
+                                    <span>Shorts Feed</span>
+                                    <span class="vp-swipes-badge" id="vpSwipesBadge">Short 1 / 1 (Grace)</span>
+                                </div>
+
+                                <div class="vp-shorts-video-frame" id="vpShortsVideoFrame">
+                                    <div class="shorts-caption-overlay">
+                                        <div class="shorts-author" id="shortsAuthor">@viral_vibes</div>
+                                        <div class="shorts-caption" id="shortsCaption">1st Short: Grace period active! Take a quick breather.</div>
+                                    </div>
+                                    <div class="shorts-side-actions">
+                                        <span><i class="fa-solid fa-heart"></i> 142k</span>
+                                        <span><i class="fa-solid fa-comment"></i> 1.2k</span>
+                                        <span><i class="fa-solid fa-share"></i> Share</span>
+                                    </div>
+                                </div>
+
+                                <!-- Swipe Trigger Button -->
+                                <div class="vp-shorts-controls">
+                                    <button class="btn-swipe-short" id="btnSwipeNextShort">
+                                        <i class="fa-solid fa-arrow-down"></i> Swipe Next Short
+                                    </button>
+                                    <button class="btn-sim-reset" id="btnSimReset">
+                                        <i class="fa-solid fa-rotate-left"></i> Reset
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- VIEW C: THE 5-SECOND DOOMSCROLL GUARDIAN OVERLAY -->
+                            <div class="vp-overlay" id="vpGuardianOverlay">
+                                <div class="guardian-modal-box">
+                                    <div class="g-modal-badge"><i class="fa-solid fa-shield-halved"></i> DOOMSCROLL GUARDIAN</div>
+                                    <div class="g-modal-title">2nd Short Detected!</div>
+                                    <p class="g-modal-desc">Returning to your study session to protect your focus curve.</p>
+                                    
+                                    <div class="countdown-circle-wrap">
+                                        <span class="countdown-num" id="simCountdownNum">5</span>
+                                    </div>
+
+                                    <button class="btn-return-now" id="btnSimReturnNow">
+                                        <i class="fa-solid fa-arrow-left"></i> Return Now
+                                    </button>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- Simulator Telemetry Log -->
+                    <div class="sim-telemetry-console">
+                        <div class="telemetry-header">
+                            <span class="dot-green"></span>
+                            <span>ACCESSIBILITY SERVICE EVENT LOG</span>
+                        </div>
+                        <div class="telemetry-log-stream" id="telemetryLogStream">
+                            <div class="log-entry sys">[00:00:00] Focus session active: "Quantum Physics". Blocker armed.</div>
+                            <div class="log-entry info">[00:00:00] Waiting for user input...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SIMULATOR 2: INTERACTIVE 48-SLOT SWIPE-PAINT MATRIX -->
+            <div class="sim-card planner-sim">
+                <div class="sim-card-header">
+                    <div class="sim-badge-row">
+                        <span class="sim-badge"><i class="fa-solid fa-calendar-day"></i> LIVE SIMULATOR 02</span>
+                        <span class="sim-state-badge state-safe" id="matrixFillCount">8/48 Slots</span>
+                    </div>
+                    <h3 class="sim-title">48-Slot Matrix Swipe-Paint Engine</h3>
+                    <p class="sim-desc">
+                        No tedious dropdowns or typing. Drag your mouse or finger across the 30-minute intervals to paint your day. 
+                        Each scheduled session automatically arms the hardware alarm and the Doomscroll Guardian.
+                    </p>
+                </div>
+
+                <div class="sim-body planner-sim-body">
+                    <!-- Category Selector Palette -->
+                    <div class="matrix-palette">
+                        <button class="palette-btn active pal-study" data-cat="study">
+                            <span class="pal-dot"></span> Study / Academics
+                        </button>
+                        <button class="palette-btn pal-health" data-cat="health">
+                            <span class="pal-dot"></span> Workout / Health
+                        </button>
+                        <button class="palette-btn pal-sleep" data-cat="sleep">
+                            <span class="pal-dot"></span> Sleep / Rest
+                        </button>
+                        <button class="palette-btn pal-erase" data-cat="empty">
+                            <i class="fa-solid fa-eraser"></i> Erase
+                        </button>
+                    </div>
+
+                    <!-- 48-Slot Interactive Canvas Grid -->
+                    <div class="matrix-grid-scroll-wrap">
+                        <div class="matrix-grid-container" id="matrixGridContainer">
+                            <!-- Injected dynamically by scripts: 48 interactive 30-min slots -->
+                        </div>
+                    </div>
+
+                    <!-- Grid Summary Readout -->
+                    <div class="matrix-summary-row">
+                        <div class="mat-stat">
+                            <span class="mat-lbl">Academics</span>
+                            <span class="mat-val text-cyan" id="matAcadTime">3.0 hrs</span>
+                        </div>
+                        <div class="mat-stat">
+                            <span class="mat-lbl">Health &amp; Workout</span>
+                            <span class="mat-val text-amber" id="matHealthTime">1.0 hrs</span>
+                        </div>
+                        <div class="mat-stat">
+                            <span class="mat-lbl">Sleep Allocated</span>
+                            <span class="mat-val text-purple" id="matSleepTime">8.0 hrs</span>
+                        </div>
+                        <button class="btn-clear-matrix" id="btnClearMatrix">
+                            <i class="fa-solid fa-trash-can"></i> Reset Matrix
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ========================================================
+         SECTION: NET AP PRODUCTIVITY SCORING PLAYGROUND
+         ======================================================== -->
+    <section class="section-container" id="formula">
+        <div class="section-header">
+            <span class="section-tag"><i class="fa-solid fa-calculator"></i> THE MATHEMATICAL ENGINE</span>
+            <h2 class="section-title">The Net AP Productivity Formula</h2>
+            <p class="section-subtitle">
+                Productometer rewards consistent study and exercise, while heavily penalizing non-productive doomscrolling. 
+                Adjust the sliders below to test how habits impact your daily score.
+            </p>
+        </div>
+
+        <div class="formula-playground-card">
+            
+            <!-- Mathematical Equation Banner -->
+            <div class="formula-equation-box">
+                <div class="formula-badge">GLOBAL MATHEMATICAL MODEL</div>
+                <div class="equation-display">
+                    <span class="eq-token net">Net AP</span>
+                    <span class="eq-op">=</span>
+                    <span class="eq-group acad" title="Academics: +100n">(100 × Academics)</span>
+                    <span class="eq-op">+</span>
+                    <span class="eq-group health" title="Health: 150 - 30n">(150 - 30 × Health)</span>
+                    <span class="eq-op">+</span>
+                    <span class="eq-group other" title="Other Productive: +50n">(50 × Other)</span>
+                    <span class="eq-op">-</span>
+                    <span class="eq-group screen" title="Non-Productive Screen: -(50 + 50n)">(50 + 50 × Screen)</span>
+                    <span class="eq-op">+</span>
+                    <span class="eq-group tasks" title="Tasks Bonus: +50 per session">(50 × Tasks)</span>
+                </div>
+            </div>
+
+            <div class="calculator-grid">
+                <!-- Sliders Deck -->
+                <div class="sliders-deck">
+                    
+                    <!-- Academics Slider -->
+                    <div class="calc-slider-row">
+                        <div class="slider-meta">
+                            <span class="slider-title"><i class="fa-solid fa-graduation-cap text-cyan"></i> Academics ($n$ Hours)</span>
+                            <span class="slider-val-readout" id="readoutAcad">3.0 hrs (+300 AP)</span>
+                        </div>
+                        <input type="range" min="0" max="10" step="0.5" value="3" class="cyber-range range-cyan" id="rangeAcad">
+                    </div>
+
+                    <!-- Health / Workout Slider -->
+                    <div class="calc-slider-row">
+                        <div class="slider-meta">
+                            <span class="slider-title"><i class="fa-solid fa-heart-pulse text-amber"></i> Workout / Health ($n$ Hours)</span>
+                            <span class="slider-val-readout" id="readoutHealth">1.0 hrs (+120 AP)</span>
+                        </div>
+                        <input type="range" min="0" max="4" step="0.5" value="1" class="cyber-range range-amber" id="rangeHealth">
+                    </div>
+
+                    <!-- Other Productive Slider -->
+                    <div class="calc-slider-row">
+                        <div class="slider-meta">
+                            <span class="slider-title"><i class="fa-solid fa-brain text-purple"></i> Other Productive ($n$ Hours)</span>
+                            <span class="slider-val-readout" id="readoutOther">1.0 hrs (+50 AP)</span>
+                        </div>
+                        <input type="range" min="0" max="6" step="0.5" value="1" class="cyber-range range-purple" id="rangeOther">
+                    </div>
+
+                    <!-- Non-Productive Screen Time Slider -->
+                    <div class="calc-slider-row">
+                        <div class="slider-meta">
+                            <span class="slider-title"><i class="fa-solid fa-mobile-screen text-crimson"></i> Non-Productive Screen ($n$ Hours)</span>
+                            <span class="slider-val-readout" id="readoutScreen">1.5 hrs (-125 AP)</span>
+                        </div>
+                        <input type="range" min="0" max="8" step="0.5" value="1.5" class="cyber-range range-crimson" id="rangeScreen">
+                    </div>
+
+                    <!-- Completed Tasks Slider -->
+                    <div class="calc-slider-row">
+                        <div class="slider-meta">
+                            <span class="slider-title"><i class="fa-solid fa-circle-check text-emerald"></i> Completed Planner Tasks</span>
+                            <span class="slider-val-readout" id="readoutTasks">3 Sessions (+150 AP)</span>
+                        </div>
+                        <input type="range" min="0" max="8" step="1" value="3" class="cyber-range range-emerald" id="rangeTasks">
+                    </div>
+
+                </div>
+
+                <!-- Live Score Card & Visual Graph -->
+                <div class="calculator-result-card" id="calcResultCard">
+                    <div class="result-card-top">
+                        <span class="result-badge">CALCULATED DAILY TOTAL</span>
+                        <div class="result-rank-pill" id="calcRankPill">
+                            <i class="fa-solid fa-bolt"></i> <span id="calcRankText">TITANIUM OPERATIVE</span>
+                        </div>
+                    </div>
+
+                    <div class="result-score-hero">
+                        <span class="result-big-num" id="calcBigScore">495</span>
+                        <span class="result-unit">NET AP</span>
+                    </div>
+
+                    <!-- Real-Time Interactive Canvas Curve -->
+                    <div class="calc-canvas-wrap">
+                        <canvas id="calcGraphCanvas" width="480" height="150"></canvas>
+                    </div>
+
+                    <!-- Dynamic Feedback Message -->
+                    <div class="calc-feedback-banner" id="calcFeedbackBanner">
+                        <i class="fa-solid fa-circle-check text-emerald" id="calcFeedbackIcon"></i>
+                        <span id="calcFeedbackText">Optimal performance! Productivity easily outpaces screen entertainment.</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ========================================================
+         SECTION: CORE FEATURES (THE 6 PILLARS)
+         ======================================================== -->
+    <section class="section-container" id="features">
+        <div class="section-header">
+            <span class="section-tag"><i class="fa-solid fa-cubes"></i> TACTICAL CAPABILITIES</span>
+            <h2 class="section-title">Built for Real Life, Not Perfect Days</h2>
+            <p class="section-subtitle">
+                Explore the modular architecture powering Productometer across mobile Android and desktop browsers.
+            </p>
+        </div>
+
+        <div class="features-pillars-grid">
+            
+            <!-- Pillar 1 -->
+            <div class="pillar-card">
+                <div class="pillar-icon-box cyan"><i class="fa-solid fa-shield-virus"></i></div>
+                <h3 class="pillar-title">The Distraction Blocker</h3>
+                <p class="pillar-text">
+                    Armed with Android Accessibility Service. Allows 1 Short/Reel grace period, then intercepts doomscrolling with a 5-second countdown alert and automatically triggers native gesture navigation back.
+                </p>
+                <ul class="pillar-points">
+                    <li><i class="fa-solid fa-check text-cyan"></i> 1-Reel Grace Rule (no shock lockouts)</li>
+                    <li><i class="fa-solid fa-check text-cyan"></i> 15s casual video warning for YouTube</li>
+                    <li><i class="fa-solid fa-check text-cyan"></i> 30s Emergency Pass override</li>
+                </ul>
+            </div>
+
+            <!-- Pillar 2 -->
+            <div class="pillar-card">
+                <div class="pillar-icon-box amber"><i class="fa-solid fa-calendar-week"></i></div>
+                <h3 class="pillar-title">48-Slot Matrix Planner</h3>
+                <p class="pillar-text">
+                    Continuous touch-drag swipe-painting across 30-minute intervals. Automatically synchronizes with Android AlarmManager (<code class="code-tag">RTC_WAKEUP</code>) to ring even if the device is locked.
+                </p>
+                <ul class="pillar-points">
+                    <li><i class="fa-solid fa-check text-amber"></i> Continuous swipe-paint touch blocks</li>
+                    <li><i class="fa-solid fa-check text-amber"></i> Hardware alarms ring in sleep mode</li>
+                    <li><i class="fa-solid fa-check text-amber"></i> Upcoming session ribbon on home portal</li>
+                </ul>
+            </div>
+
+            <!-- Pillar 3 -->
+            <div class="pillar-card">
+                <div class="pillar-icon-box emerald"><i class="fa-solid fa-clock-rotate-left"></i></div>
+                <h3 class="pillar-title">Academics &amp; Study Service</h3>
+                <p class="pillar-text">
+                    Active Pomodoro loops backed by an ongoing Android Foreground Notification Service (<code class="code-tag">FocusService</code>) displaying a persistent status bar ticker and distraction penalty audits.
+                </p>
+                <ul class="pillar-points">
+                    <li><i class="fa-solid fa-check text-emerald"></i> Status bar live countdown ticker</li>
+                    <li><i class="fa-solid fa-check text-emerald"></i> Self-report distraction deduction</li>
+                    <li><i class="fa-solid fa-check text-emerald"></i> +100 Net AP points per hour studied</li>
+                </ul>
+            </div>
+
+            <!-- Pillar 4 -->
+            <div class="pillar-card">
+                <div class="pillar-icon-box crimson"><i class="fa-solid fa-mobile-screen"></i></div>
+                <h3 class="pillar-title">Screen Time &amp; Digital Wellbeing</h3>
+                <p class="pillar-text">
+                    Queries actual Android UsageEvents timeline directly from 00:00 midnight to now. Resolves application labels and icons automatically with hands-free automated tracking.
+                </p>
+                <ul class="pillar-points">
+                    <li><i class="fa-solid fa-check text-crimson"></i> Ground-truth UsageEvents stream</li>
+                    <li><i class="fa-solid fa-check text-crimson"></i> Shorts &amp; Reels swipe counter</li>
+                    <li><i class="fa-solid fa-check text-crimson"></i> Warning Red strictly on excessive limits</li>
+                </ul>
+            </div>
+
+            <!-- Pillar 5 -->
+            <div class="pillar-card">
+                <div class="pillar-icon-box purple"><i class="fa-solid fa-heart-pulse"></i></div>
+                <h3 class="pillar-title">PulseFit Health &amp; Exercise</h3>
+                <p class="pillar-text">
+                    Comprehensive fitness tracking featuring 40+ exercise animations with 3D tutorials, nutritional calorie logging against daily targets, and hardware pedometer sensor integration.
+                </p>
+                <ul class="pillar-points">
+                    <li><i class="fa-solid fa-check text-purple"></i> 40+ animated exercise form guides</li>
+                    <li><i class="fa-solid fa-check text-purple"></i> Hardware pedometer step sensor</li>
+                    <li><i class="fa-solid fa-check text-purple"></i> Calorie goal progress and meal tracker</li>
+                </ul>
+            </div>
+
+            <!-- Pillar 6 -->
+            <div class="pillar-card">
+                <div class="pillar-icon-box cyan"><i class="fa-solid fa-brain"></i></div>
+                <h3 class="pillar-title">Producto AI Coach &amp; Sleep</h3>
+                <p class="pillar-text">
+                    On-demand cognitive coaching powered by Meta Llama Cloud AI paired with a circadian sleep rhythm monitor that enforces a 15-minute night screen limit before bedtime.
+                </p>
+                <ul class="pillar-points">
+                    <li><i class="fa-solid fa-check text-cyan"></i> Cognitive debriefs &amp; study strategy</li>
+                    <li><i class="fa-solid fa-check text-cyan"></i> Circadian bedtime smart alarms</li>
+                    <li><i class="fa-solid fa-check text-cyan"></i> Nighttime 15m screen guardian</li>
+                </ul>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ========================================================
+         SECTION: HARDWARE ARCHITECTURE (HOW IT WORKS UNDER THE HOOD)
+         ======================================================== -->
+    <section class="section-container" id="architecture">
+        <div class="section-header">
+            <span class="section-tag"><i class="fa-solid fa-microchip"></i> UNDER THE HOOD</span>
+            <h2 class="section-title">Hardware-Level Communication Architecture</h2>
+            <p class="section-subtitle">
+                How Productometer bridges Android native system daemons with the high-performance Web HUD interface.
+            </p>
+        </div>
+
+        <div class="arch-flow-wrapper">
+            
+            <div class="arch-stage-card">
+                <div class="stage-step">01</div>
+                <div class="stage-icon"><i class="fa-solid fa-eye text-cyan"></i></div>
+                <h4 class="stage-title">Accessibility Service</h4>
+                <p class="stage-desc">
+                    Passive background listener monitors window changes. Detects YouTube <code class="code-tag">reel_recycler</code> and Instagram <code class="code-tag">clips_video_container</code>.
+                </p>
+                <span class="stage-tech">ShortsReelsBlockerService.java</span>
+            </div>
+
+            <div class="arch-connector"><i class="fa-solid fa-arrow-right"></i></div>
+
+            <div class="arch-stage-card">
+                <div class="stage-step">02</div>
+                <div class="stage-icon"><i class="fa-solid fa-window-restore text-amber"></i></div>
+                <h4 class="stage-title">System Alert Overlay</h4>
+                <p class="stage-desc">
+                    On 2nd consecutive short, displays a 5-second countdown HUD above YouTube/Instagram using <code class="code-tag">TYPE_ACCESSIBILITY_OVERLAY</code>.
+                </p>
+                <span class="stage-tech">WindowManager API</span>
+            </div>
+
+            <div class="arch-connector"><i class="fa-solid fa-arrow-right"></i></div>
+
+            <div class="arch-stage-card">
+                <div class="stage-step">03</div>
+                <div class="stage-icon"><i class="fa-solid fa-arrow-left-long text-emerald"></i></div>
+                <h4 class="stage-title">Gesture Back Engine</h4>
+                <p class="stage-desc">
+                    Executes <code class="code-tag">GLOBAL_ACTION_BACK</code> after a 250ms window focus delay to cleanly restore the user’s previous study app.
+                </p>
+                <span class="stage-tech">Gesture Navigation Safe</span>
+            </div>
+
+            <div class="arch-connector"><i class="fa-solid fa-arrow-right"></i></div>
+
+            <div class="arch-stage-card">
+                <div class="stage-step">04</div>
+                <div class="stage-icon"><i class="fa-solid fa-network-wired text-purple"></i></div>
+                <h4 class="stage-title">JavaScript Bridge</h4>
+                <p class="stage-desc">
+                    Transfers ground-truth usage stats, alarm triggers, and swipe tallies directly into the web runtime with zero cloud latency.
+                </p>
+                <span class="stage-tech">NativeBridge &amp; WebAppInterface</span>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ========================================================
+         SECTION: COMPARISON MATRIX (WHY PRODUCTOMETER WINS)
+         ======================================================== -->
+    <section class="section-container" id="comparison">
+        <div class="section-header">
+            <span class="section-tag"><i class="fa-solid fa-scale-balanced"></i> HEAD-TO-HEAD</span>
+            <h2 class="section-title">Productometer vs Conventional App Blockers</h2>
+            <p class="section-subtitle">
+                Why standard app blockers get uninstalled within 48 hours, and why Productometer sticks.
+            </p>
+        </div>
+
+        <div class="comparison-table-wrapper">
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th class="col-feature">Architectural Capability</th>
+                        <th class="col-productometer">Productometer OS</th>
+                        <th class="col-other">Standard App Blockers</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="f-name">
+                            <strong>Smart 1-Reel Grace Rule</strong>
+                            <span>Allows 1st short for a quick breather; blocks only on the 2nd swipe</span>
+                        </td>
+                        <td class="val-pro"><i class="fa-solid fa-circle-check"></i> Built-in (Smart Guardian)</td>
+                        <td class="val-con"><i class="fa-solid fa-circle-xmark"></i> No (Locks out instantly)</td>
+                    </tr>
+                    <tr>
+                        <td class="f-name">
+                            <strong>Doomscroll Swipe Detection</strong>
+                            <span>Detects vertical swipes inside YouTube Shorts and Instagram Reels</span>
+                        </td>
+                        <td class="val-pro"><i class="fa-solid fa-circle-check"></i> Yes (Accessibility Service)</td>
+                        <td class="val-con"><i class="fa-solid fa-circle-xmark"></i> Blocks whole app or nothing</td>
+                    </tr>
+                    <tr>
+                        <td class="f-name">
+                            <strong>48-Slot Matrix Swipe-Painting</strong>
+                            <span>Tactile 30-minute block scheduling with continuous drag painting</span>
+                        </td>
+                        <td class="val-pro"><i class="fa-solid fa-circle-check"></i> Yes (Continuous Touch Matrix)</td>
+                        <td class="val-con"><i class="fa-solid fa-circle-xmark"></i> Tedious dropdown menus</td>
+                    </tr>
+                    <tr>
+                        <td class="f-name">
+                            <strong>Hardware Alarms in Sleep Mode</strong>
+                            <span>Rings exact audible alarms even if phone display is off</span>
+                        </td>
+                        <td class="val-pro"><i class="fa-solid fa-circle-check"></i> Yes (AlarmManager RTC_WAKEUP)</td>
+                        <td class="val-con"><i class="fa-solid fa-circle-xmark"></i> Silent push notifications</td>
+                    </tr>
+                    <tr>
+                        <td class="f-name">
+                            <strong>Mathematical Net AP Scoring</strong>
+                            <span>Dynamic scoring formula balancing academics, health, and screen time</span>
+                        </td>
+                        <td class="val-pro"><i class="fa-solid fa-circle-check"></i> Built-in (Daily &amp; Weekly Curve)</td>
+                        <td class="val-con"><i class="fa-solid fa-circle-xmark"></i> Raw minutes with no formula</td>
+                    </tr>
+                    <tr>
+                        <td class="f-name">
+                            <strong>Privacy &amp; Offline Autonomy</strong>
+                            <span>Zero cloud telemetry, zero account walls, runs 100% locally</span>
+                        </td>
+                        <td class="val-pro"><i class="fa-solid fa-circle-check"></i> 100% Offline &amp; Private</td>
+                        <td class="val-con"><i class="fa-solid fa-circle-xmark"></i> Requires account &amp; sync</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- ========================================================
+         SECTION: DOWNLOAD / LAUNCH CALL TO ACTION
+         ======================================================== -->
+    <section class="section-container download-section" id="download">
+        <div class="download-cta-card">
+            <div class="cta-glow"></div>
+            
+            <div class="cta-badge">GET STARTED TODAY</div>
+            <h2 class="cta-title">Ready to Take Control of Your Focus?</h2>
+            <p class="cta-desc">
+                Experience the Productometer portal immediately in your browser, or install the Android APK for full hardware-level doomscroll protection.
+            </p>
+
+            <div class="cta-btn-deck">
+                <a href="../index.html" class="cta-btn-primary">
+                    <i class="fa-solid fa-globe"></i>
+                    <div>
+                        <span class="cta-btn-lbl">Open Web Portal</span>
+                        <span class="cta-btn-sub">Run Live in Browser</span>
+                    </div>
+                </a>
+                <a href="../Features/index.html" class="cta-btn-secondary">
+                    <i class="fa-solid fa-cubes"></i>
+                    <div>
+                        <span class="cta-btn-lbl">Browse Features Hub</span>
+                        <span class="cta-btn-sub">Explore All Modules</span>
+                    </div>
+                </a>
+                <a href="../Me/index.html" class="cta-btn-ghost">
+                    <i class="fa-solid fa-user-astronaut"></i>
+                    <div>
+                        <span class="cta-btn-lbl">Guardian Defense Hub</span>
+                        <span class="cta-btn-sub">Configure Whitelist Rules</span>
+                    </div>
+                </a>
+            </div>
+
+            <div class="cta-install-tip">
+                <i class="fa-solid fa-circle-info text-cyan"></i>
+                <span>Android 13/14 Users: Enable "Allow restricted settings" in App Info to unlock Accessibility features.</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========================================================
+         FOOTER HUD
+         ======================================================== -->
+    <footer class="showcase-footer">
+        <div class="footer-container">
+            <div class="footer-branding">
+                <div class="brand-hex"><i class="fa-solid fa-shield-halved"></i></div>
+                <div>
+                    <div class="f-brand-title">PRODUCTOMETER OS</div>
+                    <div class="f-brand-sub">Hardware-Integrated Anti-Doomscroll &amp; Discipline Platform</div>
+                </div>
+            </div>
+
+            <div class="footer-links-row">
+                <a href="../index.html">Portal Home</a>
+                <a href="../Features/Day Planner/planner-index.html">Day Planner</a>
+                <a href="../Features/Academics_Monitoring/index.html">Academics</a>
+                <a href="../Features/Screen_Management/index.html">Screen Management</a>
+                <a href="../Features/Health_Tracker/index.html">Health Tracker</a>
+                <a href="../Me/index.html">Me Profile</a>
+            </div>
+
+            <div class="footer-copy">
+                <span>&copy; 2026 Productometer Platform. Engineered for absolute focus.</span>
+                <span class="sys-healthy"><span class="dot-green"></span> SYSTEM ONLINE</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Audio Element for Doomscroll Alert Beep -->
+    <audio id="audioWarning" src="../Features/assets/2.mp3" preload="auto"></audio>
+
+    <!-- Scripts -->
+    <script src="./showcase-scripts.js"></script>
+</body>
+</html>

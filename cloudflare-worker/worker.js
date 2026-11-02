@@ -81,12 +81,14 @@ Productometer App Architecture & Rules:
 - Academics: Live countdown timer loops, self-report distraction deduction penalties.
 - Screen Management: Entertainment limit boundaries, Focus Shield (Shorts & Reels accessibility blocker).
 - Health Tracker: Caloric intake vs workout burn, dynamic protein target (1.6g - 2.2g per kg body weight).
+- Sleep & Bedtime Monitoring: Flexible sleep duration (7.5-9 hrs target), Bedtime Wind-Down mode, Smart Wakeup Alarm with 50-step wakeup counter, 15-minute night distraction cap.
 
 User's Live Performance Context:
 - Weight: ${userContext.weight ?? 70} kg, Goal: ${userContext.goal ?? 'maintain'}
 - Net Daily Score: ${userContext.netScore ?? 0} pts
 - Academics / Study Logged: ${userContext.nAcad ?? 0}h
 - Non-Productive Screen Time: ${userContext.nScreen ?? 0}h
+- Sleep Target: ${userContext.targetSleepHours ?? 8}h (Bedtime: ${userContext.bedtimeStart ?? '23:00'} - ${userContext.bedtimeEnd ?? '07:00'})
 - Tasks Completed: ${userContext.completedTasksCount ?? 0}/${userContext.totalTasksCount ?? 0}
 - Longest Break Today: ${userContext.longestBreakMins ?? 0}m
 

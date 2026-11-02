@@ -226,6 +226,11 @@ var ProductoBrain = (function() {
         let totalTasksCount = 0;
         let totalScreenHours = 0;
         let nonProdScreenHours = 0;
+        let rawBedtimeStart = '23:00';
+        let rawBedtimeEnd = '07:00';
+        let rawTargetSleepMins = 480;
+        let smartAlarmEnabled = true;
+        let isAlarmSkippedToday = false;
 
         // User Personal Biometrics Profile (Retrieved directly from Health Tab)
         const userProfile = retrieveHealthBiometrics();
@@ -261,6 +266,19 @@ var ProductoBrain = (function() {
             if (rawScreenTotal) totalScreenHours = parseFloat(rawScreenTotal) || 0;
             const rawScreenNonProd = localStorage.getItem('screen_nonprod_hours');
             if (rawScreenNonProd) nonProdScreenHours = parseFloat(rawScreenNonProd) || 0;
+
+            // E. Read Sleep & Bedtime Monitoring Data
+            const bStart = localStorage.getItem('productometer_bedtime_start');
+            if (bStart) rawBedtimeStart = bStart;
+            const bEnd = localStorage.getItem('productometer_bedtime_end');
+            if (bEnd) rawBedtimeEnd = bEnd;
+            const tSleep = localStorage.getItem('productometer_target_sleep_minutes');
+            if (tSleep) rawTargetSleepMins = parseInt(tSleep, 10) || 480;
+            const sAlarm = localStorage.getItem('productometer_smart_alarm_enabled');
+            if (sAlarm !== null) smartAlarmEnabled = sAlarm === 'true';
+            const skippedDate = localStorage.getItem('wakeup_alarm_skipped_date');
+            const todayStr = new Date().toISOString().slice(0, 10);
+            isAlarmSkippedToday = skippedDate === todayStr;
 
         } catch (e) {
             console.warn('[ProductoBrain] Error reading live metrics:', e);
@@ -373,6 +391,12 @@ var ProductoBrain = (function() {
             totalScreenHours,
             nonProdScreenHours,
             totalFocusSlotsLogged,
+            bedtimeStart: (typeof rawBedtimeStart !== 'undefined' ? rawBedtimeStart : '23:00'),
+            bedtimeEnd: (typeof rawBedtimeEnd !== 'undefined' ? rawBedtimeEnd : '07:00'),
+            targetSleepMins: (typeof rawTargetSleepMins !== 'undefined' ? rawTargetSleepMins : 480),
+            targetSleepHours: Math.round(((typeof rawTargetSleepMins !== 'undefined' ? rawTargetSleepMins : 480) / 60) * 10) / 10,
+            smartAlarmEnabled: (typeof smartAlarmEnabled !== 'undefined' ? smartAlarmEnabled : true),
+            isAlarmSkippedToday: (typeof isAlarmSkippedToday !== 'undefined' ? isAlarmSkippedToday : false),
             maxContinuousFocusHours: maxContinuousFocusSlots * 0.5,
             longestBreakMins: longestBreakSlots * 30,
             afternoonStudyHours: afternoonStudySlots * 0.5,
@@ -2803,6 +2827,94 @@ Avoid potato chips and cookies that spike insulin. Instead, choose:
             }
         },
         {
+            id: "sleep_monitoring_module_guide",
+            category: "Sleep & Recovery",
+            title: "How does the Sleep & Bedtime Monitoring feature work?",
+            keywords: [
+                "sleep monitoring guide", "how sleep monitoring works", "configure bedtime",
+                "sleep target hours", "bedtime start end", "sleep tracker", "sleep module",
+                "circadian sleep guardian", "sleep schedule"
+            ],
+            answer: function(liveData) {
+                const bStart = liveData.bedtimeStart || '23:00';
+                const bEnd = liveData.bedtimeEnd || '07:00';
+                const targetH = liveData.targetSleepHours || 8.0;
+                const alarmOn = liveData.smartAlarmEnabled !== false;
+
+                return `### 🌙 Circadian Sleep Guardian & Bedtime Architecture
+
+The **Sleep & Bedtime Monitoring** module harmonizes your sleep architecture with your circadian rhythm to ensure deep, regenerative slow-wave recovery:
+
+1. **Flexible Target Duration (5-6 Cycles)**:
+   - Your current target is set to **${targetH} hours** (Science recommends **7.5h to 9.0h**).
+   - Tap the **+** / **-** buttons or preset chips (7h, 7.5h, 8h, 8.5h, 9h) to calibrate based on your workload.
+
+2. **Bedtime & Wake-Up Schedule**:
+   - Current window: **${bStart}** (Bedtime) → **${bEnd}** (Wake-up).
+   - The live countdown banner alerts you when bedtime is approaching so you can wind down.
+
+3. **Smart Ecosystem Integration**:
+   - Brain Activation Smart Alarm: **${alarmOn ? 'Active 🔔' : 'Disabled 🔕'}**.
+   - Syncs automatically with your Day Planner timeline so late-night tasks don't collide with restorative sleep!`;
+            }
+        },
+        {
+            id: "smart_wakeup_alarm_routine",
+            category: "Sleep & Recovery",
+            title: "How does the Brain Activation Smart Alarm & 50-Step Routine work?",
+            keywords: [
+                "smart wakeup alarm", "50 step wakeup", "smart alarm routine",
+                "skip upcoming alarm", "how to turn off alarm", "sleep alarm",
+                "alarm skip today", "alarm skip tomorrow", "step counter alarm"
+            ],
+            answer: function(liveData) {
+                const alarmOn = liveData.smartAlarmEnabled !== false;
+                const isSkipped = !!liveData.isAlarmSkippedToday;
+
+                return `### ⏰ Brain Activation Smart Alarm & 50-Step Wakeup Routine
+
+Tired of snoozing alarms and falling back into brain fog? The **Brain Activation Smart Alarm** forces full neural awakening:
+
+1. **The 50-Step Disarm Rule**:
+   - Unlike standard alarms with a simple swipe button, this smart alarm activates your motor cortex: you must **physically walk 50 steps** (counted live via native pedometer sensors) to disarm it!
+   - By step 30, heart rate accelerates and blood flow clears adenosine from your prefrontal cortex.
+
+2. **Intelligent Alarm Skip (Today vs Tomorrow)**:
+   - Need to sleep in for a scheduled recovery day? Tap **Skip Upcoming Alarm**.
+   - If pressed before your bedtime, it skips tonight's wake-up.
+   - If pressed after bedtime/midnight, it skips the upcoming morning alarm.
+   - You can resume it anytime with the **Resume Alarm** button.
+
+3. **Current Live Status**:
+   - Alarm state: **${alarmOn ? (isSkipped ? 'Skipped for upcoming cycle ⏭️' : 'Active & Armed 🔔') : 'Disabled 🔕'}**
+   - Wake-up target: **${liveData.bedtimeEnd || '07:00'}**`;
+            }
+        },
+        {
+            id: "bedtime_distraction_cap_guard",
+            category: "Sleep & Recovery",
+            title: "What is the 15-Minute Night Distraction Cap & Bedtime Wind-Down?",
+            keywords: [
+                "night distraction cap", "15 minute bedtime screen limit", "bedtime emergency pass",
+                "night grayscale mode", "bedtime distraction", "bedtime mode", "distraction cap"
+            ],
+            answer: function(liveData) {
+                return `### 🛡️ 15-Minute Night Distraction Cap & Wind-Down Protocol
+
+Blue light and late-night scrolling suppress melatonin by up to **85%**. The Bedtime Guardian enforces strict boundaries:
+
+1. **15-Minute Screen Budget**:
+   - Once your scheduled bedtime arrives, a strict **15-minute distraction allowance** begins.
+   - A real-time progress bar shows your remaining night usage.
+
+2. **Anti-Dopamine Grayscale Shield**:
+   - When your limit expires, the display turns grayscale and non-essential entertainment apps are blocked until morning wake-up.
+
+3. **Emergency Pass**:
+   - Need urgent access for a call, navigation, or critical message? Tap **Use Emergency Pass** for a temporary 10-minute pass without ruining your score.`;
+            }
+        },
+        {
             id: "sleep_cycle_architecture",
             category: "Sleep & Recovery",
             title: "How do 90-minute sleep cycles alternate between NREM and REM?",
@@ -3498,6 +3610,22 @@ True productivity is not working until you collapse:
     ]);
 
     const TOPIC_CLUSTERS = [
+        {
+            name: "sleep_bedtime_guardian",
+            triggers: [
+                "sleep", "bedtime", "alarm", "wake up", "wakeup", "wake-up",
+                "smart alarm", "circadian", "distraction cap", "50 step", "50-step",
+                "rem", "wind down", "skip alarm", "sleep schedule", "sleep monitor"
+            ],
+            boostIds: [
+                "sleep_monitoring_module_guide",
+                "smart_wakeup_alarm_routine",
+                "bedtime_distraction_cap_guard",
+                "target_sleep_duration",
+                "sleep_cycle_architecture",
+                "bedtime_mode_wind_down"
+            ]
+        },
         {
             name: "diet_workout",
             triggers: ["diet", "food", "nutrition", "workout diet", "active workout", "meal", "eating", "eat", "protein", "calories", "weight", "weigh", "bulk", "cut", "hydration"],
@@ -4679,6 +4807,7 @@ if (typeof globalThis !== 'undefined') {
         { label: "⚡ $150-30n$ Formula", query: "How is the Productivity Score calculated?" },
         { label: "🥗 My Workout Diet", query: "Which diet I should take for active workout?" },
         { label: "📋 Day Planner Guide", query: "How do I schedule upcoming sessions in Day Planner?" },
+        { label: "🌙 Sleep Guardian", query: "How does the Sleep and Bedtime Monitoring module work?" },
         { label: "🛡️ Focus Shield", query: "What is the Shorts & Reels Blocker (Focus Shield)?" }
     ];
 
