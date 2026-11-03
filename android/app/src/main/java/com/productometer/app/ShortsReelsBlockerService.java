@@ -128,9 +128,64 @@ public class ShortsReelsBlockerService extends AccessibilityService {
     // Click / search pre-watch memory
     private static long lastStudyClickedTimestamp = 0L;
     private static String lastStudyClickedText = "";
-    // 4-second settle grace period for video titles & metadata loading
+    // Settle grace period for video titles & metadata loading
     private static String activePendingLectureSignature = "";
     private static long pendingLectureStartTimestamp = 0L;
+
+    private final Runnable pendingLectureCheckRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (isOverlayActive || isCoolingDown) return;
+            AccessibilityNodeInfo root = getRootInActiveWindow();
+            if (root == null) return;
+            try {
+                CharSequence currentPkg = root.getPackageName();
+                if (currentPkg == null) return;
+                String pkgStr = currentPkg.toString();
+
+                SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+                String ytMode = prefs.getString(KEY_YOUTUBE_MODE, MODE_BLOCK_SHORTS);
+                boolean isLectureMode = MODE_LECTURE_ONLY.equals(ytMode);
+                if (!isLectureMode) return;
+
+                if (PKG_YOUTUBE.equals(pkgStr)) {
+                    if (isYouTubeVideoPlaying(root, 0)) {
+                        String activeTitle = extractActiveYouTubeTitle(root).toLowerCase();
+                        if (!containsStudyKeyword(activeTitle) && !isEducationalChannel(activeTitle)) {
+                            long now = System.currentTimeMillis();
+                            if (now - lastStudyClickedTimestamp >= 10000L) {
+                                String sig = "yt_v_" + (activeTitle.isEmpty() ? "non_study" : (activeTitle.length() > 35 ? activeTitle.substring(0, 35) : activeTitle));
+                                if (!whitelistedLectureSignatures.contains(sig)) {
+                                    handleDistractionDetected(sig, "YouTube (Lecture Only: Study Lectures Only)");
+                                }
+                            }
+                        }
+                    }
+                } else if (isBrowserPackage(pkgStr)) {
+                    boolean isShortsBlocked = prefs.getBoolean(KEY_SHORTS_ENABLED, true);
+                    String sig = detectBrowserYouTubeDistraction(root, null, isShortsBlocked, true);
+                    if (sig != null && !sig.isEmpty()) {
+                        handleDistractionDetected(sig, "Browser YouTube (Lecture Only Mode)");
+                    }
+                }
+            } finally {
+                root.recycle();
+            }
+        }
+    };
+
+    private void schedulePendingLectureCheck() {
+        if (mainHandler != null) {
+            mainHandler.removeCallbacks(pendingLectureCheckRunnable);
+            mainHandler.postDelayed(pendingLectureCheckRunnable, 2500L);
+        }
+    }
+
+    private void cancelPendingLectureCheck() {
+        if (mainHandler != null) {
+            mainHandler.removeCallbacks(pendingLectureCheckRunnable);
+        }
+    }
 
     // Strict, unambiguous entertainment keywords (clean of false positives like reaction, challenge, song, highlights)
     public static boolean containsEntertainmentKeyword(String text) {
@@ -511,11 +566,15 @@ public class ShortsReelsBlockerService extends AccessibilityService {
         }
 
         SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        boolean masterEnabled = isMasterBlockerEnabled || prefs.getBoolean(KEY_MASTER_ENABLED, false);
+        boolean masterEnabled = isMasterBlockerEnabled || prefs.getBoolean(KEY_MASTER_ENABLED, true);
         boolean sessionOngoing = isFocusSessionOngoing || prefs.getBoolean(KEY_FOCUS_ACTIVE, false);
 
-        // The Distraction Blocker is ONLY active when a focus session is ongoing OR master switch is ON!
-        if (!masterEnabled && !sessionOngoing) {
+        String ytMode = prefs.getString(KEY_YOUTUBE_MODE, MODE_BLOCK_SHORTS);
+        boolean isLectureMode = MODE_LECTURE_ONLY.equals(ytMode);
+
+        // In lecture only mode: lecture filtering is ALWAYS active for YouTube and Browsers!
+        // Otherwise, master blocker switch or focus session must be ON.
+        if (!masterEnabled && !sessionOngoing && !isLectureMode) {
             return;
         }
 
@@ -594,7 +653,7 @@ public class ShortsReelsBlockerService extends AccessibilityService {
                 handleDistractionDetected(signature, distractionLabel);
             } else {
                 long now = System.currentTimeMillis();
-                if (now - lastDistractionTimestamp > 8000) {
+                if (now - lastDistractionTimestamp > 15000L) {
                     resetDistractionSession();
                 }
             }
@@ -630,8 +689,32 @@ public class ShortsReelsBlockerService extends AccessibilityService {
     }
 
     // Robust check for active YouTube video watch page (Compose & Litho safe)
-    private boolean isYouTubeVideoPlaying(AccessibilityNodeInfo node, int depth) {
-        if (node == null || depth > 8) return false;
+    private boolean isYouTubeVideoPlaying(AccessibilityNodeInfo root, int depth) {
+        if (root == null) return false;
+
+        // 1. Direct view ID searches for player containers (O(1) index lookup)
+        String[] playerViewIds = {
+            "com.google.android.youtube:id/player_view",
+            "com.google.android.youtube:id/watch_while_layout",
+            "com.google.android.youtube:id/watch_panel",
+            "com.google.android.youtube:id/watch_metadata",
+            "com.google.android.youtube:id/movie_player",
+            "com.google.android.youtube:id/fullscreen_button"
+        };
+        for (String id : playerViewIds) {
+            List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByViewId(id);
+            if (nodes != null && !nodes.isEmpty()) {
+                for (AccessibilityNodeInfo n : nodes) n.recycle();
+                return true;
+            }
+        }
+
+        // 2. Recursive content description / control check (depth up to 25)
+        return scanForPlayerControls(root, 0);
+    }
+
+    private boolean scanForPlayerControls(AccessibilityNodeInfo node, int depth) {
+        if (node == null || depth > 25) return false;
 
         CharSequence desc = node.getContentDescription();
         if (desc != null) {
@@ -651,11 +734,11 @@ public class ShortsReelsBlockerService extends AccessibilityService {
             }
         }
 
-        int count = Math.min(node.getChildCount(), 8);
+        int count = Math.min(node.getChildCount(), 16);
         for (int i = 0; i < count; i++) {
             AccessibilityNodeInfo child = node.getChild(i);
             if (child != null) {
-                boolean active = isYouTubeVideoPlaying(child, depth + 1);
+                boolean active = scanForPlayerControls(child, depth + 1);
                 child.recycle();
                 if (active) return true;
             }
@@ -666,7 +749,7 @@ public class ShortsReelsBlockerService extends AccessibilityService {
     // Collect active video title & channel: strictly inspects only the first 2 children of list/recycler containers
     // (Child 0 = title & metadata, Child 1 = channel row) to 100% prevent recommendation feed leakage!
     private void collectTopWatchTextNodes(AccessibilityNodeInfo node, List<String> texts, int depth, int maxNodes) {
-        if (node == null || depth > 12 || texts.size() >= maxNodes) return;
+        if (node == null || depth > 25 || texts.size() >= maxNodes) return;
 
         CharSequence viewId = node.getViewIdResourceName();
         boolean isListContainer = false;
@@ -684,6 +767,9 @@ public class ShortsReelsBlockerService extends AccessibilityService {
         if (desc != null && desc.length() > 3) {
             String d = desc.toString().trim();
             String dLower = d.toLowerCase();
+            if (dLower.startsWith("comments") || dLower.contains("up next")) {
+                return; // Stop traversal before recommendations!
+            }
             if (!dLower.contains("play video") && !dLower.contains("pause video") &&
                 !dLower.contains("enter full screen") && !dLower.contains("exit full screen") &&
                 !dLower.contains("seek slider") && !dLower.contains("collapse") &&
@@ -696,6 +782,9 @@ public class ShortsReelsBlockerService extends AccessibilityService {
         if (txt != null && txt.length() > 3) {
             String t = txt.toString().trim();
             String tLower = t.toLowerCase();
+            if (tLower.startsWith("comments") || tLower.contains("up next")) {
+                return; // Stop traversal before recommendations!
+            }
             if (!tLower.equals("subscribe") && !tLower.equals("subscribed") &&
                 !tLower.equals("share") && !tLower.equals("remix") &&
                 !tLower.equals("download") && !tLower.equals("thanks") && !tLower.equals("clip")) {
@@ -706,7 +795,7 @@ public class ShortsReelsBlockerService extends AccessibilityService {
         int childCount = node.getChildCount();
         // If container is a recycler/list on watch page: Child 0 is video metadata/title, Child 1 is channel.
         // Child 2+ are comments & recommendations, so we strictly cap at 2!
-        int maxChildren = isListContainer ? Math.min(childCount, 2) : Math.min(childCount, 8);
+        int maxChildren = isListContainer ? Math.min(childCount, 2) : Math.min(childCount, 16);
         for (int i = 0; i < maxChildren; i++) {
             AccessibilityNodeInfo child = node.getChild(i);
             if (child != null) {
@@ -755,12 +844,14 @@ public class ShortsReelsBlockerService extends AccessibilityService {
 
         // 1. Verify if YouTube is actively on a video watch page (Compose & Litho safe)
         if (!isYouTubeVideoPlaying(root, 0)) {
+            cancelPendingLectureCheck();
             return null; // In search bar, channel list, home tabs, or feed
         }
 
         long now = System.currentTimeMillis();
         // Pre-watch click memory (tapped from search)
         if (now - lastStudyClickedTimestamp < 10000L) {
+            cancelPendingLectureCheck();
             return null; // Allowed! Legitimate lecture opened from search
         }
 
@@ -770,6 +861,7 @@ public class ShortsReelsBlockerService extends AccessibilityService {
         // 1. Check if user already whitelisted this video
         String sig = "yt_v_" + (activeTitle.isEmpty() ? "unknown_video" : (activeTitle.length() > 35 ? activeTitle.substring(0, 35) : activeTitle));
         if (whitelistedLectureSignatures.contains(sig)) {
+            cancelPendingLectureCheck();
             return null;
         }
 
@@ -777,26 +869,31 @@ public class ShortsReelsBlockerService extends AccessibilityService {
         // If the title or channel contains academic keywords, it is 100% permitted immediately!
         if (containsStudyKeyword(activeTitle) || isEducationalChannel(activeTitle)) {
             activePendingLectureSignature = "";
+            cancelPendingLectureCheck();
             return null; // Allowed! Legitimate study lecture
         }
 
         // 3. ENTERTAINMENT BLACKLIST (NEGATIVE MATCHING)
         // Strictly catches gaming, vlogs, comedy, songs, trailers, roasts, pranks!
         if (containsEntertainmentKeyword(activeTitle)) {
+            cancelPendingLectureCheck();
             return "yt_entertainment_" + (activeTitle.length() > 30 ? activeTitle.substring(0, 30) : activeTitle);
         }
 
-        // 4. Settle grace period (3.5 seconds) to let title finish loading
+        // 4. Settle grace period (2.5 seconds) to let title finish loading
         if (!sig.equals(activePendingLectureSignature)) {
             activePendingLectureSignature = sig;
             pendingLectureStartTimestamp = now;
+            schedulePendingLectureCheck();
             return null; // Loading buffer
         }
-        if (now - pendingLectureStartTimestamp < 3500L) {
+        if (now - pendingLectureStartTimestamp < 2500L) {
+            schedulePendingLectureCheck();
             return null;
         }
 
-        // If after 3.5s video has NO study keywords, it is uneducational content!
+        // If after 2.5s video has NO study keywords, it is uneducational content!
+        cancelPendingLectureCheck();
         return sig;
     }
 
@@ -861,29 +958,35 @@ public class ShortsReelsBlockerService extends AccessibilityService {
                 // 1. Study keywords checked FIRST!
                 if (containsStudyKeyword(activeBrowserTitle) || isEducationalChannel(activeBrowserTitle)) {
                     activePendingLectureSignature = "";
+                    cancelPendingLectureCheck();
                     return null; // Allowed! Study lecture verified
                 }
 
                 // 2. Entertainment blacklist
                 if (containsEntertainmentKeyword(activeBrowserTitle)) {
+                    cancelPendingLectureCheck();
                     return "browser_yt_entertainment_" + (activeBrowserTitle.length() > 30 ? activeBrowserTitle.substring(0, 30) : activeBrowserTitle);
                 }
 
-                // 3. Settle grace period (3.5 seconds)
+                // 3. Settle grace period (2.5 seconds)
                 long now = System.currentTimeMillis();
                 String rawSig = "browser_yt_" + (activeBrowserTitle.length() > 30 ? activeBrowserTitle.substring(0, 30) : activeBrowserTitle);
                 if (whitelistedLectureSignatures.contains(rawSig)) {
+                    cancelPendingLectureCheck();
                     return null;
                 }
                 if (!rawSig.equals(activePendingLectureSignature)) {
                     activePendingLectureSignature = rawSig;
                     pendingLectureStartTimestamp = now;
+                    schedulePendingLectureCheck();
                     return null; // Grace period start
                 }
-                if (now - pendingLectureStartTimestamp < 3500L) {
-                    return null; // Within 3.5-second loading buffer
+                if (now - pendingLectureStartTimestamp < 2500L) {
+                    schedulePendingLectureCheck();
+                    return null; // Within 2.5-second loading buffer
                 }
 
+                cancelPendingLectureCheck();
                 return rawSig;
             }
         }
@@ -949,21 +1052,17 @@ public class ShortsReelsBlockerService extends AccessibilityService {
         lastDistractionTimestamp = now;
 
         if (signature.equals(lastDistractionSignature)) {
+            if (!isOverlayActive && !isCoolingDown) {
+                mainHandler.post(() -> showCountdownOverlay(label));
+            }
             return;
         }
 
         lastDistractionSignature = signature;
         distractionCount++;
 
-        if (distractionCount == 1) {
-            mainHandler.post(() -> Toast.makeText(
-                    getApplicationContext(),
-                    "🛡️ Productometer: 1st " + label + " allowed (grace). Next will trigger guardian alert.",
-                    Toast.LENGTH_SHORT
-            ).show());
-        } else if (distractionCount >= 2) {
-            mainHandler.post(() -> showCountdownOverlay(label));
-        }
+        // Trigger countdown overlay immediately (no grace loopholes!)
+        mainHandler.post(() -> showCountdownOverlay(label));
     }
 
     private void resetDistractionSession() {

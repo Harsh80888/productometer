@@ -49,6 +49,14 @@ html, body {
     user-select: none;
 }
 
+/* Allow text selection when in editable mode */
+body.editable-active [contenteditable="true"],
+[contenteditable="true"] {
+    user-select: text !important;
+    -webkit-user-select: text !important;
+    cursor: text !important;
+}
+
 /* Ambient Cosmic Background */
 .mesh-canvas-bg {
     position: fixed;
@@ -238,6 +246,39 @@ html, body {
     color: var(--cyan);
     border-color: var(--cyan);
     background: rgba(0, 229, 255, 0.08);
+}
+
+.edit-deck-pill {
+    background: rgba(0, 229, 255, 0.12);
+    border: 1px solid var(--cyan);
+    color: var(--cyan);
+    box-shadow: 0 0 12px rgba(0, 229, 255, 0.25);
+}
+
+.edit-deck-pill:hover {
+    background: rgba(0, 229, 255, 0.22);
+    box-shadow: 0 0 18px rgba(0, 229, 255, 0.45);
+    color: #FFF;
+}
+
+.edit-deck-pill.mode-off {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: var(--border-glass);
+    color: #94A3B8;
+    box-shadow: none;
+}
+
+.reset-deck-pill {
+    background: rgba(244, 63, 94, 0.12);
+    border: 1px solid rgba(244, 63, 94, 0.4);
+    color: #FDA4AF;
+}
+
+.reset-deck-pill:hover {
+    background: rgba(244, 63, 94, 0.25);
+    border-color: #F43F5E;
+    color: #FFF;
+    box-shadow: 0 0 12px rgba(244, 63, 94, 0.35);
 }
 
 .try-app-btn {
@@ -1506,6 +1547,275 @@ html, body {
     .drawer-tiles-grid { grid-template-columns: 1fr; }
 }
 
+/* ========================================================
+   IN-PLACE DECK EDITING SYSTEM (TEXT & PICTURES)
+   ======================================================== */
+
+/* Floating Guide Banner */
+.deck-edit-banner {
+    position: fixed;
+    top: 72px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(13, 19, 45, 0.94);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(0, 229, 255, 0.4);
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 229, 255, 0.25);
+    border-radius: 30px;
+    padding: 8px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    z-index: 95;
+    font-size: 0.82rem;
+    color: #F8FAFC;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    max-width: 90vw;
+}
+
+.deck-edit-banner.hidden {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(-50%) translateY(-12px);
+}
+
+.deb-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    line-height: 1.4;
+}
+
+.deb-icon {
+    font-size: 1.15rem;
+    animation: pulseIcon 2s ease-in-out infinite;
+}
+
+@keyframes pulseIcon {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+}
+
+.deb-text strong {
+    color: var(--cyan);
+}
+
+.deb-close {
+    background: transparent;
+    border: none;
+    color: #94A3B8;
+    font-size: 1.25rem;
+    cursor: pointer;
+    padding: 0 4px;
+    line-height: 1;
+    transition: color 0.15s ease;
+}
+
+.deb-close:hover {
+    color: #FFF;
+}
+
+/* In-place Editable Text Focus & Hover Highlights */
+body.editable-active [contenteditable="true"] {
+    outline: 1.5px dashed rgba(0, 229, 255, 0.45);
+    border-radius: 5px;
+    cursor: text !important;
+    transition: background-color 0.15s ease, outline-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+body.editable-active [contenteditable="true"]:hover {
+    outline-color: var(--cyan);
+    background-color: rgba(0, 229, 255, 0.08);
+}
+
+body.editable-active [contenteditable="true"]:focus {
+    outline: 2px solid var(--cyan);
+    background-color: rgba(0, 229, 255, 0.14);
+    box-shadow: 0 0 16px rgba(0, 229, 255, 0.35);
+}
+
+/* Image Container & Editing Toolbar */
+.deck-img-container {
+    position: relative;
+}
+
+.img-edit-bar {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    z-index: 30;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-4px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+body.editable-active .deck-img-container:hover .img-edit-bar {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+}
+
+.img-tool-btn {
+    background: rgba(8, 11, 24, 0.92);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #F8FAFC;
+    padding: 5px 11px;
+    border-radius: 8px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.15s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.img-tool-btn:hover {
+    background: rgba(0, 229, 255, 0.25);
+    border-color: var(--cyan);
+    color: #FFF;
+    transform: translateY(-1px);
+    box-shadow: 0 0 12px rgba(0, 229, 255, 0.3);
+}
+
+.img-tool-btn.btn-remove-photo:hover {
+    background: rgba(244, 63, 94, 0.25);
+    border-color: #F43F5E;
+    color: #FDA4AF;
+    box-shadow: 0 0 12px rgba(244, 63, 94, 0.35);
+}
+
+.img-tool-btn.btn-reset-photo {
+    color: #A7F3D0;
+    border-color: rgba(16, 185, 129, 0.4);
+}
+
+.img-tool-btn.btn-reset-photo:hover {
+    background: rgba(16, 185, 129, 0.25);
+    border-color: #10B981;
+    color: #FFF;
+}
+
+/* Removed Image Placeholder Styles */
+.is-img-removed > img,
+.is-img-removed .real-app-photo,
+.is-img-removed .mosaic-img,
+.is-img-removed .exercise-gif,
+.is-img-removed .photo-overlay-tag {
+    display: none !important;
+}
+
+.img-placeholder-card {
+    display: none;
+    width: 100%;
+    background: rgba(14, 18, 36, 0.85);
+    border: 2px dashed rgba(148, 163, 184, 0.35);
+    border-radius: 16px;
+    padding: 24px 16px;
+    box-sizing: border-box;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.is-img-removed .img-placeholder-card {
+    display: flex;
+}
+
+.mosaic-tile.is-img-removed .img-placeholder-card {
+    height: 140px;
+    min-height: 140px;
+    border-radius: 20px 20px 0 0;
+    padding: 12px;
+}
+
+.planner-photo-card.is-img-removed .img-placeholder-card,
+.acad-photo-wrapper.is-img-removed .img-placeholder-card,
+.hero-health-box.is-img-removed .img-placeholder-card,
+.screen-photo-card.is-img-removed .img-placeholder-card,
+.sleep-photo-card.is-img-removed .img-placeholder-card {
+    min-height: 360px;
+    height: 100%;
+}
+
+.gif-item.is-img-removed .img-placeholder-card {
+    min-height: 120px;
+    padding: 12px 8px;
+}
+
+.ph-center-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.ph-icon {
+    font-size: 2rem;
+    color: #64748B;
+}
+
+.ph-text {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #94A3B8;
+}
+
+.placeholder-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 6px;
+}
+
+.btn-ph-action {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    color: #E2E8F0;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 0.74rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s ease;
+}
+
+.btn-ph-action:hover {
+    background: rgba(0, 229, 255, 0.2);
+    border-color: var(--cyan);
+    color: #FFF;
+}
+
+.btn-ph-action.ph-restore-btn:hover {
+    background: rgba(16, 185, 129, 0.2);
+    border-color: #10B981;
+    color: #A7F3D0;
+}
+
+/* Present Mode Cleanup (when editing is turned off) */
+body:not(.editable-active) .img-edit-bar {
+    display: none !important;
+}
+
+body:not(.editable-active) [contenteditable="true"] {
+    outline: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    cursor: default !important;
+}
+
 /* Print to PDF Clean Support */
 @media print {
     body {
@@ -1513,8 +1823,13 @@ html, body {
         background: #050711 !important;
         color: #FFF !important;
     }
-    .deck-top-bar, .deck-bottom-bar, .deck-drawer {
+    .deck-top-bar, .deck-bottom-bar, .deck-drawer, .deck-edit-banner, .img-edit-bar {
         display: none !important;
+    }
+    body.editable-active [contenteditable="true"] {
+        outline: none !important;
+        background: transparent !important;
+        box-shadow: none !important;
     }
     .deck-stage {
         margin: 0 !important;

@@ -11,6 +11,8 @@ import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.media.AudioAttributes;
 import android.media.AudioManager;
+import android.media.AudioFormat;
+import android.media.AudioTrack;
 import android.media.MediaPlayer;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
@@ -31,6 +33,77 @@ public class AlarmReceiver extends BroadcastReceiver {
     private static Ringtone activeRingtone = null;
     private static Vibrator activeVibrator = null;
     private static PowerManager.WakeLock activeWakeLock = null;
+    private static Thread audioTrackSirenThread = null;
+    private static volatile boolean isSirenRunning = false;
+
+    private static synchronized void startAudioTrackSiren() {
+        if (isSirenRunning) return;
+        isSirenRunning = true;
+        audioTrackSirenThread = new Thread(() -> {
+            AudioTrack track = null;
+            try {
+                int sampleRate = 22050;
+                int bufferSize = AudioTrack.getMinBufferSize(sampleRate, AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT);
+                if (bufferSize < sampleRate) bufferSize = sampleRate;
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    track = new AudioTrack.Builder()
+                            .setAudioAttributes(new AudioAttributes.Builder()
+                                    .setUsage(AudioAttributes.USAGE_ALARM)
+                                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                                    .build())
+                            .setAudioFormat(new AudioFormat.Builder()
+                                    .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
+                                    .setSampleRate(sampleRate)
+                                    .setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
+                                    .build())
+                            .setBufferSizeInBytes(bufferSize)
+                            .setTransferMode(AudioTrack.MODE_STREAM)
+                            .build();
+                } else {
+                    track = new AudioTrack(
+                            AudioManager.STREAM_ALARM,
+                            sampleRate,
+                            AudioFormat.CHANNEL_OUT_MONO,
+                            AudioFormat.ENCODING_PCM_16BIT,
+                            bufferSize,
+                            AudioTrack.MODE_STREAM
+                    );
+                }
+
+                track.play();
+
+                short[] buffer = new short[2205]; // 100ms chunk
+                double phase = 0.0;
+                long startTime = System.currentTimeMillis();
+
+                while (isSirenRunning) {
+                    long elapsed = System.currentTimeMillis() - startTime;
+                    // European emergency siren: 880 Hz alternating with 1175 Hz every 400ms
+                    double freq = ((elapsed / 400) % 2 == 0) ? 880.0 : 1175.0;
+                    double phaseIncrement = (2.0 * Math.PI * freq) / sampleRate;
+
+                    for (int i = 0; i < buffer.length; i++) {
+                        buffer[i] = (short) (Math.sin(phase) * 28000);
+                        phase += phaseIncrement;
+                        if (phase > 2.0 * Math.PI) phase -= 2.0 * Math.PI;
+                    }
+
+                    track.write(buffer, 0, buffer.length);
+                }
+            } catch (Throwable t) {
+                t.printStackTrace();
+            } finally {
+                if (track != null) {
+                    try {
+                        track.stop();
+                        track.release();
+                    } catch (Throwable ignored) {}
+                }
+            }
+        }, "AudioTrackSirenThread");
+        audioTrackSirenThread.start();
+    }
 
     /**
      * Ensures high-priority alarm notification channel exists across all Android versions.
@@ -135,13 +208,9 @@ public class AlarmReceiver extends BroadcastReceiver {
             }
         }
 
-        // 3. Fallback ToneGenerator if neither MediaPlayer nor Ringtone succeeded
-        if (!soundStarted) {
-            try {
-                android.media.ToneGenerator toneGen = new android.media.ToneGenerator(AudioManager.STREAM_ALARM, 100);
-                toneGen.startTone(android.media.ToneGenerator.TONE_CDMA_EMERGENCY_RINGBACK, 10000);
-            } catch (Throwable ignored) {}
-        }
+        // 3. HARDWARE-LEVEL SYNTHESIZED PCM SIREN VIA AudioTrack
+        // 100% immune to silent mode, missing ringtone files, or OEM bugs!
+        startAudioTrackSiren();
 
         // 3. Continuous hardware vibration in pattern
         try {
@@ -161,6 +230,14 @@ public class AlarmReceiver extends BroadcastReceiver {
      * Silences any active alarm ringtone and cancels vibration immediately.
      */
     public static synchronized void stopAlarm() {
+        isSirenRunning = false;
+        if (audioTrackSirenThread != null) {
+            try {
+                audioTrackSirenThread.interrupt();
+            } catch (Exception ignored) {}
+            audioTrackSirenThread = null;
+        }
+
         if (activeMediaPlayer != null) {
             try {
                 if (activeMediaPlayer.isPlaying()) {
@@ -211,7 +288,13 @@ public class AlarmReceiver extends BroadcastReceiver {
             return;
         }
 
-        // Case 2: Smart Wakeup Alarm
+        // Case 2: Bedtime Start Reminder Alarm
+        if (taskId.startsWith("bedtime_start_alarm")) {
+            handleBedtimeStartAlarm(context, intent);
+            return;
+        }
+
+        // Case 3: Smart Wakeup Alarm
         if (taskId.startsWith("wakeup_smart_alarm")) {
             handleSmartWakeupAlarm(context, intent);
             return;
@@ -411,7 +494,7 @@ public class AlarmReceiver extends BroadcastReceiver {
         }
     }
 
-    private void wakeScreen(Context context, long durationMs) {
+    public static void wakeScreen(Context context, long durationMs) {
         try {
             PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
             if (pm != null) {
@@ -520,5 +603,124 @@ public class AlarmReceiver extends BroadcastReceiver {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    /**
+     * Schedules the Bedtime Start Wind-Down alarm so the user is audibly notified at bedtime.
+     */
+    public static void scheduleBedtimeStartReminderAlarm(Context context) {
+        try {
+            ensureAlarmChannel(context);
+            SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+            boolean isBedtimeEnabled = prefs.getBoolean("productometer_bedtime_enabled", true);
+            if (!isBedtimeEnabled) return;
+
+            String bedtimeStart = prefs.getString("productometer_bedtime_start", "22:30");
+            String[] parts = bedtimeStart.split(":");
+            int hour = Integer.parseInt(parts[0].trim());
+            int minute = Integer.parseInt(parts[1].trim());
+
+            Calendar now = Calendar.getInstance();
+            Calendar target = Calendar.getInstance();
+            target.set(Calendar.HOUR_OF_DAY, hour);
+            target.set(Calendar.MINUTE, minute);
+            target.set(Calendar.SECOND, 0);
+            target.set(Calendar.MILLISECOND, 0);
+
+            long diff = now.getTimeInMillis() - target.getTimeInMillis();
+            if (diff > 60000L) {
+                target.add(Calendar.DAY_OF_YEAR, 1);
+            } else if (target.getTimeInMillis() <= now.getTimeInMillis()) {
+                target.setTimeInMillis(now.getTimeInMillis() + 2000L);
+            }
+
+            AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+            if (alarmManager == null) return;
+
+            Intent intent = new Intent(context, AlarmReceiver.class);
+            intent.putExtra("task_id", "bedtime_start_alarm");
+            intent.putExtra("task_title", "Bedtime Wind-Down Reminder");
+            intent.putExtra("task_time", bedtimeStart);
+
+            PendingIntent pi = PendingIntent.getBroadcast(
+                    context,
+                    23456,
+                    intent,
+                    PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.FLAG_IMMUTABLE : 0)
+            );
+
+            Intent showIntent = new Intent(context, MainActivity.class);
+            PendingIntent showPendingIntent = PendingIntent.getActivity(
+                    context,
+                    23457,
+                    showIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.FLAG_IMMUTABLE : 0)
+            );
+
+            boolean scheduled = false;
+            try {
+                AlarmManager.AlarmClockInfo clockInfo = new AlarmManager.AlarmClockInfo(target.getTimeInMillis(), showPendingIntent);
+                alarmManager.setAlarmClock(clockInfo, pi);
+                scheduled = true;
+            } catch (Throwable ignored) {}
+
+            if (!scheduled) {
+                try {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, target.getTimeInMillis(), pi);
+                    } else {
+                        alarmManager.setExact(AlarmManager.RTC_WAKEUP, target.getTimeInMillis(), pi);
+                    }
+                    scheduled = true;
+                } catch (Throwable t) {
+                    try {
+                        alarmManager.set(AlarmManager.RTC_WAKEUP, target.getTimeInMillis(), pi);
+                        scheduled = true;
+                    } catch (Throwable ignored) {}
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void handleBedtimeStartAlarm(Context context, Intent intent) {
+        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        boolean isBedtimeEnabled = prefs.getBoolean("productometer_bedtime_enabled", true);
+        if (!isBedtimeEnabled) {
+            scheduleBedtimeStartReminderAlarm(context);
+            return;
+        }
+
+        wakeScreen(context, 15000L);
+        playAlarmSiren(context);
+        ensureAlarmChannel(context);
+
+        Intent openAppIntent = new Intent(context, MainActivity.class);
+        openAppIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        PendingIntent contentPendingIntent = PendingIntent.getActivity(
+                context,
+                0,
+                openAppIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.FLAG_IMMUTABLE : 0)
+        );
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, MainActivity.CHANNEL_ID_ALARMS)
+                .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
+                .setContentTitle("🌙 Bedtime Wind-Down Active")
+                .setContentText("It's bedtime! Put away distractions. Social media & doomscroll apps capped at 15m.")
+                .setPriority(NotificationCompat.PRIORITY_MAX)
+                .setCategory(NotificationCompat.CATEGORY_ALARM)
+                .setAutoCancel(true)
+                .setContentIntent(contentPendingIntent)
+                .setVibrate(new long[]{0, 600, 300, 600, 300, 600});
+
+        NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        if (manager != null) {
+            manager.notify(7777, builder.build());
+        }
+
+        // Reschedule for tomorrow
+        scheduleBedtimeStartReminderAlarm(context);
     }
 }

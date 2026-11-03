@@ -942,6 +942,7 @@ public class WebAppInterface {
                     .apply();
 
             if (enabled) {
+                AlarmReceiver.scheduleBedtimeStartReminderAlarm(context);
                 AlarmReceiver.scheduleNextMorningWakeupAlarm(context);
             }
         } catch (Exception e) {}
@@ -973,13 +974,21 @@ public class WebAppInterface {
     }
 
     @JavascriptInterface
-    public void triggerWakeupAlarmNow() {
+    public boolean triggerWakeupAlarmNow() {
         try {
-            Intent intent = new Intent(context, AlarmReceiver.class);
-            intent.putExtra("task_id", "wakeup_smart_alarm");
-            context.sendBroadcast(intent);
+            AlarmReceiver.ensureAlarmChannel(context);
+            AlarmReceiver.wakeScreen(context, 30000L);
+            AlarmReceiver.playAlarmSiren(context);
+
+            Intent alarmIntent = new Intent(context, AlarmActivity.class);
+            alarmIntent.putExtra("grace_mins", 15);
+            alarmIntent.putExtra("is_re_ring", false);
+            alarmIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+            context.startActivity(alarmIntent);
+            return true;
         } catch (Exception e) {
             e.printStackTrace();
+            return false;
         }
     }
 

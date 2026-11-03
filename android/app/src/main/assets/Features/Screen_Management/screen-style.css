@@ -1281,52 +1281,7 @@
 }
 
 
-/* --- 🌙 INTERACTIVE BEDTIME CARD --- */
-.bedtime-manager-card {
-    border: 1.5px solid rgba(255, 179, 0, 0.35);
-    background: linear-gradient(180deg, rgba(20, 24, 35, 0.95) 0%, rgba(10, 12, 18, 0.98) 100%);
-}
 
-.bedtime-inputs-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    margin: 14px 0;
-}
-
-.bedtime-input-box {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 12px;
-    padding: 10px 14px;
-    box-sizing: border-box;
-    min-width: 0;
-}
-
-.bedtime-input-label {
-    font-size: 0.72rem;
-    font-weight: 700;
-    color: #94a3b8;
-    text-transform: uppercase;
-}
-
-.bedtime-time-field {
-    background: transparent;
-    border: 1px solid rgba(255, 179, 0, 0.4);
-    color: #ffd600;
-    font-size: 1.1rem;
-    font-weight: 800;
-    padding: 6px 8px;
-    border-radius: 8px;
-    font-family: inherit;
-    color-scheme: dark;
-    width: 100%;
-    box-sizing: border-box;
-    min-width: 0;
-}
 
 
 /* --- ⏱️ COMPACT APP LIMITS SUMMARY BANNER --- */
@@ -1578,30 +1533,7 @@
     flex-shrink: 0;
 }
 
-@media (max-width: 480px) {
-    .bedtime-inputs-grid {
-        grid-template-columns: 1fr 1fr;
-        gap: 8px;
-    }
-    .bedtime-input-box {
-        padding: 8px 10px;
-    }
-    .bedtime-time-field {
-        font-size: 0.95rem;
-    }
-    .limit-card-top {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 8px;
-    }
-    .limit-card-left {
-        width: 100%;
-    }
-    .limit-card-right {
-        width: 100%;
-        justify-content: space-between;
-    }
-}
+
 
 .limit-progress-bar {
     height: 6px;

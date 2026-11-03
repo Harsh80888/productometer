@@ -47,6 +47,14 @@
         </div>
 
         <div class="bar-right">
+            <button class="action-pill-btn edit-deck-pill active" id="btnToggleEdit" title="Toggle slide and text editing">
+                <i class="fa-solid fa-pen-to-square text-cyan"></i>
+                <span id="editBtnLabel">Editing: ON</span>
+            </button>
+            <button class="action-pill-btn reset-deck-pill" id="btnResetDeck" title="Reset all custom edits & pictures" style="display: none;">
+                <i class="fa-solid fa-arrow-rotate-left"></i>
+                <span>Reset Deck</span>
+            </button>
             <button class="action-pill-btn" id="btnOpenGrid" title="Overview of all slides">
                 <i class="fa-solid fa-grid-2"></i>
                 <span>All Slides</span>
@@ -65,6 +73,20 @@
             </a>
         </div>
     </header>
+
+    <!-- Edit Mode Floating Guide Banner -->
+    <div class="deck-edit-banner" id="deckEditBanner">
+        <div class="deb-content">
+            <span class="deb-icon">✏️</span>
+            <span class="deb-text"><strong>Deck Editing Active:</strong> Click any text to edit directly &bull; Hover over any picture to <strong>Change 📷</strong> or <strong>Remove 🗑️</strong> &bull; Edits auto-save!</span>
+        </div>
+        <div class="deb-actions">
+            <button type="button" class="deb-close" id="btnCloseEditBanner" title="Dismiss tip">&times;</button>
+        </div>
+    </div>
+
+    <!-- Hidden File Input for Image Uploads -->
+    <input type="file" id="deckImageFileInput" accept="image/*" style="display:none;">
 
     <!-- Main Slide Stage -->
     <main class="deck-stage" id="deckStage">
@@ -121,7 +143,7 @@
                 <div class="visual-cards-mosaic">
                     <!-- Day Planner Card -->
                     <div class="mosaic-tile tile-planner">
-                        <img src="../Features/assets/1.avif" alt="Day Planner preview" class="mosaic-img">
+                        <img src="../Features/assets/1.avif" alt="Day Planner preview" class="mosaic-img" data-deck-img-id="slide2_planner">
                         <div class="mosaic-caption">
                             <span class="tile-tag">01 &bull; DAY PLANNER</span>
                             <h3>Paint Your Day</h3>
@@ -131,7 +153,7 @@
 
                     <!-- Academics Card -->
                     <div class="mosaic-tile tile-academics">
-                        <img src="../Features/assets/2.jpg" alt="Academics preview" class="mosaic-img">
+                        <img src="../Features/assets/2.jpg" alt="Academics preview" class="mosaic-img" data-deck-img-id="slide2_academics">
                         <div class="mosaic-caption">
                             <span class="tile-tag">02 &bull; ACADEMICS</span>
                             <h3>Focus Deeply</h3>
@@ -141,7 +163,7 @@
 
                     <!-- Screen Management Card -->
                     <div class="mosaic-tile tile-screen">
-                        <img src="../Features/assets/3.avif" alt="Screen management preview" class="mosaic-img">
+                        <img src="../Features/assets/3.avif" alt="Screen management preview" class="mosaic-img" data-deck-img-id="slide2_screen">
                         <div class="mosaic-caption">
                             <span class="tile-tag">03 &bull; SCREEN TIME</span>
                             <h3>Honest Screen Time</h3>
@@ -151,7 +173,7 @@
 
                     <!-- Health Tracker Card -->
                     <div class="mosaic-tile tile-health">
-                        <img src="../Features/assets/4.avif" alt="Health tracker preview" class="mosaic-img">
+                        <img src="../Features/assets/4.avif" alt="Health tracker preview" class="mosaic-img" data-deck-img-id="slide2_health">
                         <div class="mosaic-caption">
                             <span class="tile-tag">04 &bull; HEALTH &amp; WORKOUTS</span>
                             <h3>Move Your Body</h3>
@@ -161,7 +183,7 @@
 
                     <!-- Sleep Monitoring Card -->
                     <div class="mosaic-tile tile-sleep">
-                        <img src="../Features/assets/5.jpeg" alt="Sleep monitoring preview" class="mosaic-img">
+                        <img src="../Features/assets/5.jpeg" alt="Sleep monitoring preview" class="mosaic-img" data-deck-img-id="slide2_sleep">
                         <div class="mosaic-caption">
                             <span class="tile-tag">05 &bull; SLEEP &amp; REST</span>
                             <h3>Real Restful Nights</h3>
@@ -433,7 +455,7 @@
 
                 <div class="planner-two-col">
                     <div class="planner-photo-card">
-                        <img src="../Features/assets/1.avif" alt="Day planner in action" class="real-app-photo">
+                        <img src="../Features/assets/1.avif" alt="Day planner in action" class="real-app-photo" data-deck-img-id="slide7_planner_mockup">
                         <div class="photo-overlay-tag">
                             <i class="fa-solid fa-wand-magic-sparkles text-cyan"></i>
                             <span>Continuous Swipe-Paint (30-min slots)</span>
@@ -512,7 +534,7 @@
                     </div>
 
                     <div class="acad-photo-wrapper">
-                        <img src="../Features/assets/2.jpg" alt="Academics session in action" class="real-app-photo">
+                        <img src="../Features/assets/2.jpg" alt="Academics session in action" class="real-app-photo" data-deck-img-id="slide8_academics_mockup">
                         <div class="photo-overlay-tag">
                             <i class="fa-solid fa-clock text-cyan"></i>
                             <span>Deep Work &bull; +100 Points Every Hour</span>
@@ -539,15 +561,15 @@
                     <!-- Real Exercise GIF Showcases -->
                     <div class="exercise-visual-column">
                         <div class="hero-health-box">
-                            <img src="../Features/assets/4.avif" alt="Health tracker main screen" class="real-app-photo">
+                            <img src="../Features/assets/4.avif" alt="Health tracker main screen" class="real-app-photo" data-deck-img-id="slide9_health_mockup">
                         </div>
                         <div class="gif-pair-row">
                             <div class="gif-item">
-                                <img src="../Features/Health_Tracker/assets/barbell_bench_press.gif" alt="Bench Press Form" class="exercise-gif">
+                                <img src="../Features/Health_Tracker/assets/barbell_bench_press.gif" alt="Bench Press Form" class="exercise-gif" data-deck-img-id="slide9_bench_press">
                                 <span>Bench Press Form</span>
                             </div>
                             <div class="gif-item">
-                                <img src="../Features/Health_Tracker/assets/pushups.gif" alt="Pushups Form" class="exercise-gif">
+                                <img src="../Features/Health_Tracker/assets/pushups.gif" alt="Pushups Form" class="exercise-gif" data-deck-img-id="slide9_pushups">
                                 <span>Bodyweight Pushups</span>
                             </div>
                         </div>
@@ -598,7 +620,7 @@
 
                 <div class="screen-showcase-layout">
                     <div class="screen-photo-card">
-                        <img src="../Features/assets/3.avif" alt="Screen management dashboard" class="real-app-photo">
+                        <img src="../Features/assets/3.avif" alt="Screen management dashboard" class="real-app-photo" data-deck-img-id="slide10_screen_mockup">
                         <div class="photo-overlay-tag">
                             <i class="fa-solid fa-chart-pie text-cyan"></i>
                             <span>Real Phone Usage (Midnight &rarr; Now)</span>
@@ -675,7 +697,7 @@
                     </div>
 
                     <div class="sleep-photo-card">
-                        <img src="../Features/assets/5.jpeg" alt="Sleep monitoring view" class="real-app-photo">
+                        <img src="../Features/assets/5.jpeg" alt="Sleep monitoring view" class="real-app-photo" data-deck-img-id="slide11_sleep_mockup">
                         <div class="photo-overlay-tag">
                             <i class="fa-solid fa-bed text-purple"></i>
                             <span>Target: 8.0 Hours of Restorative Sleep</span>

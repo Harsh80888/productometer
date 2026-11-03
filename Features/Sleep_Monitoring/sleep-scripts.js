@@ -603,16 +603,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (btnTestSmartAlarm) {
         btnTestSmartAlarm.addEventListener('click', () => {
-            // 1. If running inside the Android APK with NativeBridge: trigger the REAL phone alarm siren!
+            let triggered = false;
             if (window.NativeBridge && window.NativeBridge.triggerWakeupAlarmNow) {
-                const triggered = window.NativeBridge.triggerWakeupAlarmNow();
-                if (triggered && window.NativeBridge.showToast) {
-                    window.NativeBridge.showToast('🚨 Real Alarm Triggered! Deliver 10 Hard Shakes.');
-                    return;
+                try {
+                    triggered = window.NativeBridge.triggerWakeupAlarmNow();
+                } catch (e) {
+                    triggered = false;
                 }
             }
 
-            // 2. In browser fallback: play synthesizer siren and open simulator modal
+            if (triggered) {
+                if (window.NativeBridge && window.NativeBridge.showToast) {
+                    window.NativeBridge.showToast('🚨 Real Alarm Triggered! Deliver 10 Hard Shakes.');
+                }
+                return;
+            }
+
+            // Fallback for browser preview
             resetAlarmSimulator();
             if (alarmSimulatorModal) alarmSimulatorModal.showModal();
             playBrowserAlarmSiren();
