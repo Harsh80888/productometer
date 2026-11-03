@@ -66,32 +66,32 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cat << 'EOF' > release_notes.md
-          ### 📱 Productometer Android Release v1.2.8
+          ### 📱 Productometer Android Release v1.2.9
 
-          Reliability & UX update delivering rock-solid Wake-up Smart Alarm scheduling powered by the Day Planner exact epoch millis engine, preserving the complete Two-Stage Wake-up Mission (10 hard accelerometer shakes + 50 walking steps), and redesigning the Bedtime Dialog into an App-Frozen style popup with strictly no background activity.
+          Major UX & Reliability release fixing the rapid alarm re-ring loop, ensuring the full undisturbed 15-minute grace window for walking, and replacing the direct dismiss button with a Conscious Typing Verification Challenge.
 
-          #### 🚀 Highlights in v1.2.8:
-          - **⏰ Rock-Solid Wake-up Smart Alarm (Exact Epoch Millis Engine):**
-            - Aligned with the proven Day Planner session alarm architecture: JavaScript calculates exact target epoch milliseconds (`targetEpochMillis`) and passes it directly across the NativeBridge.
-            - Direct `alarmManager.setExactAndAllowWhileIdle(RTC_WAKEUP, epochMillis, pi)` scheduling wakes CPU from Doze mode across all Android versions (6.0 to 14+) without relying on fragile lock-screen clock widgets.
-            - Instant testing support: Setting the alarm to current minute fires reliably within 3 seconds for immediate verification.
-            - Removed silent skip guards that caused missed alarms.
-          - **🏃‍♂️ Two-Stage Wake-up Mission 100% Intact:**
-            - **Phase 1**: Full-screen wake activity with European emergency siren (`880Hz` / `1175Hz` PCM AudioTrack + MediaPlayer). Requires 10 hard physical accelerometer shakes to silence the siren.
-            - **Phase 2**: Automatically launches Running module in Health Tracker with a 15-minute countdown requiring 50 physical walking steps. If not completed, re-rings with persistent 5-minute loops.
-            - Emergency fail-safe dismiss button available on `AlarmActivity` for unexpected situations.
-          - **🌙 Bedtime Popup Overhauled to App-Frozen Style (No Background Activity):**
-            - The bedtime popup is now structured and styled identically to the App Frozen dialog (`showAppFrozenDialog`).
-            - Impenetrable Cyberpunk backdrop consuming all touch events.
-            - Decisive two-button layout: **⬅️ Return to Home** (immediately closes the distracting app and sends user to Android home screen) and **📱 Open Productometer**.
-            - Zero loopholes and strictly NO background activity permitted.
+          #### 🚀 Highlights in v1.2.9:
+          - **✍️ Conscious Typing Verification Challenge (Replaced Direct Dismiss Button):**
+            - The direct one-click dismiss button has been completely removed to prevent lazy snooze habits.
+            - To disable the alarm without completing 10 shakes and 50 steps, the user must consciously type the exact verification statement:
+              `"I am awaken but don't want to walk now so I am using this typing method to disable the alarm"`
+            - Includes live character matching progress and activates the disable button ONLY when 100% exact match is achieved.
+            - Wrapped in a smooth ScrollView ensuring comfortable visibility and typing when the soft keyboard is open.
+          - **🛑 Eliminated Rapid Alarm Repeat Loop:**
+            - Fixed the critical bug where `scheduleNextMorningWakeupAlarm` calculated today's minute and re-triggered an alarm every 3 seconds (firing 4 times in a single minute).
+            - `scheduleNextMorningWakeupAlarm` now strictly schedules for tomorrow morning (`target.add(DAY_OF_YEAR, 1)`), giving the user their full, peaceful 15-minute grace period to complete 50 walking steps.
+          - **🏃‍♂️ Full 15-Minute Grace for 50-Step Walk:**
+            - Shaking 10 times silences the European emergency siren and opens the Running tracker with a 15-minute countdown.
+            - Only if 50 steps are not completed after the full 15 minutes will the re-ring alarm sound.
+          - **🌙 Bedtime Popup in App-Frozen Style (No Background Activity):**
+            - Deep opaque backdrop with two decisive buttons: **⬅️ Return to Home** (kicks distracting apps to home screen) and **📱 Open Productometer**. Strictly no background activity.
           - **🛡️ Distraction Blocker Untouched:**
-            - All academic keyword whitelist rules (160+ educational terms) and media control detection remain intact.
+            - Educational whitelist and detection logic remain 100% intact.
 
           #### 📦 Direct Download:
           - Click **Productometer.apk** under Assets below to download and install.
           EOF
-          gh release create v1.2.8 dist/Productometer.apk \
-            --title "Productometer v1.2.8 - Android Release APK" \
+          gh release create v1.2.9 dist/Productometer.apk \
+            --title "Productometer v1.2.9 - Android Release APK" \
             --notes-file release_notes.md || \
-          gh release upload v1.2.8 dist/Productometer.apk --clobber
+          gh release upload v1.2.9 dist/Productometer.apk --clobber

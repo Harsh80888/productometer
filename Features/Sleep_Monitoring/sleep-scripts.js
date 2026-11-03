@@ -81,14 +81,10 @@ document.addEventListener('DOMContentLoaded', () => {
         target.setHours(wh, wm, 0, 0);
 
         let isTomorrow = false;
-        // If target time today is already passed by more than 2 minutes, schedule tomorrow
-        if (now.getTime() - target.getTime() > 120000) {
+        if (now.getTime() >= target.getTime()) {
+            // Alarm time today has already passed! The next upcoming alarm is tomorrow.
             target.setDate(target.getDate() + 1);
             isTomorrow = true;
-        } else if (now.getTime() >= target.getTime()) {
-            // User set wake-up time to current minute for testing! Fire in 3 seconds
-            target = new Date(now.getTime() + 3000);
-            isTomorrow = false;
         }
 
         const targetDateStr = `${target.getFullYear()}-${(target.getMonth() + 1).toString().padStart(2, '0')}-${target.getDate().toString().padStart(2, '0')}`;

@@ -15,3 +15,5 @@ android/*/*.iml
 android/app/*.keystore
 dist/
 scratch/
+
+~$*

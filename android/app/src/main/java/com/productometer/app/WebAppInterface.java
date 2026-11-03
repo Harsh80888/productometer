@@ -1003,7 +1003,13 @@ public class WebAppInterface {
     public void cancelSmartWakeupAlarm() {
         try {
             SharedPreferences prefs = context.getSharedPreferences(ShortsReelsBlockerService.PREFS_NAME, Context.MODE_PRIVATE);
-            prefs.edit().putBoolean("productometer_smart_alarm_enabled", false).apply();
+            prefs.edit()
+                    .putBoolean("productometer_smart_alarm_enabled", false)
+                    .putBoolean("wakeup_step_mission_active", false)
+                    .apply();
+
+            AlarmReceiver.stopAlarm();
+
             android.app.AlarmManager alarmManager = (android.app.AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
             if (alarmManager != null) {
                 Intent intent = new Intent(context, AlarmReceiver.class);
@@ -1015,6 +1021,17 @@ public class WebAppInterface {
                         android.app.PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? android.app.PendingIntent.FLAG_IMMUTABLE : 0)
                 );
                 alarmManager.cancel(pi);
+
+                Intent stepIntent = new Intent(context, AlarmReceiver.class);
+                stepIntent.putExtra("task_id", "wakeup_smart_alarm_step_check");
+                stepIntent.putExtra("is_step_check", true);
+                android.app.PendingIntent stepPi = android.app.PendingIntent.getBroadcast(
+                        context,
+                        998877,
+                        stepIntent,
+                        android.app.PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? android.app.PendingIntent.FLAG_IMMUTABLE : 0)
+                );
+                alarmManager.cancel(stepPi);
             }
         } catch (Exception e) {}
     }

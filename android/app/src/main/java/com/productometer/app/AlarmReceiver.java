@@ -550,7 +550,9 @@ public class AlarmReceiver extends BroadcastReceiver {
             if (!isAlarmEnabled) return;
 
             long targetMillis = triggerEpochMillis;
-            if (targetMillis <= 0L) {
+            long nowMillis = System.currentTimeMillis();
+
+            if (targetMillis <= nowMillis) {
                 if (wakeTimeStr == null || wakeTimeStr.isEmpty()) {
                     wakeTimeStr = prefs.getString("productometer_bedtime_end", "06:30");
                 }
@@ -558,23 +560,16 @@ public class AlarmReceiver extends BroadcastReceiver {
                 int hour = Integer.parseInt(parts[0].trim());
                 int minute = Integer.parseInt(parts[1].trim());
 
-                Calendar now = Calendar.getInstance();
                 Calendar target = Calendar.getInstance();
                 target.set(Calendar.HOUR_OF_DAY, hour);
                 target.set(Calendar.MINUTE, minute);
                 target.set(Calendar.SECOND, 0);
                 target.set(Calendar.MILLISECOND, 0);
 
-                long diff = now.getTimeInMillis() - target.getTimeInMillis();
-                if (diff > 0 && diff <= 120000L) {
-                    // User set alarm to current/recent minute for testing, fire in 3 seconds!
-                    targetMillis = now.getTimeInMillis() + 3000L;
-                } else if (target.getTimeInMillis() <= now.getTimeInMillis()) {
+                if (target.getTimeInMillis() <= nowMillis) {
                     target.add(Calendar.DAY_OF_YEAR, 1);
-                    targetMillis = target.getTimeInMillis();
-                } else {
-                    targetMillis = target.getTimeInMillis();
                 }
+                targetMillis = target.getTimeInMillis();
             }
 
             AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
@@ -592,7 +587,6 @@ public class AlarmReceiver extends BroadcastReceiver {
                     PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.FLAG_IMMUTABLE : 0)
             );
 
-            // Exact and allow while idle wakes CPU from Doze mode across all Android versions
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, targetMillis, pi);
             } else {
@@ -605,8 +599,57 @@ public class AlarmReceiver extends BroadcastReceiver {
         }
     }
 
+    /**
+     * Reschedules alarm for tomorrow morning after an alarm session has triggered.
+     * Guaranteed to NEVER reschedule in a 3-second loop!
+     */
     public static void scheduleNextMorningWakeupAlarm(Context context) {
-        scheduleSmartWakeupAlarm(context, null, 0L);
+        try {
+            ensureAlarmChannel(context);
+            SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+            boolean isAlarmEnabled = prefs.getBoolean("productometer_smart_alarm_enabled", true);
+            if (!isAlarmEnabled) return;
+
+            String wakeTime = prefs.getString("productometer_bedtime_end", "06:30");
+            String[] parts = wakeTime.split(":");
+            int hour = Integer.parseInt(parts[0].trim());
+            int minute = Integer.parseInt(parts[1].trim());
+
+            Calendar target = Calendar.getInstance();
+            target.set(Calendar.HOUR_OF_DAY, hour);
+            target.set(Calendar.MINUTE, minute);
+            target.set(Calendar.SECOND, 0);
+            target.set(Calendar.MILLISECOND, 0);
+
+            // ALWAYS target next morning:
+            target.add(Calendar.DAY_OF_YEAR, 1);
+            long targetMillis = target.getTimeInMillis();
+
+            AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+            if (alarmManager == null) return;
+
+            Intent intent = new Intent(context, AlarmReceiver.class);
+            intent.putExtra("task_id", "wakeup_smart_alarm");
+            intent.putExtra("task_title", "Brain Activation Smart Alarm");
+            intent.putExtra("task_time", wakeTime);
+
+            PendingIntent pi = PendingIntent.getBroadcast(
+                    context,
+                    12345,
+                    intent,
+                    PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.FLAG_IMMUTABLE : 0)
+            );
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, targetMillis, pi);
+            } else {
+                alarmManager.setExact(AlarmManager.RTC_WAKEUP, targetMillis, pi);
+            }
+
+            prefs.edit().putLong("productometer_next_alarm_epoch", targetMillis).apply();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     /**

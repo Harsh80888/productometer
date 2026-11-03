@@ -275,10 +275,8 @@ const NativeBridge = {
                 const target = new Date();
                 target.setHours(parts[0] || 0, parts[1] || 0, 0, 0);
                 const now = Date.now();
-                if (now - target.getTime() > 120000) {
+                if (now >= target.getTime()) {
                     target.setDate(target.getDate() + 1);
-                } else if (now >= target.getTime()) {
-                    target.setTime(now + 3000);
                 }
                 epochMillis = target.getTime();
             }
