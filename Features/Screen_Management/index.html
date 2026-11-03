@@ -332,7 +332,7 @@
 
             <div class="limits-tab-row">
                 <button type="button" class="limit-tab-btn active" data-tab="active">Active Limits</button>
-                <button type="button" class="limit-tab-btn" data-tab="compulsory">Compulsory (FB/IG/Games)</button>
+                <button type="button" class="limit-tab-btn" data-tab="social">Social & Games</button>
                 <button type="button" class="limit-tab-btn" data-tab="all">All Apps</button>
             </div>
 
@@ -361,29 +361,57 @@
     </dialog>
 
     <!-- ⏱️ APP DAILY TIME LIMIT CONFIGURATION MODAL -->
-    <div id="appLimitModal" class="limit-modal-backdrop" style="display: none;">
+        <!-- ⏱️ APP DAILY TIME LIMIT CONFIGURATION MODAL -->
+    <dialog id="appLimitModal" class="limit-modal-dialog">
         <div class="limit-modal-card">
             <div class="limit-modal-header">
                 <div class="limit-modal-title-box">
                     <div class="limit-modal-icon" id="limitModalIcon"><i class="fa-solid fa-stopwatch"></i></div>
                     <div>
                         <div class="limit-modal-title" id="limitModalAppName">Set Daily Limit</div>
-                        <div class="limit-modal-sub" id="limitModalSub">Set a healthy daily time boundary</div>
+                        <div class="limit-modal-sub" id="limitModalSub">Set a custom daily time boundary</div>
                     </div>
                 </div>
-                <button type="button" class="limit-modal-close" id="btnCloseLimitModal">&times;</button>
+                <button type="button" class="limit-modal-close" id="btnCloseLimitModal" aria-label="Close">&times;</button>
             </div>
 
-            <!-- Compulsory Alert Notice (Visible for FB, IG, and Games) -->
-            <div class="limit-compulsory-alert" id="limitCompulsoryNotice" style="display: none;">
-                <i class="fa-solid fa-bolt" style="color: #ffd600;"></i>
-                <span><strong>Mandatory Daily Limit:</strong> Facebook, Instagram, and all games require a daily limit to safeguard your focus and health.</span>
+            <!-- Live Limit Preview Hero Card -->
+            <div class="limit-current-display-box">
+                <div class="limit-display-label">DAILY USAGE LIMIT</div>
+                <div class="limit-display-value" id="customLimitDisplay">30m</div>
+                <div class="limit-display-sub" id="customLimitDisplaySub">App will lock after 30 minutes of daily use</div>
             </div>
 
-            <div class="limit-section-label">Select Daily Usage Allowance:</div>
+            <!-- Flexible Hours & Minutes Steppers -->
+            <div class="limit-flexible-section">
+                <div class="limit-section-label">Custom Duration:</div>
+                <div class="limit-flexible-controls">
+                    <div class="time-stepper-col">
+                        <span class="stepper-label">Hours</span>
+                        <div class="stepper-input-group">
+                            <button type="button" class="stepper-btn" id="btnMinusHours" aria-label="Decrease hours"><i class="fa-solid fa-minus"></i></button>
+                            <input type="number" id="inputLimitHours" class="stepper-input" min="0" max="23" value="0" />
+                            <span class="stepper-unit">h</span>
+                            <button type="button" class="stepper-btn" id="btnPlusHours" aria-label="Increase hours"><i class="fa-solid fa-plus"></i></button>
+                        </div>
+                    </div>
+                    <div class="stepper-divider">:</div>
+                    <div class="time-stepper-col">
+                        <span class="stepper-label">Minutes</span>
+                        <div class="stepper-input-group">
+                            <button type="button" class="stepper-btn" id="btnMinusMinutes" aria-label="Decrease minutes"><i class="fa-solid fa-minus"></i></button>
+                            <input type="number" id="inputLimitMinutes" class="stepper-input" min="0" max="59" step="5" value="30" />
+                            <span class="stepper-unit">m</span>
+                            <button type="button" class="stepper-btn" id="btnPlusMinutes" aria-label="Increase minutes"><i class="fa-solid fa-plus"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="limit-section-label">Quick Presets:</div>
             <div class="limit-options-grid" id="limitOptionsGrid">
                 <button type="button" class="limit-preset-chip" data-mins="15">15m</button>
-                <button type="button" class="limit-preset-chip active" data-mins="30">30m <span class="chip-tag">Default</span></button>
+                <button type="button" class="limit-preset-chip" data-mins="30">30m</button>
                 <button type="button" class="limit-preset-chip" data-mins="45">45m</button>
                 <button type="button" class="limit-preset-chip" data-mins="60">1h</button>
                 <button type="button" class="limit-preset-chip" data-mins="90">1h 30m</button>
@@ -394,7 +422,7 @@
 
             <div class="limit-rule-hint">
                 <i class="fa-solid fa-circle-info"></i>
-                <span>When the limit is reached, a <strong>10-minute grace window</strong> activates. Once grace expires, the app is <strong>frozen</strong> until midnight and limits cannot be modified.</span>
+                <span>When your limit is reached, a <strong>10-minute grace window</strong> activates. Once grace expires, the app is <strong>frozen</strong> until midnight.</span>
             </div>
 
             <div class="limit-modal-footer">
@@ -402,7 +430,7 @@
                 <button type="button" class="btn-limit-save" id="btnSaveAppLimit">Confirm Limit</button>
             </div>
         </div>
-    </div>
+    </dialog>
 
     <script src="../../native-bridge.js"></script>
     <script src="../../main-portal.js"></script>

@@ -917,6 +917,21 @@
 /* ==========================================================================
    LIMIT SELECTION MODAL
    ========================================================================== */
+.limit-modal-dialog {
+    border: none;
+    background: transparent;
+    padding: 0;
+    max-width: 440px;
+    width: 92%;
+    margin: auto;
+}
+
+.limit-modal-dialog::backdrop {
+    background: rgba(2, 6, 12, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
 .limit-modal-backdrop {
     position: fixed;
     inset: 0;
@@ -929,6 +944,147 @@
     justify-content: center;
     padding: 18px;
     box-sizing: border-box;
+}
+
+/* --- LIVE PREVIEW HERO BOX --- */
+.limit-current-display-box {
+    background: rgba(0, 229, 255, 0.05);
+    border: 1px solid rgba(0, 229, 255, 0.25);
+    border-radius: 14px;
+    padding: 12px 14px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+}
+
+.limit-display-label {
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    color: #00e5ff;
+    text-transform: uppercase;
+}
+
+.limit-display-value {
+    font-size: 1.75rem;
+    font-weight: 900;
+    color: #ffffff;
+    font-family: 'Cabinet Grotesk', system-ui, sans-serif;
+    letter-spacing: 0.02em;
+    text-shadow: 0 0 15px rgba(0, 229, 255, 0.35);
+}
+
+.limit-display-sub {
+    font-size: 0.72rem;
+    color: #94a3b8;
+}
+
+/* --- FLEXIBLE CONTROLS & STEPPERS --- */
+.limit-flexible-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.limit-flexible-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 10px 14px;
+}
+
+.time-stepper-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    flex: 1;
+}
+
+.stepper-label {
+    font-size: 0.68rem;
+    color: #94a3b8;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.stepper-input-group {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: #060911;
+    border: 1px solid rgba(0, 229, 255, 0.22);
+    border-radius: 10px;
+    padding: 3px 6px;
+    width: 100%;
+    justify-content: space-between;
+    box-sizing: border-box;
+}
+
+.stepper-btn {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #00e5ff;
+    font-size: 0.8rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.stepper-btn:hover {
+    background: rgba(0, 229, 255, 0.2);
+    border-color: #00e5ff;
+    transform: scale(1.05);
+}
+
+.stepper-btn:active {
+    transform: scale(0.95);
+}
+
+.stepper-input {
+    width: 38px;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #ffffff;
+    font-size: 1.15rem;
+    font-weight: 800;
+    text-align: center;
+    font-family: inherit;
+    -moz-appearance: textfield;
+}
+
+.stepper-input::-webkit-outer-spin-button,
+.stepper-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.stepper-unit {
+    color: #64748b;
+    font-size: 0.78rem;
+    font-weight: 700;
+    margin-right: 2px;
+}
+
+.stepper-divider {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: #64748b;
+    margin-top: 18px;
 }
 
 .limit-modal-card {
