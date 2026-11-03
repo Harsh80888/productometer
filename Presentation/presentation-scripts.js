@@ -1,9 +1,9 @@
 /**
- * PRODUCTOMETER WEB PRESENTATION ENGINE
+ * PRODUCTOMETER STUDENT PRESENTATION ENGINE (13 SLIDES)
  * Features:
- * 1. 12-Slide Sequential Deck Navigation with Smooth Transitions
- * 2. Keyboard Shortcuts (Arrows, Space, PageUp/Down, 'F' Fullscreen)
- * 3. Dynamic Progress Fill & Slide Counter Ribbon HUD
+ * 1. 13-Slide Keynote Deck with Smooth Sliding/Scaling Transitions
+ * 2. Keyboard Arrow & Spacebar Navigation
+ * 3. Dynamic Progress Capsule & Slide Counter
  * 4. Touch Gestures (Mobile Swipe Left/Right)
  * 5. Quick-Jump Slide Navigator Drawer
  * 6. Autoplay Presentation Mode
@@ -11,62 +11,66 @@
 
 document.addEventListener('DOMContentLoaded', () => {
 
-    const slides = Array.from(document.querySelectorAll('.slide-frame'));
+    const slides = Array.from(document.querySelectorAll('.slide'));
     const totalSlides = slides.length;
     let currentSlideIndex = 0;
 
-    // HUD Elements
-    const ribbonTopic = document.getElementById('ribbonTopic');
-    const slideProgressFill = document.getElementById('slideProgressFill');
-    const currentSlideNum = document.getElementById('currentSlideNum');
-    const totalSlidesNum = document.getElementById('totalSlidesNum');
-    const slideDotsContainer = document.getElementById('slideDotsContainer');
-    const btnPrevSlide = document.getElementById('btnPrevSlide');
-    const btnNextSlide = document.getElementById('btnNextSlide');
-    const btnFullscreen = document.getElementById('btnFullscreen');
-    const fullscreenIcon = document.getElementById('fullscreenIcon');
-    const btnToggleDrawer = document.getElementById('btnToggleDrawer');
+    // Header & HUD Elements
+    const slideNavTitle = document.getElementById('slideNavTitle');
+    const progressBarInner = document.getElementById('progressBarInner');
+    const currentNum = document.getElementById('currentNum');
+    const totalNum = document.getElementById('totalNum');
+    const slideDotsRail = document.getElementById('slideDotsRail');
+    const btnPrev = document.getElementById('btnPrev');
+    const btnNext = document.getElementById('btnNext');
+    const btnToggleFull = document.getElementById('btnToggleFull');
+    const fullIcon = document.getElementById('fullIcon');
+    const btnOpenGrid = document.getElementById('btnOpenGrid');
     const btnCloseDrawer = document.getElementById('btnCloseDrawer');
-    const slidesDrawer = document.getElementById('slidesDrawer');
-    const drawerGrid = document.getElementById('drawerGrid');
-    const btnAutoplay = document.getElementById('btnAutoplay');
-    const autoplayIcon = document.getElementById('autoplayIcon');
-    const autoplayText = document.getElementById('autoplayText');
+    const deckDrawer = document.getElementById('deckDrawer');
+    const drawerTilesGrid = document.getElementById('drawerTilesGrid');
+    const btnAutoPlay = document.getElementById('btnAutoPlay');
+    const autoIcon = document.getElementById('autoIcon');
+    const autoLabel = document.getElementById('autoLabel');
 
     let autoplayTimer = null;
     let isAutoplayActive = false;
 
-    if (totalSlidesNum) totalSlidesNum.textContent = String(totalSlides).padStart(2, '0');
+    if (totalNum) totalNum.textContent = String(totalSlides).padStart(2, '0');
 
     // ========================================================
     // 1. GENERATE BOTTOM DOTS & DRAWER TILES
     // ========================================================
     function initNavigationElements() {
-        if (slideDotsContainer) {
-            slideDotsContainer.innerHTML = '';
+        if (slideDotsRail) {
+            slideDotsRail.innerHTML = '';
             slides.forEach((slide, idx) => {
                 const dot = document.createElement('div');
-                dot.className = `slide-dot ${idx === 0 ? 'active' : ''}`;
+                dot.className = `rail-dot ${idx === 0 ? 'active' : ''}`;
                 dot.title = `Slide ${idx + 1}: ${slide.dataset.title || ''}`;
-                dot.addEventListener('click', () => goToSlide(idx));
-                slideDotsContainer.appendChild(dot);
+                dot.addEventListener('click', () => {
+                    stopAutoplay();
+                    goToSlide(idx);
+                });
+                slideDotsRail.appendChild(dot);
             });
         }
 
-        if (drawerGrid) {
-            drawerGrid.innerHTML = '';
+        if (drawerTilesGrid) {
+            drawerTilesGrid.innerHTML = '';
             slides.forEach((slide, idx) => {
                 const tile = document.createElement('div');
-                tile.className = `drawer-tile ${idx === 0 ? 'active' : ''}`;
+                tile.className = `drawer-tile-card ${idx === 0 ? 'active' : ''}`;
                 tile.innerHTML = `
-                    <span class="dt-num">SLIDE ${String(idx + 1).padStart(2, '0')}</span>
-                    <span class="dt-title">${slide.dataset.title || 'Slide ' + (idx + 1)}</span>
+                    <span class="dt-number">SLIDE ${String(idx + 1).padStart(2, '0')}</span>
+                    <span class="dt-name">${slide.dataset.title || 'Slide ' + (idx + 1)}</span>
                 `;
                 tile.addEventListener('click', () => {
+                    stopAutoplay();
                     goToSlide(idx);
                     closeDrawer();
                 });
-                drawerGrid.appendChild(tile);
+                drawerTilesGrid.appendChild(tile);
             });
         }
     }
@@ -88,32 +92,32 @@ document.addEventListener('DOMContentLoaded', () => {
         const activeSlide = slides[currentSlideIndex];
         activeSlide.classList.add('active');
 
-        // Update Ribbon Title & Numbers
+        // Update Header Title & Numbers
         const title = activeSlide.dataset.title || `Slide ${currentSlideIndex + 1}`;
-        if (ribbonTopic) ribbonTopic.textContent = title;
-        if (currentSlideNum) currentSlideNum.textContent = String(currentSlideIndex + 1).padStart(2, '0');
+        if (slideNavTitle) slideNavTitle.textContent = title;
+        if (currentNum) currentNum.textContent = String(currentSlideIndex + 1).padStart(2, '0');
 
-        // Update Progress Bar
+        // Update Progress Capsule
         const pct = ((currentSlideIndex + 1) / totalSlides) * 100;
-        if (slideProgressFill) slideProgressFill.style.width = `${pct}%`;
+        if (progressBarInner) progressBarInner.style.width = `${pct}%`;
 
-        // Update Bottom Dots
-        if (slideDotsContainer) {
-            const dots = slideDotsContainer.querySelectorAll('.slide-dot');
+        // Update Bottom Rail Dots
+        if (slideDotsRail) {
+            const dots = slideDotsRail.querySelectorAll('.rail-dot');
             dots.forEach((dot, idx) => {
                 dot.classList.toggle('active', idx === currentSlideIndex);
             });
         }
 
         // Update Drawer Tiles
-        if (drawerGrid) {
-            const tiles = drawerGrid.querySelectorAll('.drawer-tile');
+        if (drawerTilesGrid) {
+            const tiles = drawerTilesGrid.querySelectorAll('.drawer-tile-card');
             tiles.forEach((tile, idx) => {
                 tile.classList.toggle('active', idx === currentSlideIndex);
             });
         }
 
-        // Auto-scroll active slide back to top
+        // Auto-scroll active slide to top
         activeSlide.scrollTop = 0;
     }
 
@@ -121,7 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (currentSlideIndex < totalSlides - 1) {
             goToSlide(currentSlideIndex + 1);
         } else if (isAutoplayActive) {
-            goToSlide(0); // loop in autoplay
+            goToSlide(0); // loop
         }
     }
 
@@ -131,15 +135,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Nav Button Clicks
-    if (btnNextSlide) btnNextSlide.addEventListener('click', () => { stopAutoplay(); nextSlide(); });
-    if (btnPrevSlide) btnPrevSlide.addEventListener('click', () => { stopAutoplay(); prevSlide(); });
+    if (btnNext) btnNext.addEventListener('click', () => { stopAutoplay(); nextSlide(); });
+    if (btnPrev) btnPrev.addEventListener('click', () => { stopAutoplay(); prevSlide(); });
 
     // ========================================================
     // 3. KEYBOARD SHORTCUTS
     // ========================================================
     document.addEventListener('keydown', (e) => {
-        // Ignore typing inside inputs
         if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
 
         switch (e.key) {
@@ -163,7 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 toggleFullscreen();
                 break;
             case 'Escape':
-                if (slidesDrawer && slidesDrawer.classList.contains('open')) {
+                if (deckDrawer && deckDrawer.classList.contains('open')) {
                     closeDrawer();
                 }
                 break;
@@ -193,31 +195,30 @@ document.addEventListener('DOMContentLoaded', () => {
         const diffX = e.changedTouches[0].screenX - touchStartX;
         const diffY = e.changedTouches[0].screenY - touchStartY;
 
-        // Ensure horizontal swipe dominates vertical scroll
         if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 45) {
             stopAutoplay();
             if (diffX < 0) {
-                nextSlide(); // Swiped left -> next
+                nextSlide();
             } else {
-                prevSlide(); // Swiped right -> prev
+                prevSlide();
             }
         }
     }, { passive: true });
 
     // ========================================================
-    // 5. SLIDE NAVIGATOR DRAWER (GRID OVERVIEW)
+    // 5. SLIDE NAVIGATOR DRAWER
     // ========================================================
     function openDrawer() {
-        if (slidesDrawer) slidesDrawer.classList.add('open');
+        if (deckDrawer) deckDrawer.classList.add('open');
     }
 
     function closeDrawer() {
-        if (slidesDrawer) slidesDrawer.classList.remove('open');
+        if (deckDrawer) deckDrawer.classList.remove('open');
     }
 
-    if (btnToggleDrawer) {
-        btnToggleDrawer.addEventListener('click', () => {
-            if (slidesDrawer && slidesDrawer.classList.contains('open')) {
+    if (btnOpenGrid) {
+        btnOpenGrid.addEventListener('click', () => {
+            if (deckDrawer && deckDrawer.classList.contains('open')) {
                 closeDrawer();
             } else {
                 openDrawer();
@@ -235,22 +236,22 @@ document.addEventListener('DOMContentLoaded', () => {
     function toggleFullscreen() {
         if (!document.fullscreenElement) {
             document.documentElement.requestFullscreen().catch(() => {});
-            if (fullscreenIcon) fullscreenIcon.className = 'fa-solid fa-compress';
+            if (fullIcon) fullIcon.className = 'fa-solid fa-compress';
         } else {
             if (document.exitFullscreen) {
                 document.exitFullscreen();
-                if (fullscreenIcon) fullscreenIcon.className = 'fa-solid fa-expand';
+                if (fullIcon) fullIcon.className = 'fa-solid fa-expand';
             }
         }
     }
 
-    if (btnFullscreen) {
-        btnFullscreen.addEventListener('click', toggleFullscreen);
+    if (btnToggleFull) {
+        btnToggleFull.addEventListener('click', toggleFullscreen);
     }
 
     document.addEventListener('fullscreenchange', () => {
-        if (!document.fullscreenElement && fullscreenIcon) {
-            fullscreenIcon.className = 'fa-solid fa-expand';
+        if (!document.fullscreenElement && fullIcon) {
+            fullIcon.className = 'fa-solid fa-expand';
         }
     });
 
@@ -267,26 +268,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function startAutoplay() {
         isAutoplayActive = true;
-        if (autoplayIcon) autoplayIcon.className = 'fa-solid fa-pause';
-        if (autoplayText) autoplayText.textContent = 'Pause';
-        if (btnAutoplay) btnAutoplay.classList.add('active');
+        if (autoIcon) autoIcon.className = 'fa-solid fa-pause';
+        if (autoLabel) autoLabel.textContent = 'Pause';
+        if (btnAutoPlay) btnAutoPlay.classList.add('active');
 
         autoplayTimer = setInterval(() => {
             nextSlide();
-        }, 8000); // Advance every 8 seconds
+        }, 8500); // 8.5 seconds per slide
     }
 
     function stopAutoplay() {
         if (!isAutoplayActive) return;
         isAutoplayActive = false;
         if (autoplayTimer) clearInterval(autoplayTimer);
-        if (autoplayIcon) autoplayIcon.className = 'fa-solid fa-play';
-        if (autoplayText) autoplayText.textContent = 'Auto';
-        if (btnAutoplay) btnAutoplay.classList.remove('active');
+        if (autoIcon) autoIcon.className = 'fa-solid fa-play';
+        if (autoLabel) autoLabel.textContent = 'Autoplay';
+        if (btnAutoPlay) btnAutoPlay.classList.remove('active');
     }
 
-    if (btnAutoplay) {
-        btnAutoplay.addEventListener('click', toggleAutoplay);
+    if (btnAutoPlay) {
+        btnAutoPlay.addEventListener('click', toggleAutoplay);
     }
 
     // Initialize View

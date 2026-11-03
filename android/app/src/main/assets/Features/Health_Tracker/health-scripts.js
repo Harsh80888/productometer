@@ -2830,8 +2830,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 const m = document.getElementById('runningSectionModal');
                 if (m) m.showModal();
             }, 300);
+        } else if (sec === 'sleep') {
+            window.location.href = '../Sleep_Monitoring/index.html';
         }
     } catch (e) {}
+
+    window.openDisciplineSection = openDisciplineSection;
 
     function openDisciplineSection(discipline) {
         if (discipline === 'workout') {
@@ -2847,11 +2851,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const m = document.getElementById('hiitSectionModal');
             if (m) m.showModal();
         } else if (discipline === 'sleep') {
-            const m = document.getElementById('sleepSectionModal');
-            if (m) {
-                updateSleepHUD();
-                m.showModal();
-            }
+            window.location.href = '../Sleep_Monitoring/index.html';
+            return;
         }
     }
 

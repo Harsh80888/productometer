@@ -269,8 +269,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         isMeta: isMeta,
                         youtubeMode: ytMode,
                         isGame: !!item.isGame,
-                        isCompulsory: !!item.isCompulsory,
-                        limitMinutes: typeof item.limitMinutes === 'number' ? item.limitMinutes : (item.isCompulsory ? 30 : 0),
+                        isCompulsory: false,
+                        limitMinutes: typeof item.limitMinutes === 'number' ? item.limitMinutes : 0,
                         isFrozen: !!item.isFrozen,
                         isGrace: !!item.isGrace,
                         graceRemaining: typeof item.graceRemaining === 'number' ? item.graceRemaining : 0,
@@ -286,7 +286,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         seconds: a.seconds,
                         limitMinutes: a.limitMinutes,
                         isGame: a.isGame,
-                        isCompulsory: a.isCompulsory
+                        isCompulsory: false
                     }));
                     localStorage.setItem(KEY_APPS, JSON.stringify(lightApps));
                 } catch (e) {}
@@ -414,13 +414,12 @@ document.addEventListener('DOMContentLoaded', () => {
         apps.forEach(app => {
             const lower = ((app.id || '') + ' ' + (app.name || '')).toLowerCase();
             const isGame = lower.includes('game') || lower.includes('chess') || lower.includes('daman');
-            const isCompulsory = isGame || lower.includes('facebook') || lower.includes('instagram');
             app.isGame = isGame;
-            app.isCompulsory = isCompulsory;
+            app.isCompulsory = false;
 
             let lim = localLimits[app.id];
             if (typeof lim !== 'number') {
-                lim = isCompulsory ? 30 : 0;
+                lim = 0;
             }
             app.limitMinutes = lim;
 
@@ -796,17 +795,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         <i class="fa-solid fa-lock"></i> ⏳ Grace (${app.graceRemaining || 1}m left)
                     </button>`;
             } else if (limit > 0) {
-                if (app.isCompulsory) {
-                    limitBadgeHtml = `
-                        <button class="app-limit-badge badge-active badge-compulsory" data-app-id="${app.id}" title="Compulsory daily limit (click to adjust)">
-                            <i class="fa-solid fa-bolt"></i> ${limit}m (Compulsory)
-                        </button>`;
-                } else {
-                    limitBadgeHtml = `
-                        <button class="app-limit-badge badge-active" data-app-id="${app.id}" title="Daily time limit (click to adjust)">
-                            <i class="fa-solid fa-stopwatch"></i> ${limit}m limit
-                        </button>`;
-                }
+                limitBadgeHtml = `
+                    <button class="app-limit-badge badge-active" data-app-id="${app.id}" title="Daily time limit (click to adjust)">
+                        <i class="fa-solid fa-stopwatch"></i> ${formatDurationMinutes(limit)} limit
+                    </button>`;
             } else {
                 limitBadgeHtml = `
                     <button class="app-limit-badge badge-none" data-app-id="${app.id}" title="Set daily time limit">
@@ -929,69 +921,180 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- APP LIMIT MODAL CONTROLLER ---
     let selectedAppForLimit = null;
-    let selectedLimitMinutes = 30;
+    let selectedLimitMinutes = 0;
 
-    function openAppLimitModal(app) {
-        selectedAppForLimit = app;
-        selectedLimitMinutes = app.limitMinutes || (app.isCompulsory ? 30 : 0);
+    function formatDurationMinutes(mins) {
+        if (!mins || mins <= 0) return 'No Limit';
+        const h = Math.floor(mins / 60);
+        const m = mins % 60;
+        if (h > 0 && m > 0) return `${h}h ${m}m`;
+        if (h > 0) return `${h}h`;
+        return `${m}m`;
+    }
 
-        const modal = document.getElementById('appLimitModal');
-        const titleEl = document.getElementById('limitModalAppName');
-        const compulsoryNotice = document.getElementById('limitCompulsoryNotice');
-        const btnNoLimit = document.getElementById('btnChipNoLimit');
+    function syncFlexibleInputsFromMinutes(mins) {
+        const inputHours = document.getElementById('inputLimitHours');
+        const inputMinutes = document.getElementById('inputLimitMinutes');
+        const displayVal = document.getElementById('customLimitDisplay');
+        const displaySub = document.getElementById('customLimitDisplaySub');
 
-        if (!modal) return;
+        const m = Math.max(0, parseInt(mins, 10) || 0);
+        selectedLimitMinutes = m;
 
-        if (titleEl) titleEl.textContent = `Limit for ${app.name}`;
+        const h = Math.floor(m / 60);
+        const remM = m % 60;
 
-        if (app.isCompulsory) {
-            if (compulsoryNotice) compulsoryNotice.style.display = 'flex';
-            if (btnNoLimit) btnNoLimit.style.display = 'none'; // Compulsory: cannot disable limit
-            if (selectedLimitMinutes <= 0) selectedLimitMinutes = 30;
-            if (selectedLimitMinutes > 60) selectedLimitMinutes = 60; // Compulsory max 60 min limit cap
+        if (inputHours) inputHours.value = h;
+        if (inputMinutes) inputMinutes.value = remM;
 
-            // Hide preset chips > 60m for compulsory apps
-            document.querySelectorAll('.limit-preset-chip').forEach(chip => {
-                const mins = parseInt(chip.dataset.mins, 10);
-                if (mins > 60) {
-                    chip.style.display = 'none';
-                } else if (chip !== btnNoLimit) {
-                    chip.style.display = '';
-                }
-            });
-        } else {
-            if (compulsoryNotice) compulsoryNotice.style.display = 'none';
-            if (btnNoLimit) btnNoLimit.style.display = '';
-            document.querySelectorAll('.limit-preset-chip').forEach(chip => {
-                chip.style.display = '';
-            });
+        if (displayVal) {
+            displayVal.textContent = formatDurationMinutes(m);
+        }
+        if (displaySub) {
+            if (m === 0) {
+                displaySub.textContent = 'App has no usage restrictions';
+            } else {
+                displaySub.textContent = `App will lock after ${formatDurationMinutes(m)} of daily use`;
+            }
         }
 
-        // Highlight active preset chip
+        // Highlight matching preset chip if exists, else unhighlight
         document.querySelectorAll('.limit-preset-chip').forEach(chip => {
-            const mins = parseInt(chip.dataset.mins, 10);
-            if (mins === selectedLimitMinutes) {
+            const chipMins = parseInt(chip.dataset.mins, 10);
+            if (chipMins === m) {
                 chip.classList.add('active');
             } else {
                 chip.classList.remove('active');
             }
         });
+    }
 
-        modal.style.display = 'flex';
+    function updateFromInputs() {
+        const inputHours = document.getElementById('inputLimitHours');
+        const inputMinutes = document.getElementById('inputLimitMinutes');
+
+        let h = parseInt(inputHours ? inputHours.value : '0', 10);
+        let m = parseInt(inputMinutes ? inputMinutes.value : '0', 10);
+
+        if (isNaN(h) || h < 0) h = 0;
+        if (h > 23) h = 23;
+        if (isNaN(m) || m < 0) m = 0;
+        if (m > 59) m = 59;
+
+        if (inputHours) inputHours.value = h;
+        if (inputMinutes) inputMinutes.value = m;
+
+        const total = (h * 60) + m;
+        syncFlexibleInputsFromMinutes(total);
+    }
+
+    window.openAppLimitModal = openAppLimitModal;
+    window.closeAppLimitModal = closeAppLimitModal;
+
+    function openAppLimitModal(app) {
+        selectedAppForLimit = app;
+        selectedLimitMinutes = typeof app.limitMinutes === 'number' ? app.limitMinutes : 0;
+
+        const modal = document.getElementById('appLimitModal');
+        const titleEl = document.getElementById('limitModalAppName');
+        const subEl = document.getElementById('limitModalSub');
+
+        if (!modal) return;
+
+        if (titleEl) titleEl.textContent = app.name || 'Set Daily Limit';
+        if (subEl) {
+            subEl.textContent = selectedLimitMinutes > 0 ? `Current: ${formatDurationMinutes(selectedLimitMinutes)}` : 'Set a daily time boundary';
+        }
+
+        syncFlexibleInputsFromMinutes(selectedLimitMinutes);
+
+        if (typeof modal.showModal === 'function') {
+            try {
+                if (!modal.open) modal.showModal();
+            } catch (e) {
+                modal.style.display = 'flex';
+            }
+        } else {
+            modal.style.display = 'flex';
+        }
     }
 
     function closeAppLimitModal() {
         const modal = document.getElementById('appLimitModal');
-        if (modal) modal.style.display = 'none';
+        if (modal) {
+            if (typeof modal.close === 'function') {
+                try {
+                    if (modal.open) modal.close();
+                } catch (e) {
+                    modal.style.display = 'none';
+                }
+            } else {
+                modal.style.display = 'none';
+            }
+        }
         selectedAppForLimit = null;
+    }
+
+    // Modal backdrop click to close
+    const limitModalDialog = document.getElementById('appLimitModal');
+    if (limitModalDialog) {
+        limitModalDialog.addEventListener('click', (e) => {
+            if (e.target === limitModalDialog) {
+                closeAppLimitModal();
+            }
+        });
+    }
+
+    // Stepper buttons & direct inputs
+    const btnMinusHours = document.getElementById('btnMinusHours');
+    const btnPlusHours = document.getElementById('btnPlusHours');
+    const btnMinusMins = document.getElementById('btnMinusMinutes');
+    const btnPlusMins = document.getElementById('btnPlusMinutes');
+    const inputLimitH = document.getElementById('inputLimitHours');
+    const inputLimitM = document.getElementById('inputLimitMinutes');
+
+    if (btnMinusHours && inputLimitH) {
+        btnMinusHours.addEventListener('click', () => {
+            const cur = parseInt(inputLimitH.value || '0', 10);
+            inputLimitH.value = Math.max(0, cur - 1);
+            updateFromInputs();
+        });
+    }
+    if (btnPlusHours && inputLimitH) {
+        btnPlusHours.addEventListener('click', () => {
+            const cur = parseInt(inputLimitH.value || '0', 10);
+            inputLimitH.value = Math.min(23, cur + 1);
+            updateFromInputs();
+        });
+    }
+    if (btnMinusMins && inputLimitM) {
+        btnMinusMins.addEventListener('click', () => {
+            let cur = parseInt(inputLimitM.value || '0', 10);
+            cur = Math.max(0, cur - 5);
+            inputLimitM.value = cur;
+            updateFromInputs();
+        });
+    }
+    if (btnPlusMins && inputLimitM) {
+        btnPlusMins.addEventListener('click', () => {
+            let cur = parseInt(inputLimitM.value || '0', 10);
+            cur = Math.min(59, cur + 5);
+            inputLimitM.value = cur;
+            updateFromInputs();
+        });
+    }
+    if (inputLimitH) {
+        inputLimitH.addEventListener('input', updateFromInputs);
+    }
+    if (inputLimitM) {
+        inputLimitM.addEventListener('input', updateFromInputs);
     }
 
     // Modal preset chips click handler
     document.querySelectorAll('.limit-preset-chip').forEach(chip => {
         chip.addEventListener('click', () => {
-            document.querySelectorAll('.limit-preset-chip').forEach(c => c.classList.remove('active'));
-            chip.classList.add('active');
-            selectedLimitMinutes = parseInt(chip.dataset.mins, 10);
+            const mins = parseInt(chip.dataset.mins, 10) || 0;
+            syncFlexibleInputsFromMinutes(mins);
         });
     });
 
@@ -1007,14 +1110,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const appId = selectedAppForLimit.id;
             const appName = selectedAppForLimit.name;
 
-            // Compulsory protection: default 30, max 60, min > 0
-            if (selectedAppForLimit.isCompulsory) {
-                if (selectedLimitMinutes <= 0) {
-                    selectedLimitMinutes = 30;
-                } else if (selectedLimitMinutes > 60) {
-                    selectedLimitMinutes = 60;
-                }
-            }
+            // Read flexible time
+            const hours = Math.max(0, parseInt((document.getElementById('inputLimitHours') || {}).value || '0', 10));
+            const mins = Math.max(0, parseInt((document.getElementById('inputLimitMinutes') || {}).value || '0', 10));
+            selectedLimitMinutes = (hours * 60) + mins;
 
             // Save locally
             let localLimits = {};
@@ -1042,7 +1141,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (window.NativeBridge && window.NativeBridge.showToast) {
                 if (selectedLimitMinutes > 0) {
-                    window.NativeBridge.showToast(`Daily limit for "${appName}" set to ${selectedLimitMinutes}m`);
+                    window.NativeBridge.showToast(`Daily limit for "${appName}" set to ${formatDurationMinutes(selectedLimitMinutes)}`);
                 } else {
                     window.NativeBridge.showToast(`Daily limit removed for "${appName}"`);
                 }
@@ -1050,6 +1149,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             closeAppLimitModal();
             refreshDigitalWellbeingDashboard();
+            if (typeof renderActiveLimitsSection === 'function') {
+                renderActiveLimitsSection(getRealScreenApps());
+            }
         });
     }
 
@@ -1485,7 +1587,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         container.innerHTML = filtered.map(app => {
-            const limit = app.limitMinutes || (app.isCompulsory ? 30 : 0);
+            const limit = app.limitMinutes || 0;
             const usedMins = Math.round((app.seconds || 0) / 60);
             const pct = limit > 0 ? Math.min(100, Math.round((usedMins / limit) * 100)) : 0;
 
@@ -1519,7 +1621,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div>
                             <div class="limit-app-name">
                                 ${escapeHTML(app.name)}
-                                ${app.isCompulsory ? '<span style="background: rgba(255,214,0,0.15); border: 1px solid rgba(255,214,0,0.4); color: #ffd600; font-size: 0.65rem; font-weight: 800; padding: 2px 6px; border-radius: 4px; margin-left: 5px;">MANDATORY</span>' : ''}
+                                
                             </div>
                             <div style="font-size: 0.74rem; color: #cbd5e1; margin-top: 1px;">Used ${usedMins}m today</div>
                         </div>
@@ -1527,7 +1629,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="limit-card-right">
                         ${statusBadge}
                         <button type="button" class="btn-adjust-limit" data-app-id="${app.id}" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #00e5ff; font-weight: 800; font-size: 0.74rem; padding: 5px 10px; border-radius: 8px; cursor: pointer; white-space: nowrap;">
-                            ${limit > 0 ? `${limit}m Limit` : '+ Set'}
+                            ${limit > 0 ? `${formatDurationMinutes(limit)} Limit` : '+ Set'}
                         </button>
                     </div>
                 </div>

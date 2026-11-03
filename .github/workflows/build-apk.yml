@@ -66,11 +66,11 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cat << 'EOF' > release_notes.md
-          ### 📱 Productometer Android Release v1.2.2
+          ### 📱 Productometer Android Release v1.2.3
 
           Major release featuring the new Sleep & Bedtime Monitoring system, interactive Showcase portal, Voice-first AI Coach with 5-turn memory & offline scheduling, and bedtime guardian protection.
 
-          #### 🚀 Highlights in v1.2.2:
+          #### 🚀 Highlights in v1.2.3:
           - **🎓 Truncated Video Title & Study Keyword Fix:**
             - Expanded study detection beyond single word `'Class'` to all major academic keywords (Lecture, Chapter, Lesson, Course, Tutorial, Physics, Chemistry, Math, Biology, CBSE, NCERT, JEE, NEET, OneShot, Revision, etc.).
             - Deep metadata and `contentDescription` inspection captures full unabbreviated titles even when YouTube truncates them with `...`.
@@ -86,7 +86,7 @@ jobs:
           #### 📦 Direct Download:
           - Click **`Productometer.apk`** under Assets below to download and install.
           EOF
-          gh release create v1.2.2 dist/Productometer.apk \
-            --title "Productometer v1.2.2 - Android Release APK" \
+          gh release create v1.2.3 dist/Productometer.apk \
+            --title "Productometer v1.2.3 - Android Release APK" \
             --notes-file release_notes.md || \
-          gh release upload v1.2.2 dist/Productometer.apk --clobber
+          gh release upload v1.2.3 dist/Productometer.apk --clobber

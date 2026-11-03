@@ -611,13 +611,7 @@ public class WebAppInterface {
                 if (limitsObj.has(pkgName)) {
                     limitMinutes = limitsObj.optInt(pkgName, 0);
                 }
-                if (isCompulsory) {
-                    if (limitMinutes <= 0) {
-                        limitMinutes = 30; // Default 30 min mandatory limit
-                    } else if (limitMinutes > 60) {
-                        limitMinutes = 60; // Max 60m daily limit cap for compulsory apps
-                    }
-                }
+                // Compulsory overrides removed - limits are fully flexible and optional
 
                 int usedMinutes = Math.round(totalForegroundMs / 60000f);
                 boolean isFrozen = false;
@@ -642,7 +636,7 @@ public class WebAppInterface {
                 obj.put("totalSeconds", totalForegroundMs / 1000L);
                 obj.put("minutes", usedMinutes);
                 obj.put("isGame", isGame);
-                obj.put("isCompulsory", isCompulsory);
+                obj.put("isCompulsory", false);
                 obj.put("limitMinutes", limitMinutes);
                 obj.put("isFrozen", isFrozen);
                 obj.put("isGrace", isGrace);
@@ -694,20 +688,11 @@ public class WebAppInterface {
             boolean isGame = isGameApp(pm, packageName, appLabel);
             boolean isCompulsory = isCompulsoryApp(pm, packageName, appLabel, isGame);
 
-            int currentLimit = limitsObj.optInt(packageName, isCompulsory ? 30 : 0);
+            int currentLimit = limitsObj.optInt(packageName, 0);
 
             // Strict immutability rule: Cannot change or increase if in grace period or frozen!
             if (currentLimit > 0 && usedMinutes >= currentLimit) {
                 return false;
-            }
-
-            // Compulsory apps cannot have 0 limit (no limit) and max 60 min limit
-            if (isCompulsory) {
-                if (limitMinutes <= 0) {
-                    limitMinutes = 30;
-                } else if (limitMinutes > 60) {
-                    limitMinutes = 60;
-                }
             }
 
             if (limitMinutes > 0) {

@@ -131,6 +131,41 @@ public class ShortsReelsBlockerService extends AccessibilityService {
     private static String activePendingLectureSignature = "";
     private static long pendingLectureStartTimestamp = 0L;
 
+    public static boolean containsEntertainmentKeyword(String text) {
+        if (text == null || text.isEmpty()) return false;
+        String t = text.toLowerCase();
+        return t.contains("gameplay") || t.contains("gaming") || t.contains("gta") ||
+               t.contains("minecraft") || t.contains("roblox") || t.contains("free fire") ||
+               t.contains("bgmi") || t.contains("pubg") || t.contains("trailer") ||
+               t.contains("teaser") || t.contains("official video") || t.contains("official music") ||
+               t.contains("music video") || t.contains("song") || t.contains("songs") ||
+               t.contains("vlog") || t.contains("vlogs") || t.contains("daily vlog") ||
+               t.contains("prank") || t.contains("pranks") || t.contains("roast") ||
+               t.contains("comedy") || t.contains("standup") || t.contains("stand-up") ||
+               t.contains("reaction") || t.contains("challenge") || t.contains("highlights") ||
+               t.contains("unboxing") || t.contains("movie") || t.contains("full movie") ||
+               t.contains("web series") || t.contains("anime fight") || t.contains("streamer") ||
+               t.contains("tiktok") || t.contains("reel") || t.contains("meme") || t.contains("memes");
+    }
+
+    public static boolean isEducationalChannel(String channel) {
+        if (channel == null || channel.isEmpty()) return false;
+        String c = channel.toLowerCase();
+        return c.contains("physics wallah") || c.contains("alakh pandey") || c.contains("pw") ||
+               c.contains("khan academy") || c.contains("unacademy") || c.contains("vedantu") ||
+               c.contains("mit opencourseware") || c.contains("stanford") || c.contains("harvard") ||
+               c.contains("crashcourse") || c.contains("3blue1brown") || c.contains("veritasium") ||
+               c.contains("freecodecamp") || c.contains("apna college") || c.contains("apni kaksha") ||
+               c.contains("aman dhattarwal") || c.contains("code with harry") || c.contains("neso academy") ||
+               c.contains("gate smashers") || c.contains("abdul bari") || c.contains("take u forward") ||
+               c.contains("striver") || c.contains("mohit tyagi") || c.contains("competishun") ||
+               c.contains("eduniti") || c.contains("physics galaxy") || c.contains("ncert") ||
+               c.contains("nptel") || c.contains("ignou") || c.contains("studyiq") ||
+               c.contains("drishti ias") || c.contains("magnet brains") || c.contains("dear sir") ||
+               c.contains("edx") || c.contains("coursera") || c.contains("simplilearn") ||
+               c.contains("byju");
+    }
+
     public static boolean containsStudyKeyword(String text) {
         if (text == null || text.isEmpty()) return false;
         String t = text.toLowerCase();
@@ -306,13 +341,7 @@ public class ShortsReelsBlockerService extends AccessibilityService {
             if (limitsObj.has(packageName)) {
                 limitMinutes = limitsObj.optInt(packageName, 0);
             }
-            if (isCompulsory) {
-                if (limitMinutes <= 0) {
-                    limitMinutes = 30; // Compulsory default daily limit (30m)
-                } else if (limitMinutes > 60) {
-                    limitMinutes = 60; // Max 60m daily limit cap for compulsory apps
-                }
-            }
+            // Compulsory overrides removed - strictly respect user configuration
 
             if (limitMinutes > 0) {
                 long usedMs = WebAppInterface.getAppTodayForegroundMs(getApplicationContext(), packageName);
@@ -558,10 +587,13 @@ public class ShortsReelsBlockerService extends AccessibilityService {
     private String detectYouTubeNonStudyVideo(AccessibilityNodeInfo root, AccessibilityEvent event) {
         if (root == null) return null;
 
-        // Exclude inline_player so home feed autoplay previews are ignored
+        // Is video watch page active?
         List<AccessibilityNodeInfo> playerNodes = root.findAccessibilityNodeInfosByViewId("com.google.android.youtube:id/player_view");
         if (playerNodes == null || playerNodes.isEmpty()) {
-            playerNodes = root.findAccessibilityNodeInfosByViewId("com.google.android.youtube:id/watch_while_layout");
+            playerNodes = root.findAccessibilityNodeInfosByViewId("com.google.android.youtube:id/watch_metadata");
+        }
+        if (playerNodes == null || playerNodes.isEmpty()) {
+            playerNodes = root.findAccessibilityNodeInfosByViewId("com.google.android.youtube:id/watch_panel");
         }
 
         boolean hasPlayer = (playerNodes != null && !playerNodes.isEmpty());
@@ -569,64 +601,125 @@ public class ShortsReelsBlockerService extends AccessibilityService {
             for (AccessibilityNodeInfo n : playerNodes) n.recycle();
         }
 
-        if (!hasPlayer) return null; // In search bar, channel list, or feed
+        // --- REGAIN METHOD PILLAR 1: BLOCK HOME RECOMMENDATION FEED IN LECTURE MODE ---
+        if (!hasPlayer) {
+            // Check if user is scrolling the Home feed instead of searching
+            List<AccessibilityNodeInfo> searchBoxes = root.findAccessibilityNodeInfosByViewId("com.google.android.youtube:id/search_box");
+            boolean isSearching = (searchBoxes != null && !searchBoxes.isEmpty());
+            if (searchBoxes != null) {
+                for (AccessibilityNodeInfo n : searchBoxes) n.recycle();
+            }
 
-        long now = System.currentTimeMillis();
-        // 1. If clicked a study video within the last 10 seconds from search/feed:
-        if (now - lastStudyClickedTimestamp < 10000L) {
-            return null; // Allowed! Legitimate lecture opened from search/recommendation
+            List<AccessibilityNodeInfo> homeFeeds = root.findAccessibilityNodeInfosByViewId("com.google.android.youtube:id/feed_view");
+            if (homeFeeds == null || homeFeeds.isEmpty()) {
+                homeFeeds = root.findAccessibilityNodeInfosByViewId("com.google.android.youtube:id/results_recycler_view");
+            }
+            boolean isFeedVisible = (homeFeeds != null && !homeFeeds.isEmpty());
+            if (homeFeeds != null) {
+                for (AccessibilityNodeInfo n : homeFeeds) n.recycle();
+            }
+
+            // If user is in feed with no active search or player for >= 6 seconds:
+            if (isFeedVisible && !isSearching) {
+                long now = System.currentTimeMillis();
+                if (!"home_feed".equals(activePendingLectureSignature)) {
+                    activePendingLectureSignature = "home_feed";
+                    pendingLectureStartTimestamp = now;
+                    return null;
+                }
+                if (now - pendingLectureStartTimestamp > 6000L) {
+                    return "yt_home_feed_trap";
+                }
+            }
+            return null;
         }
 
-        // 2. Deep extract visible text and check title view IDs specifically
-        String textDump = extractVisibleTextSignature(root).toLowerCase();
+        long now = System.currentTimeMillis();
+        // Pre-watch click memory (tapped from search)
+        if (now - lastStudyClickedTimestamp < 10000L) {
+            return null; // Allowed! Legitimate lecture opened from search
+        }
 
-        // Also inspect YouTube specific title and metadata nodes
+        // --- REGAIN METHOD PILLAR 2: ISOLATE ACTIVE TITLE & ACTIVE CHANNEL (NO SCREEN DUMP!) ---
+        // (Scanning the entire screen leaks study words from the 20 recommended videos below the player!)
         String[] titleNodeIds = {
             "com.google.android.youtube:id/title",
             "com.google.android.youtube:id/video_title",
             "com.google.android.youtube:id/collapsed_title",
-            "com.google.android.youtube:id/expandable_title",
-            "com.google.android.youtube:id/watch_metadata",
-            "com.google.android.youtube:id/description",
-            "com.google.android.youtube:id/channel_name",
-            "com.google.android.youtube:id/owner_name"
+            "com.google.android.youtube:id/expandable_title"
         };
-        StringBuilder titleSb = new StringBuilder();
+        StringBuilder activeTitleSb = new StringBuilder();
         for (String id : titleNodeIds) {
             List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByViewId(id);
             if (nodes != null && !nodes.isEmpty()) {
-                for (AccessibilityNodeInfo n : nodes) {
-                    if (n.getContentDescription() != null) titleSb.append(n.getContentDescription()).append(" ");
-                    if (n.getText() != null) titleSb.append(n.getText()).append(" ");
-                    n.recycle();
+                AccessibilityNodeInfo firstNode = nodes.get(0);
+                if (firstNode.getContentDescription() != null) {
+                    activeTitleSb.append(firstNode.getContentDescription()).append(" ");
                 }
+                if (firstNode.getText() != null) {
+                    activeTitleSb.append(firstNode.getText()).append(" ");
+                }
+                for (AccessibilityNodeInfo n : nodes) n.recycle();
+                break;
             }
         }
-        String combinedMetadata = (textDump + " " + titleSb.toString()).toLowerCase();
 
-        // 3. Check for any study keywords (Class, Lecture, Chapter, Physics, Math, etc.)
-        if (containsStudyKeyword(combinedMetadata)) {
-            activePendingLectureSignature = "";
-            return null; // Allowed! Study material detected
+        String[] channelNodeIds = {
+            "com.google.android.youtube:id/channel_name",
+            "com.google.android.youtube:id/owner_name",
+            "com.google.android.youtube:id/byline"
+        };
+        StringBuilder activeChannelSb = new StringBuilder();
+        for (String id : channelNodeIds) {
+            List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByViewId(id);
+            if (nodes != null && !nodes.isEmpty()) {
+                AccessibilityNodeInfo firstNode = nodes.get(0);
+                if (firstNode.getText() != null) {
+                    activeChannelSb.append(firstNode.getText()).append(" ");
+                }
+                for (AccessibilityNodeInfo n : nodes) n.recycle();
+                break;
+            }
         }
 
-        String sig = "yt_non_class_" + (textDump.isEmpty() ? String.valueOf(now / 5000) : (textDump.length() > 40 ? textDump.substring(0, 40) : textDump));
+        String activeTitle = activeTitleSb.toString().trim().toLowerCase();
+        String activeChannel = activeChannelSb.toString().trim().toLowerCase();
 
-        // 4. Check if already whitelisted for this session
+        // 1. Check if user already whitelisted this video
+        String sig = "yt_v_" + (activeTitle.isEmpty() ? String.valueOf(now / 5000) : (activeTitle.length() > 35 ? activeTitle.substring(0, 35) : activeTitle));
         if (whitelistedLectureSignatures.contains(sig)) {
             return null;
         }
 
-        // 5. Initial settle grace period (4 seconds) to let title and description finish loading
+        // 2. REGAIN METHOD PILLAR 3: EDUCATIONAL CHANNEL WHITELIST
+        if (isEducationalChannel(activeChannel)) {
+            activePendingLectureSignature = "";
+            return null; // Allowed! Legitimate academic creator
+        }
+
+        // 3. REGAIN METHOD PILLAR 4: ENTERTAINMENT BLACKLIST (NEGATIVE MATCHING)
+        // Immediately catch gaming, vlogs, comedy, songs, trailers, roasts, pranks!
+        if (containsEntertainmentKeyword(activeTitle) || containsEntertainmentKeyword(activeChannel)) {
+            return "yt_entertainment_" + (activeTitle.length() > 30 ? activeTitle.substring(0, 30) : activeTitle);
+        }
+
+        // 4. POSITIVE STUDY KEYWORD MATCHING ON ACTIVE TITLE ONLY
+        if (containsStudyKeyword(activeTitle) || containsStudyKeyword(activeChannel)) {
+            activePendingLectureSignature = "";
+            return null; // Allowed! Study lecture verified
+        }
+
+        // 5. Initial settle grace period (3 seconds) to let title and channel load
         if (!sig.equals(activePendingLectureSignature)) {
             activePendingLectureSignature = sig;
             pendingLectureStartTimestamp = now;
-            return null; // Start 4-second loading buffer
+            return null; // Loading buffer
         }
-        if (now - pendingLectureStartTimestamp < 4000L) {
-            return null; // Still in 4-second loading buffer
+        if (now - pendingLectureStartTimestamp < 3500L) {
+            return null;
         }
 
+        // If after 3.5s video has NO study keywords, it is uneducational content!
         return sig;
     }
 
@@ -680,6 +773,11 @@ public class ShortsReelsBlockerService extends AccessibilityService {
                                   textDump.contains("up next") || textDump.contains("comments") ||
                                   textDump.contains("views");
             if (isWatchPage) {
+                // Negative matching: block entertainment, gaming, vlogs, songs in browser!
+                if (containsEntertainmentKeyword(textDump)) {
+                    return "browser_yt_distraction_" + (System.currentTimeMillis() / 4000);
+                }
+
                 if (containsStudyKeyword(textDump)) {
                     return null; // Allowed! Study material detected
                 }
