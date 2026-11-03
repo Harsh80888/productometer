@@ -367,6 +367,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (window.NativeBridge && window.NativeBridge.setBedtimeSchedule) {
                     window.NativeBridge.setBedtimeSchedule(true, startVal, newEndVal);
                 }
+                if (window.NativeBridge && window.NativeBridge.scheduleSmartWakeupAlarm) {
+                    window.NativeBridge.scheduleSmartWakeupAlarm(newEndVal);
+                }
 
                 updateTargetSleepUI();
                 updateBedtimeRemainingHUD();
@@ -389,6 +392,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (window.NativeBridge && window.NativeBridge.setBedtimeSchedule) {
                     window.NativeBridge.setBedtimeSchedule(true, startVal, newEndVal);
+                }
+                if (window.NativeBridge && window.NativeBridge.scheduleSmartWakeupAlarm) {
+                    window.NativeBridge.scheduleSmartWakeupAlarm(newEndVal);
                 }
 
                 updateTargetSleepUI();

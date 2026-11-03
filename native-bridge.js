@@ -266,11 +266,32 @@ const NativeBridge = {
     scheduleSmartWakeupAlarm: (wakeTimeStr) => {
         try {
             localStorage.setItem('productometer_smart_alarm_enabled', 'true');
+            localStorage.removeItem('wakeup_alarm_skipped_date');
+            localStorage.removeItem('wakeup_mission_completed_date');
             if (wakeTimeStr) localStorage.setItem('productometer_bedtime_end', wakeTimeStr);
             if (typeof window.AndroidBridge !== 'undefined' && window.AndroidBridge.scheduleSmartWakeupAlarm) {
                 window.AndroidBridge.scheduleSmartWakeupAlarm(wakeTimeStr);
             }
         } catch (e) {}
+    },
+
+    skipUpcomingAlarm: (dateStr) => {
+        try {
+            localStorage.setItem('wakeup_alarm_skipped_date', dateStr);
+            if (typeof window.AndroidBridge !== 'undefined' && window.AndroidBridge.skipUpcomingAlarm) {
+                window.AndroidBridge.skipUpcomingAlarm(dateStr);
+            }
+        } catch (e) {}
+    },
+
+    triggerWakeupAlarmNow: () => {
+        try {
+            if (typeof window.AndroidBridge !== 'undefined' && window.AndroidBridge.triggerWakeupAlarmNow) {
+                window.AndroidBridge.triggerWakeupAlarmNow();
+                return true;
+            }
+        } catch (e) {}
+        return false;
     },
 
     cancelSmartWakeupAlarm: () => {

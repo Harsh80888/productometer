@@ -954,9 +954,33 @@ public class WebAppInterface {
             prefs.edit()
                     .putBoolean("productometer_smart_alarm_enabled", true)
                     .putString("productometer_bedtime_end", wakeTimeStr != null ? wakeTimeStr : "06:30")
+                    .remove("wakeup_alarm_skipped_date")
+                    .remove("wakeup_mission_completed_date")
                     .apply();
             AlarmReceiver.scheduleNextMorningWakeupAlarm(context);
         } catch (Exception e) {}
+    }
+
+    @JavascriptInterface
+    public void skipUpcomingAlarm(String dateStr) {
+        try {
+            SharedPreferences prefs = context.getSharedPreferences(ShortsReelsBlockerService.PREFS_NAME, Context.MODE_PRIVATE);
+            prefs.edit()
+                    .putString("wakeup_alarm_skipped_date", dateStr)
+                    .apply();
+            AlarmReceiver.scheduleNextMorningWakeupAlarm(context);
+        } catch (Exception e) {}
+    }
+
+    @JavascriptInterface
+    public void triggerWakeupAlarmNow() {
+        try {
+            Intent intent = new Intent(context, AlarmReceiver.class);
+            intent.putExtra("task_id", "wakeup_smart_alarm");
+            context.sendBroadcast(intent);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @JavascriptInterface

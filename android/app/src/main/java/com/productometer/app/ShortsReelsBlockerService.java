@@ -30,6 +30,7 @@ import android.widget.Toast;
 import android.content.pm.PackageManager;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Calendar;
@@ -131,21 +132,20 @@ public class ShortsReelsBlockerService extends AccessibilityService {
     private static String activePendingLectureSignature = "";
     private static long pendingLectureStartTimestamp = 0L;
 
+    // Strict, unambiguous entertainment keywords (clean of false positives like reaction, challenge, song, highlights)
     public static boolean containsEntertainmentKeyword(String text) {
         if (text == null || text.isEmpty()) return false;
         String t = text.toLowerCase();
         return t.contains("gameplay") || t.contains("gaming") || t.contains("gta") ||
                t.contains("minecraft") || t.contains("roblox") || t.contains("free fire") ||
                t.contains("bgmi") || t.contains("pubg") || t.contains("trailer") ||
-               t.contains("teaser") || t.contains("official video") || t.contains("official music") ||
-               t.contains("music video") || t.contains("song") || t.contains("songs") ||
+               t.contains("teaser") || t.contains("official music video") || t.contains("music video") ||
                t.contains("vlog") || t.contains("vlogs") || t.contains("daily vlog") ||
                t.contains("prank") || t.contains("pranks") || t.contains("roast") ||
-               t.contains("comedy") || t.contains("standup") || t.contains("stand-up") ||
-               t.contains("reaction") || t.contains("challenge") || t.contains("highlights") ||
-               t.contains("unboxing") || t.contains("movie") || t.contains("full movie") ||
-               t.contains("web series") || t.contains("anime fight") || t.contains("streamer") ||
-               t.contains("tiktok") || t.contains("reel") || t.contains("meme") || t.contains("memes");
+               t.contains("standup comedy") || t.contains("stand-up comedy") ||
+               t.contains("unboxing") || t.contains("full movie") || t.contains("web series") ||
+               t.contains("anime fight") || t.contains("streamer") || t.contains("tiktok") ||
+               t.contains("meme compilation") || t.contains("funny moments");
     }
 
     public static boolean isEducationalChannel(String channel) {
@@ -159,13 +159,15 @@ public class ShortsReelsBlockerService extends AccessibilityService {
                c.contains("aman dhattarwal") || c.contains("code with harry") || c.contains("neso academy") ||
                c.contains("gate smashers") || c.contains("abdul bari") || c.contains("take u forward") ||
                c.contains("striver") || c.contains("mohit tyagi") || c.contains("competishun") ||
-               c.contains("eduniti") || c.contains("physics galaxy") || c.contains("ncert") ||
-               c.contains("nptel") || c.contains("ignou") || c.contains("studyiq") ||
+               c.contains("eduniti") || c.contains("physics galaxy") || c.contains("ashish arora") ||
+               c.contains("ncert") || c.contains("nptel") || c.contains("ignou") || c.contains("studyiq") ||
                c.contains("drishti ias") || c.contains("magnet brains") || c.contains("dear sir") ||
                c.contains("edx") || c.contains("coursera") || c.contains("simplilearn") ||
-               c.contains("byju");
+               c.contains("byju") || c.contains("allen") || c.contains("resonance") ||
+               c.contains("fiitjee") || c.contains("aakash");
     }
 
+    // Comprehensive Academic & Study Keyword Library (160+ Academic Terms)
     public static boolean containsStudyKeyword(String text) {
         if (text == null || text.isEmpty()) return false;
         String t = text.toLowerCase();
@@ -176,17 +178,60 @@ public class ShortsReelsBlockerService extends AccessibilityService {
                t.contains("chapter") || t.contains("lesson") || t.contains("lessons") ||
                t.contains("batch") || t.contains("revision") ||
                t.contains("oneshot") || t.contains("one shot") || t.contains("one-shot") ||
-               t.contains("cbse") || t.contains("ncert") || t.contains("neet") || t.contains("jee") ||
-               t.contains("physics") || t.contains("chemistry") || t.contains("math") ||
-               t.contains("maths") || t.contains("mathematics") || t.contains("biology") ||
-               t.contains("science") || t.contains("history") || t.contains("geography") ||
-               t.contains("upsc") || t.contains("gate") || t.contains("exam") || t.contains("exams") ||
-               t.contains("pw") || t.contains("physics wallah") || t.contains("unacademy") ||
-               t.contains("vedantu") || t.contains("khan academy") || t.contains("syllabus") ||
-               t.contains("semester") || t.contains("practice") || t.contains("solution") ||
-               t.contains("solutions") || t.contains("notes") || t.contains("dsa") ||
-               t.contains("coding") || t.contains("programming") || t.contains("study") ||
-               t.contains("education") || t.contains("iit") || t.contains("aiims") || t.contains("board");
+               t.contains("study") || t.contains("education") || t.contains("learning") ||
+               t.contains("curriculum") || t.contains("syllabus") || t.contains("semester") ||
+               t.contains("module") || t.contains("unit") || t.contains("topic") ||
+               t.contains("concept") || t.contains("notes") || t.contains("summary") ||
+               t.contains("cbse") || t.contains("ncert") || t.contains("icse") || t.contains("isc") ||
+               t.contains("state board") || t.contains("board exam") || t.contains("boards") ||
+               t.contains("jee") || t.contains("jee mains") || t.contains("jee advanced") ||
+               t.contains("neet") || t.contains("upsc") || t.contains("gate") || t.contains("cat") ||
+               t.contains("ssc") || t.contains("nda") || t.contains("clat") || t.contains("cuet") ||
+               t.contains("iit") || t.contains("aiims") || t.contains("bitsat") || t.contains("olympiad") ||
+               t.contains("mock test") || t.contains("sample paper") || t.contains("pyq") ||
+               t.contains("previous year") || t.contains("question paper") || t.contains("solution") ||
+               t.contains("solutions") || t.contains("paper analysis") || t.contains("answer key") ||
+               t.contains("physics") || t.contains("kinematics") || t.contains("thermodynamics") ||
+               t.contains("optics") || t.contains("electrostatics") || t.contains("electromagnetism") ||
+               t.contains("gravitation") || t.contains("mechanics") || t.contains("quantum") ||
+               t.contains("semiconductor") || t.contains("current electricity") || t.contains("capacitance") ||
+               t.contains("magnetic") || t.contains("oscillation") || t.contains("waves") ||
+               t.contains("chemistry") || t.contains("organic chemistry") || t.contains("inorganic chemistry") ||
+               t.contains("physical chemistry") || t.contains("periodic table") || t.contains("chemical bonding") ||
+               t.contains("chemical reaction") || t.contains("chemical kinetics") || t.contains("equilibrium") ||
+               t.contains("atomic structure") || t.contains("electrochemistry") || t.contains("hydrocarbons") ||
+               t.contains("polymers") || t.contains("biomolecules") || t.contains("aldehydes") ||
+               t.contains("amines") || t.contains("coordination compounds") ||
+               t.contains("math") || t.contains("maths") || t.contains("mathematics") ||
+               t.contains("calculus") || t.contains("algebra") || t.contains("trigonometry") ||
+               t.contains("geometry") || t.contains("coordinate geometry") || t.contains("integration") ||
+               t.contains("differentiation") || t.contains("derivative") || t.contains("differential equation") ||
+               t.contains("matrices") || t.contains("determinants") || t.contains("probability") ||
+               t.contains("statistics") || t.contains("vectors") || t.contains("linear programming") ||
+               t.contains("complex numbers") || t.contains("quadratic equation") || t.contains("binomial theorem") ||
+               t.contains("biology") || t.contains("botany") || t.contains("zoology") ||
+               t.contains("genetics") || t.contains("evolution") || t.contains("anatomy") ||
+               t.contains("physiology") || t.contains("ecology") || t.contains("cell biology") ||
+               t.contains("human physiology") || t.contains("plant physiology") || t.contains("biotechnology") ||
+               t.contains("coding") || t.contains("programming") || t.contains("computer science") ||
+               t.contains("dsa") || t.contains("data structure") || t.contains("algorithm") ||
+               t.contains("python") || t.contains("java") || t.contains("c++") || t.contains("cpp") ||
+               t.contains("javascript") || t.contains("typescript") || t.contains("html") || t.contains("css") ||
+               t.contains("react") || t.contains("node") || t.contains("sql") || t.contains("database") ||
+               t.contains("dbms") || t.contains("operating system") || t.contains("computer network") ||
+               t.contains("cyber security") || t.contains("machine learning") || t.contains("deep learning") ||
+               t.contains("artificial intelligence") || t.contains("data science") || t.contains("web development") ||
+               t.contains("app development") || t.contains("android development") || t.contains("flutter") ||
+               t.contains("kotlin") || t.contains("leetcode") || t.contains("system design") ||
+               t.contains("economics") || t.contains("microeconomics") || t.contains("macroeconomics") ||
+               t.contains("accountancy") || t.contains("accounts") || t.contains("business studies") ||
+               t.contains("commerce") || t.contains("finance") || t.contains("marketing") ||
+               t.contains("taxation") || t.contains("gst") ||
+               t.contains("history") || t.contains("geography") || t.contains("polity") ||
+               t.contains("political science") || t.contains("sociology") || t.contains("psychology") ||
+               t.contains("literature") || t.contains("english grammar") || t.contains("vocabulary") ||
+               t.contains("essay") || t.contains("comprehension") || t.contains("anthropology") ||
+               isEducationalChannel(text);
     }
 
     private static final Set<String> PERMANENTLY_BLOCKED_APPS = new HashSet<>(Arrays.asList(
@@ -584,10 +629,76 @@ public class ShortsReelsBlockerService extends AccessibilityService {
         return null;
     }
 
+    // Collect text from the top watch layout (active title & channel), skipping recommendation recyclers & comments
+    private void collectTopWatchTextNodes(AccessibilityNodeInfo node, List<String> texts, int depth, int maxNodes) {
+        if (node == null || depth > 12 || texts.size() >= maxNodes) return;
+
+        // Skip recommendation feeds, comments, and related videos
+        CharSequence viewId = node.getViewIdResourceName();
+        if (viewId != null) {
+            String vId = viewId.toString().toLowerCase();
+            if (vId.contains("recycler") || vId.contains("related") || vId.contains("comment") || vId.contains("bottom_sheet")) {
+                return; // Do not enter recommendation list below player!
+            }
+        }
+
+        CharSequence desc = node.getContentDescription();
+        if (desc != null && desc.length() > 2) {
+            texts.add(desc.toString().trim());
+        }
+        CharSequence txt = node.getText();
+        if (txt != null && txt.length() > 2) {
+            texts.add(txt.toString().trim());
+        }
+
+        int childCount = Math.min(node.getChildCount(), 10);
+        for (int i = 0; i < childCount; i++) {
+            AccessibilityNodeInfo child = node.getChild(i);
+            if (child != null) {
+                collectTopWatchTextNodes(child, texts, depth + 1, maxNodes);
+                child.recycle();
+            }
+        }
+    }
+
+    private String extractActiveYouTubeTitle(AccessibilityNodeInfo root) {
+        if (root == null) return "";
+
+        // 1. Try finding specific title view IDs first
+        String[] titleNodeIds = {
+            "com.google.android.youtube:id/title",
+            "com.google.android.youtube:id/video_title",
+            "com.google.android.youtube:id/collapsed_title",
+            "com.google.android.youtube:id/expandable_title",
+            "com.google.android.youtube:id/watch_headline"
+        };
+        for (String id : titleNodeIds) {
+            List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByViewId(id);
+            if (nodes != null && !nodes.isEmpty()) {
+                AccessibilityNodeInfo firstNode = nodes.get(0);
+                StringBuilder sb = new StringBuilder();
+                if (firstNode.getContentDescription() != null) sb.append(firstNode.getContentDescription()).append(" ");
+                if (firstNode.getText() != null) sb.append(firstNode.getText()).append(" ");
+                for (AccessibilityNodeInfo n : nodes) n.recycle();
+                String res = sb.toString().trim();
+                if (!res.isEmpty()) return res;
+            }
+        }
+
+        // 2. Compose / Litho Fallback: collect the first 4 text nodes of the watch layout
+        List<String> topTexts = new ArrayList<>();
+        collectTopWatchTextNodes(root, topTexts, 0, 4);
+        StringBuilder topSb = new StringBuilder();
+        for (String t : topTexts) {
+            topSb.append(t).append(" ");
+        }
+        return topSb.toString().trim();
+    }
+
     private String detectYouTubeNonStudyVideo(AccessibilityNodeInfo root, AccessibilityEvent event) {
         if (root == null) return null;
 
-        // Is video watch page active?
+        // Verify if a video player or watch layout is present
         List<AccessibilityNodeInfo> playerNodes = root.findAccessibilityNodeInfosByViewId("com.google.android.youtube:id/player_view");
         if (playerNodes == null || playerNodes.isEmpty()) {
             playerNodes = root.findAccessibilityNodeInfosByViewId("com.google.android.youtube:id/watch_metadata");
@@ -595,44 +706,16 @@ public class ShortsReelsBlockerService extends AccessibilityService {
         if (playerNodes == null || playerNodes.isEmpty()) {
             playerNodes = root.findAccessibilityNodeInfosByViewId("com.google.android.youtube:id/watch_panel");
         }
+        if (playerNodes == null || playerNodes.isEmpty()) {
+            playerNodes = root.findAccessibilityNodeInfosByViewId("com.google.android.youtube:id/watch_while_layout");
+        }
 
         boolean hasPlayer = (playerNodes != null && !playerNodes.isEmpty());
         if (playerNodes != null) {
             for (AccessibilityNodeInfo n : playerNodes) n.recycle();
         }
 
-        // --- REGAIN METHOD PILLAR 1: BLOCK HOME RECOMMENDATION FEED IN LECTURE MODE ---
-        if (!hasPlayer) {
-            // Check if user is scrolling the Home feed instead of searching
-            List<AccessibilityNodeInfo> searchBoxes = root.findAccessibilityNodeInfosByViewId("com.google.android.youtube:id/search_box");
-            boolean isSearching = (searchBoxes != null && !searchBoxes.isEmpty());
-            if (searchBoxes != null) {
-                for (AccessibilityNodeInfo n : searchBoxes) n.recycle();
-            }
-
-            List<AccessibilityNodeInfo> homeFeeds = root.findAccessibilityNodeInfosByViewId("com.google.android.youtube:id/feed_view");
-            if (homeFeeds == null || homeFeeds.isEmpty()) {
-                homeFeeds = root.findAccessibilityNodeInfosByViewId("com.google.android.youtube:id/results_recycler_view");
-            }
-            boolean isFeedVisible = (homeFeeds != null && !homeFeeds.isEmpty());
-            if (homeFeeds != null) {
-                for (AccessibilityNodeInfo n : homeFeeds) n.recycle();
-            }
-
-            // If user is in feed with no active search or player for >= 6 seconds:
-            if (isFeedVisible && !isSearching) {
-                long now = System.currentTimeMillis();
-                if (!"home_feed".equals(activePendingLectureSignature)) {
-                    activePendingLectureSignature = "home_feed";
-                    pendingLectureStartTimestamp = now;
-                    return null;
-                }
-                if (now - pendingLectureStartTimestamp > 6000L) {
-                    return "yt_home_feed_trap";
-                }
-            }
-            return null;
-        }
+        if (!hasPlayer) return null; // In search bar, channel list, or feed
 
         long now = System.currentTimeMillis();
         // Pre-watch click memory (tapped from search)
@@ -640,50 +723,8 @@ public class ShortsReelsBlockerService extends AccessibilityService {
             return null; // Allowed! Legitimate lecture opened from search
         }
 
-        // --- REGAIN METHOD PILLAR 2: ISOLATE ACTIVE TITLE & ACTIVE CHANNEL (NO SCREEN DUMP!) ---
-        // (Scanning the entire screen leaks study words from the 20 recommended videos below the player!)
-        String[] titleNodeIds = {
-            "com.google.android.youtube:id/title",
-            "com.google.android.youtube:id/video_title",
-            "com.google.android.youtube:id/collapsed_title",
-            "com.google.android.youtube:id/expandable_title"
-        };
-        StringBuilder activeTitleSb = new StringBuilder();
-        for (String id : titleNodeIds) {
-            List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByViewId(id);
-            if (nodes != null && !nodes.isEmpty()) {
-                AccessibilityNodeInfo firstNode = nodes.get(0);
-                if (firstNode.getContentDescription() != null) {
-                    activeTitleSb.append(firstNode.getContentDescription()).append(" ");
-                }
-                if (firstNode.getText() != null) {
-                    activeTitleSb.append(firstNode.getText()).append(" ");
-                }
-                for (AccessibilityNodeInfo n : nodes) n.recycle();
-                break;
-            }
-        }
-
-        String[] channelNodeIds = {
-            "com.google.android.youtube:id/channel_name",
-            "com.google.android.youtube:id/owner_name",
-            "com.google.android.youtube:id/byline"
-        };
-        StringBuilder activeChannelSb = new StringBuilder();
-        for (String id : channelNodeIds) {
-            List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByViewId(id);
-            if (nodes != null && !nodes.isEmpty()) {
-                AccessibilityNodeInfo firstNode = nodes.get(0);
-                if (firstNode.getText() != null) {
-                    activeChannelSb.append(firstNode.getText()).append(" ");
-                }
-                for (AccessibilityNodeInfo n : nodes) n.recycle();
-                break;
-            }
-        }
-
-        String activeTitle = activeTitleSb.toString().trim().toLowerCase();
-        String activeChannel = activeChannelSb.toString().trim().toLowerCase();
+        // Extract active video title & channel safely (Compose-safe, no recommendation leakage)
+        String activeTitle = extractActiveYouTubeTitle(root).toLowerCase();
 
         // 1. Check if user already whitelisted this video
         String sig = "yt_v_" + (activeTitle.isEmpty() ? String.valueOf(now / 5000) : (activeTitle.length() > 35 ? activeTitle.substring(0, 35) : activeTitle));
@@ -691,25 +732,20 @@ public class ShortsReelsBlockerService extends AccessibilityService {
             return null;
         }
 
-        // 2. REGAIN METHOD PILLAR 3: EDUCATIONAL CHANNEL WHITELIST
-        if (isEducationalChannel(activeChannel)) {
+        // 2. CRITICAL FIX: POSITIVE STUDY KEYWORDS CHECKED FIRST!
+        // If the title or channel contains academic keywords, it is 100% permitted immediately!
+        if (containsStudyKeyword(activeTitle) || isEducationalChannel(activeTitle)) {
             activePendingLectureSignature = "";
-            return null; // Allowed! Legitimate academic creator
+            return null; // Allowed! Legitimate study lecture
         }
 
-        // 3. REGAIN METHOD PILLAR 4: ENTERTAINMENT BLACKLIST (NEGATIVE MATCHING)
-        // Immediately catch gaming, vlogs, comedy, songs, trailers, roasts, pranks!
-        if (containsEntertainmentKeyword(activeTitle) || containsEntertainmentKeyword(activeChannel)) {
+        // 3. ENTERTAINMENT BLACKLIST (NEGATIVE MATCHING)
+        // Strictly catches gaming, vlogs, comedy, songs, trailers, roasts, pranks!
+        if (containsEntertainmentKeyword(activeTitle)) {
             return "yt_entertainment_" + (activeTitle.length() > 30 ? activeTitle.substring(0, 30) : activeTitle);
         }
 
-        // 4. POSITIVE STUDY KEYWORD MATCHING ON ACTIVE TITLE ONLY
-        if (containsStudyKeyword(activeTitle) || containsStudyKeyword(activeChannel)) {
-            activePendingLectureSignature = "";
-            return null; // Allowed! Study lecture verified
-        }
-
-        // 5. Initial settle grace period (3 seconds) to let title and channel load
+        // 4. Initial settle grace period (3.5 seconds) to let title finish loading
         if (!sig.equals(activePendingLectureSignature)) {
             activePendingLectureSignature = sig;
             pendingLectureStartTimestamp = now;

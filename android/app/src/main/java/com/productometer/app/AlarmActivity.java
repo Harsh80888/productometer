@@ -259,55 +259,10 @@ public class AlarmActivity extends AppCompatActivity implements SensorEventListe
     }
 
     private void startAlarmAlerts() {
-        try {
-            // Ensure alarm audio stream has high volume
-            AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-            if (audioManager != null) {
-                int maxVol = audioManager.getStreamMaxVolume(AudioManager.STREAM_ALARM);
-                audioManager.setStreamVolume(AudioManager.STREAM_ALARM, maxVol, 0);
-            }
-
-            Uri alarmUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
-            if (alarmUri == null) alarmUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE);
-            if (alarmUri == null) alarmUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-
-            mediaPlayer = new MediaPlayer();
-            mediaPlayer.setDataSource(this, alarmUri);
-            mediaPlayer.setAudioAttributes(new AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_ALARM)
-                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                    .build());
-            mediaPlayer.setLooping(true);
-            mediaPlayer.prepare();
-            mediaPlayer.start();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        try {
-            vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
-            if (vibrator != null) {
-                long[] pattern = { 0, 800, 300, 800, 300, 800 };
-                vibrator.vibrate(pattern, 0); // Loop indefinitely
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        AlarmReceiver.playAlarmSiren(this);
     }
 
     private void stopAlarmAlerts() {
-        if (mediaPlayer != null) {
-            try {
-                if (mediaPlayer.isPlaying()) mediaPlayer.stop();
-                mediaPlayer.release();
-            } catch (Exception ignored) {}
-            mediaPlayer = null;
-        }
-        if (vibrator != null) {
-            try {
-                vibrator.cancel();
-            } catch (Exception ignored) {}
-        }
         AlarmReceiver.stopAlarm();
     }
 

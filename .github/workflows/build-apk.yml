@@ -66,27 +66,34 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cat << 'EOF' > release_notes.md
-          ### 📱 Productometer Android Release v1.2.3
+### 📱 Productometer Android Release v1.2.4
 
-          Major release featuring the new Sleep & Bedtime Monitoring system, interactive Showcase portal, Voice-first AI Coach with 5-turn memory & offline scheduling, and bedtime guardian protection.
+          Major release featuring an expanded 160+ Academic Keyword Library, Jetpack Compose-safe active title extraction, intelligent educational creator whitelisting, bedtime smart alarms, and complete distraction blocker coverage.
 
-          #### 🚀 Highlights in v1.2.3:
-          - **🎓 Truncated Video Title & Study Keyword Fix:**
-            - Expanded study detection beyond single word `'Class'` to all major academic keywords (Lecture, Chapter, Lesson, Course, Tutorial, Physics, Chemistry, Math, Biology, CBSE, NCERT, JEE, NEET, OneShot, Revision, etc.).
-            - Deep metadata and `contentDescription` inspection captures full unabbreviated titles even when YouTube truncates them with `...`.
-            - Added search click memory: tapping a study video in search results automatically verifies and allows playback.
-            - 4-second settle grace period allows titles to load without triggering instant false alerts.
-            - Added **'Allow This Lecture' (Whitelist)** button on the guardian alert overlay to whitelist lectures with 1 tap.
-          - **🌐 Full Android Browser Distraction Blocker:**
-            - Added active monitoring across Chrome, Brave, Samsung Internet, Edge, Firefox, and Opera.
-            - Automatically blocks YouTube Shorts and non-study videos when browsing on the web.
-          - **🎥 Distraction-Free Study Player (Study Tube):**
-            - Direct in-app study video player in Academics Monitoring to watch any lecture link distraction-free with zero Shorts and zero recommendations.
+          #### 🚀 Highlights in v1.2.4:
+          - **🎓 160+ Comprehensive Academic Keyword Library:**
+            - Spans Physics, Chemistry, Mathematics, Biology, Computer Science/Coding, Engineering, Commerce, Economics, Humanities, and Board exams (CBSE, NCERT, ICSE, State Boards).
+            - Competitive exams covered: JEE Mains & Advanced, NEET, UPSC, GATE, CAT, NDA, CLAT, CUET, IIT, AIIMS, BITSAT.
+            - Educational creator whitelist: Physics Wallah, Khan Academy, MIT OCW, Stanford, Harvard, CrashCourse, 3Blue1Brown, Veritasium, freeCodeCamp, Gate Smashers, NPTEL, StudyIQ, Drishti IAS, and more.
+          - **⚡ Litho & Jetpack Compose Safe Active Title Extraction:**
+            - YouTube Android app no longer returns empty titles on modern Compose/Litho layouts.
+            - Inspects top watch text nodes while strictly isolating player metadata from recommendations and comments below.
+          - **🛡️ Study-First Matching & Clean Entertainment Blacklist:**
+            - Academic keyword matching and educational creator whitelisting run FIRST before any entertainment checks.
+            - Negative entertainment blacklist sanitized to eliminate collisions (e.g. chemical 'reactions', coding 'challenges', revision 'highlights').
+            - Removed home feed trap timer so search and channel browsing remain unhindered.
+          - **🌐 Browser Distraction Blocker & Academics Study Player:**
+            - Blocks Shorts and non-study videos across Chrome, Brave, Samsung Internet, Edge, Firefox, and Opera.
+            - Direct in-app study video player (#studyLectureDialog) in Academics Monitoring.
+          - **⏰ Smart Bedtime Wakeup Alarm & Sensor Mission:**
+            - Native alarm with dynamic volume crescendo, math/shake morning wake-up missions, and skip/trigger APIs.
+          - **📖 Interactive 8-Page Project Writeover:**
+            - Complete project documentation, architectural diagrams, hardware bridge specifications, and live showcase links.
 
           #### 📦 Direct Download:
-          - Click **`Productometer.apk`** under Assets below to download and install.
+          - Click **Productometer.apk** under Assets below to download and install.
           EOF
-          gh release create v1.2.3 dist/Productometer.apk \
-            --title "Productometer v1.2.3 - Android Release APK" \
+          gh release create v1.2.4 dist/Productometer.apk \
+            --title "Productometer v1.2.4 - Android Release APK" \
             --notes-file release_notes.md || \
-          gh release upload v1.2.3 dist/Productometer.apk --clobber
+          gh release upload v1.2.4 dist/Productometer.apk --clobber
