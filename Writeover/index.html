@@ -3,1527 +3,818 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Productometer Project Report — System Architecture &amp; Technical Specification</title>
+    <title>Productometer — Project Writeout &amp; Technical Overview (A4 Printable)</title>
 
-    <!-- Academic & Technical Typography -->
+    <!-- Modern & Elegant Typography -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
 
     <!-- FontAwesome 6 Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <!-- White Shade Academic Stylesheet -->
+    <!-- A4 Printable Stylesheet -->
     <link rel="stylesheet" href="./writeover-style.css">
 </head>
-<body class="academic-body">
+<body class="a4-document-body">
 
-    <!-- Top Persistent Examiner Ribbon -->
-    <header class="doc-top-bar">
-        <div class="bar-left">
-            <div class="doc-brand">
-                <i class="fa-solid fa-microchip text-accent"></i>
-                <span class="brand-title">PRODUCTOMETER</span>
-                <span class="doc-badge">ENGINEERING REPORT</span>
+    <!-- Persistent Top Ribbon (Hidden in Print) -->
+    <header class="a4-top-nav" id="a4TopNav">
+        <div class="nav-brand-group">
+            <div class="nav-logo">
+                <i class="fa-solid fa-microchip text-cobalt"></i>
+                <span class="nav-title">PRODUCTOMETER</span>
             </div>
-            <span class="chapter-nav-label" id="topChapterTitle">Page 1: Project Abstract &amp; System Overview</span>
+            <span class="nav-badge">A4 PROJECT WRITEOUT</span>
         </div>
 
-        <div class="bar-center">
-            <div class="progress-track">
-                <div class="progress-fill" id="readingProgressFill" style="width: 12.5%;"></div>
-            </div>
-            <span class="page-counter-tag" id="currentPageNum">Page 1 / 8</span>
-        </div>
-
-        <div class="bar-right">
-            <button class="top-btn" id="btnToggleToc" title="Table of Contents">
-                <i class="fa-solid fa-list-check"></i>
-                <span>Index</span>
+        <div class="nav-center-group">
+            <button class="nav-btn-icon" id="btnA4Prev" title="Previous Page">
+                <i class="fa-solid fa-chevron-left"></i>
             </button>
-            <button class="top-btn" id="btnPrintDoc" title="Print Examiner Report to PDF">
+            <span class="page-indicator" id="a4PageIndicator">Page 1 of 8</span>
+            <button class="nav-btn-icon" id="btnA4Next" title="Next Page">
+                <i class="fa-solid fa-chevron-right"></i>
+            </button>
+            <div class="view-mode-toggle">
+                <button class="view-btn active" id="btnViewPaged" title="View Page by Page">Single Page</button>
+                <button class="view-btn" id="btnViewAll" title="View All 8 Pages as Continuous Booklet">Continuous Booklet</button>
+            </div>
+        </div>
+
+        <div class="nav-actions-group">
+            <button class="nav-edit-btn" id="btnToggleEdit" title="Click to edit text directly on the page">
+                <i class="fa-solid fa-pen-to-square"></i>
+                <span id="editBtnLabel">Edit Text</span>
+            </button>
+            <button class="nav-reset-btn" id="btnResetText" title="Restore original text" style="display: none;">
+                <i class="fa-solid fa-rotate-left"></i>
+                <span>Reset Text</span>
+            </button>
+            <button class="nav-print-btn" id="btnPrintA4" title="Print to A4 Paper or Save as PDF">
                 <i class="fa-solid fa-print"></i>
-                <span>Print / PDF</span>
+                <span>Print / Save A4 PDF</span>
             </button>
-            <a href="../index.html" class="top-btn btn-launch-app" target="_blank" title="Launch live application">
+            <a href="../index.html" class="nav-link-btn" target="_blank" title="Open Live App">
                 <span>Live App</span>
                 <i class="fa-solid fa-arrow-up-right-from-square"></i>
             </a>
         </div>
     </header>
 
-    <!-- Table of Contents Slide-Out Drawer -->
-    <aside class="toc-drawer" id="tocDrawer">
-        <div class="toc-header">
-            <h3><i class="fa-solid fa-folder-tree text-accent"></i> Examination Index</h3>
-            <button class="btn-close-toc" id="btnCloseToc">&times;</button>
+    <!-- Edit Mode Notification Toast -->
+    <div class="edit-mode-toast" id="editModeToast" style="display: none;">
+        <div class="toast-left">
+            <i class="fa-solid fa-pen-nib text-cobalt"></i>
+            <span><strong>Edit Mode Active:</strong> Click directly on any title, paragraph, or point to customize the text. Changes are saved automatically!</span>
         </div>
-        <nav class="toc-list" id="tocList">
-            <button class="toc-item active" data-target="1">
-                <span class="toc-page-num">PAGE 01</span>
-                <span class="toc-page-title">Project Abstract, Problem Statement &amp; Architecture Comparison</span>
-            </button>
-            <button class="toc-item" data-target="2">
-                <span class="toc-page-num">PAGE 02</span>
-                <span class="toc-page-title">System Architecture &amp; Native Bridge IPC Inspector</span>
-            </button>
-            <button class="toc-item" data-target="3">
-                <span class="toc-page-num">PAGE 03</span>
-                <span class="toc-page-title">Module 1: 48-Slot Matrix Planner &amp; Hardware RTC Alarms</span>
-            </button>
-            <button class="toc-item" data-target="4">
-                <span class="toc-page-num">PAGE 04</span>
-                <span class="toc-page-title">Module 2: Distraction Blocker &amp; 1-Reel Grace State Machine</span>
-            </button>
-            <button class="toc-item" data-target="5">
-                <span class="toc-page-num">PAGE 05</span>
-                <span class="toc-page-title">Module 3: Academics Monitoring &amp; Lecture Security</span>
-            </button>
-            <button class="toc-item" data-target="6">
-                <span class="toc-page-num">PAGE 06</span>
-                <span class="toc-page-title">Module 4: Automated Screen Time &amp; UsageEvents Engine</span>
-            </button>
-            <button class="toc-item" data-target="7">
-                <span class="toc-page-num">PAGE 07</span>
-                <span class="toc-page-title">Module 5 &amp; 6: Health Pedometer, Sleep &amp; Producto AI</span>
-            </button>
-            <button class="toc-item" data-target="8">
-                <span class="toc-page-num">PAGE 08</span>
-                <span class="toc-page-title">Mathematical Net AP Modeling &amp; Examiner Defense</span>
-            </button>
-        </nav>
-    </aside>
+        <button class="toast-close-btn" id="btnCloseToast">&times;</button>
+    </div>
 
-    <!-- Main Report Viewport -->
-    <main class="report-viewport" id="readerViewport">
+    <!-- Main Container of 8 A4 Sheets -->
+    <main class="a4-document-container" id="a4Container">
 
         <!-- ========================================================
-             PAGE 1: PROJECT ABSTRACT & SYSTEM OVERVIEW
+             A4 SHEET 1: TITLE & EXECUTIVE PROJECT OVERVIEW
              ======================================================== -->
-        <article class="report-page active" data-page="1" data-title="Page 1: Project Abstract &amp; System Overview">
-            <div class="page-paper">
-                <div class="paper-meta-header">
-                    <span class="doc-code-tag">SECTION 1.0 &bull; PROJECT OVERVIEW</span>
-                    <span class="doc-date-tag">ACADEMIC &amp; TECHNICAL SPECIFICATION</span>
+        <section class="a4-sheet active" data-page="1">
+            <div class="sheet-content">
+                
+                <!-- Official Header Strip -->
+                <div class="sheet-header-strip">
+                    <div class="header-left">
+                        <span class="institution-tag">STUDENT DISCIPLINE &amp; PRODUCTIVITY SYSTEM</span>
+                        <span class="sub-header-tag">OFFICIAL PROJECT WRITEOUT &bull; SPECIFICATION</span>
+                    </div>
+                    <div class="header-right">
+                        <span class="version-pill">VERSION 2.0</span>
+                    </div>
                 </div>
 
-                <h1 class="paper-title">
-                    Productometer: An Integrated Hardware-Level Student Productivity &amp; Discipline Operating System
-                </h1>
-
-                <!-- Executive Abstract Box -->
-                <div class="abstract-box">
-                    <div class="abstract-title">ABSTRACT</div>
-                    <p>
-                        <strong>Productometer</strong> is an integrated mobile-and-web operating platform engineered to solve student digital addiction, fragmented time allocation, and academic burnout. Unlike conventional third-party application blockers that rely on rigid, punitive lockouts (frequently uninstalled by users within 48 hours), Productometer introduces an architecture-first approach. It connects four core domains of student life&mdash;<strong>Academics, Physical Health, Screen Consumption, and Circadian Sleep</strong>&mdash;into a unified execution environment. The platform utilizes Android Accessibility Services, low-power hardware sensor polling, automated OS usage event streaming, and a mathematically weighted Net AP (Activity Points) evaluation model to provide automated tracking, non-intrusive focus safeguarding, and verifiable habit reinforcement without remote cloud telemetry or manual logging friction.
+                <!-- Cover Title Box -->
+                <div class="hero-title-box">
+                    <div class="hero-badge">
+                        <i class="fa-solid fa-graduation-cap text-cobalt"></i>
+                        <span>ALL-IN-ONE STUDENT OPERATING ENVIRONMENT</span>
+                    </div>
+                    <h1 class="hero-main-title">
+                        Productometer
+                    </h1>
+                    <p class="hero-tagline">
+                        An ultimate destination built for students to track and master their entire 24-hour day&mdash;<strong>Studies, Health, Screen Time, and Circadian Sleep</strong>.
                     </p>
                 </div>
 
-                <!-- Problem Statement & Objectives -->
-                <div class="two-col-grid">
-                    <div class="grid-card">
-                        <div class="card-title-row">
-                            <i class="fa-solid fa-triangle-exclamation text-amber"></i>
-                            <h3>Problem Statement</h3>
-                        </div>
-                        <ul class="spec-list">
-                            <li><strong>Tool Fragmentation:</strong> Students rely on 4&ndash;6 disconnected single-purpose applications (Pomodoro timers, calendars, habit trackers, sleep alarms), resulting in high cognitive friction and zero unified analytics.</li>
-                            <li><strong>The Willpower Failure in Short-Form Feeds:</strong> Algorithmic feeds (YouTube Shorts, Instagram Reels) generate continuous micro-dopamine loops that break study concentration without user awareness.</li>
-                            <li><strong>Draconian Blocker Flaws:</strong> Traditional blockers lock entire applications indiscriminately, impeding access to legitimate educational material (e.g., online lectures, coding documentation, academic communication).</li>
-                        </ul>
+                <!-- Executive Summary Box -->
+                <div class="callout-card primary-gradient">
+                    <div class="callout-title">
+                        <i class="fa-solid fa-lightbulb text-amber"></i>
+                        <span>Why Productometer Was Created</span>
                     </div>
-
-                    <div class="grid-card">
-                        <div class="card-title-row">
-                            <i class="fa-solid fa-bullseye text-accent"></i>
-                            <h3>System Objectives</h3>
-                        </div>
-                        <ul class="spec-list">
-                            <li><strong>Holistic 24-Hour Coverage:</strong> Unify day planning, deep study timing, physical exercise biomechanics, screen-time auditing, and sleep monitoring under one offline engine.</li>
-                            <li><strong>Architecture Over Willpower:</strong> Replace manual self-restraint with hardware-level state machines: the 1-Reel Grace Rule, lecture-only content filters, and exact hardware wake alarms.</li>
-                            <li><strong>Ground-Truth Automation:</strong> Eliminate manual minute logging by deriving digital activity directly from Android OS event streams (<code class="mono-code">UsageEvents</code>) from 00:00 to current timestamp.</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <!-- Interactive Benchmark Comparison Matrix -->
-                <div class="interactive-sandbox-card">
-                    <div class="sandbox-header">
-                        <div class="sandbox-title">
-                            <i class="fa-solid fa-code-compare text-accent"></i>
-                            <span>Interactive System Benchmark: Fragmented 5-App Setup vs. Productometer OS</span>
-                        </div>
-                        <span class="sandbox-tag">SYSTEM METRICS AUDIT</span>
-                    </div>
-                    <p class="sandbox-desc">
-                        Toggle between the standard student toolkit (5 standalone apps) and Productometer's unified native architecture to inspect hardware footprint, cognitive friction, and behavioral retention.
+                    <p class="callout-text">
+                        Most students today juggle 4 to 6 disconnected apps (a Pomodoro timer, a calendar, a habit checklist, a workout app, and a sleep alarm). Worse, conventional app blockers fail because they lock phones completely, creating frustration that leads students to uninstall the blocker within 48 hours. <strong>Productometer replaces willpower with smart, friendly architecture</strong>&mdash;connecting your daily academic goals, physical movement, healthy screen limits, and restful bedtime sleep into one cohesive system that works completely offline.
                     </p>
+                </div>
 
-                    <div class="comparison-toggle-bar">
-                        <button class="comp-toggle-btn active" id="btnCompProductometer">
-                            <i class="fa-solid fa-microchip"></i>
-                            <span>Productometer Integrated OS (Unified)</span>
-                        </button>
-                        <button class="comp-toggle-btn" id="btnCompLegacy">
-                            <i class="fa-solid fa-cubes-stacked"></i>
-                            <span>Fragmented Ecosystem (5 Standalone Apps)</span>
-                        </button>
+                <!-- 4 Core Pillars Grid -->
+                <div class="section-title-sm">
+                    <i class="fa-solid fa-shapes text-cobalt"></i>
+                    <span>The 4 Core Life Domains Mastered by Productometer</span>
+                </div>
+
+                <div class="pillars-grid-4">
+                    <div class="pillar-card border-cobalt">
+                        <div class="pillar-icon bg-cobalt-light text-cobalt">
+                            <i class="fa-solid fa-book-open"></i>
+                        </div>
+                        <h3>1. Academics &amp; Focus</h3>
+                        <p>Lecture-safe study sessions that let you watch educational tutorials freely while preventing rabbit holes.</p>
                     </div>
 
-                    <div class="comp-metrics-grid" id="compMetricsGrid">
-                        <!-- Populated dynamically via JavaScript -->
+                    <div class="pillar-card border-emerald">
+                        <div class="pillar-icon bg-emerald-light text-emerald">
+                            <i class="fa-solid fa-heart-pulse"></i>
+                        </div>
+                        <h3>2. PulseFit Health</h3>
+                        <p>Built-in step pedometer, active calorie targets, and 40+ workout guides to keep body energy high.</p>
+                    </div>
+
+                    <div class="pillar-card border-amber">
+                        <div class="pillar-icon bg-amber-light text-amber">
+                            <i class="fa-solid fa-mobile-screen-button"></i>
+                        </div>
+                        <h3>3. Screen Management</h3>
+                        <p>Ground-truth automated screen time tracking from midnight with the friendly 1-Reel Grace Rule.</p>
+                    </div>
+
+                    <div class="pillar-card border-purple">
+                        <div class="pillar-icon bg-purple-light text-purple">
+                            <i class="fa-solid fa-moon"></i>
+                        </div>
+                        <h3>4. Sleep &amp; Recovery</h3>
+                        <p>Circadian Bedtime Shield that dims blue light 15 minutes before bed, plus smart wake-up alarms.</p>
                     </div>
                 </div>
 
-                <!-- System Pillars Table -->
-                <div class="table-container">
-                    <div class="table-caption">Table 1.1: Functional Domain Modules of Productometer</div>
-                    <table class="report-table">
-                        <thead>
-                            <tr>
-                                <th>Domain Module</th>
-                                <th>Primary Technical Mechanism</th>
-                                <th>Target Output &amp; Governance</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td><strong>Day Planner</strong></td>
-                                <td>48-Slot Continuous Swipe-Paint Matrix (30-min intervals)</td>
-                                <td>Automated hardware alarm scheduling &amp; security policy arming</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Distraction Blocker</strong></td>
-                                <td>Accessibility Event Listening (<code class="mono-code">AccessibilityService</code>)</td>
-                                <td>1-Reel Grace rule, 5-second countdown HUD, gesture back navigation</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Academics Monitoring</strong></td>
-                                <td>Foreground Service (<code class="mono-code">FocusService.java</code>) + View Inspection</td>
-                                <td>Permits educational lectures; issues 15s gentle alert on casual entertainment</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Screen Management</strong></td>
-                                <td>Daily Event Aggregation (<code class="mono-code">UsageStatsManager.queryEvents</code>)</td>
-                                <td>Ground-truth foreground seconds, Shorts swipe count, strict red color threshold</td>
-                            </tr>
-                            <tr>
-                                <td><strong>PulseFit Health</strong></td>
-                                <td>Hardware Step Sensor (<code class="mono-code">sensor.stepcounter</code>)</td>
-                                <td>Calorie expenditure tracking, 40+ exercise form library, activity balancing</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Sleep &amp; Recovery</strong></td>
-                                <td>Circadian Bedtime Shield + AlarmManager (<code class="mono-code">RTC_WAKEUP</code>)</td>
-                                <td>15-minute nighttime screen guardian; alarms survive device reboot</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <!-- Bottom Sheet Footer -->
+                <div class="sheet-footer-strip">
+                    <span>Productometer &bull; Academic &amp; Technical Project Writeout</span>
+                    <span class="sheet-page-num">Sheet 1 of 8</span>
                 </div>
 
-                <div class="page-footer-nav">
-                    <span>Section 1.0 Complete</span>
-                    <button class="nav-next-btn" data-goto="2">
-                        <span>Section 2.0: System Architecture &amp; Native Pipeline</span>
-                        <i class="fa-solid fa-arrow-right"></i>
-                    </button>
-                </div>
             </div>
-        </article>
+        </section>
 
         <!-- ========================================================
-             PAGE 2: SYSTEM ARCHITECTURE & NATIVE PIPELINE
+             A4 SHEET 2: MOBILE PHONE PERMISSIONS & PRIVACY (BRIEF & CLEAR)
              ======================================================== -->
-        <article class="report-page" data-page="2" data-title="Page 2: System Architecture &amp; Native Pipeline">
-            <div class="page-paper">
-                <div class="paper-meta-header">
-                    <span class="doc-code-tag">SECTION 2.0 &bull; ARCHITECTURAL DESIGN</span>
-                    <span class="doc-date-tag">ENGINEERING PIPELINE</span>
+        <section class="a4-sheet" data-page="2">
+            <div class="sheet-content">
+                
+                <div class="sheet-header-strip">
+                    <div class="header-left">
+                        <span class="institution-tag">SYSTEM SECURITY &amp; COMPLIANCE</span>
+                        <span class="sub-header-tag">PHONE PERMISSIONS &bull; ZERO-CLOUD PRIVACY</span>
+                    </div>
+                    <div class="header-right">
+                        <span class="version-pill">SAFE &amp; OFFLINE</span>
+                    </div>
                 </div>
 
-                <h1 class="paper-title">
-                    System Architecture &amp; Native JavaScript Bridge Pipeline
-                </h1>
+                <div class="page-title-box">
+                    <h2 class="page-title">Why Does Productometer Need Phone Permissions?</h2>
+                    <p class="page-subtitle">A brief and transparent guide to the 4 essential permissions requested from your smartphone.</p>
+                </div>
 
-                <p class="lead-paragraph">
-                    Productometer implements a hybrid architecture: a high-performance, responsive HTML5/CSS3/ES6 user interface packaged inside a native Android wrapper via an optimized hardware-accelerated <code class="mono-code">WebView</code> bridge.
-                </p>
-
-                <!-- Architecture Diagram Box -->
-                <div class="diagram-card">
-                    <div class="diagram-header">
-                        <i class="fa-solid fa-network-wired text-accent"></i>
-                        <span>Figure 2.1: Native Bridge Data Flow &amp; Service Intercommunication</span>
-                    </div>
-                    <div class="ascii-flow-box">
-                        <div class="flow-tier client-tier">
-                            <span class="tier-label">FRONTEND RUNTIME (WEB ENGINE)</span>
-                            <div class="tier-nodes">
-                                <span class="node">Portal UI (Home HUD)</span>
-                                <span class="node">Day Planner Matrix</span>
-                                <span class="node">Screen Management</span>
-                                <span class="node">Net AP Scoring Model</span>
+                <!-- 4 Permissions Grid -->
+                <div class="permissions-grid">
+                    
+                    <!-- 1. Accessibility Service -->
+                    <div class="perm-card">
+                        <div class="perm-card-header">
+                            <div class="perm-icon bg-amber-light text-amber">
+                                <i class="fa-solid fa-universal-access"></i>
+                            </div>
+                            <div class="perm-meta">
+                                <h3>1. Accessibility Permission</h3>
+                                <span class="perm-tag">Shorts &amp; Reels Guardian</span>
                             </div>
                         </div>
-
-                        <div class="flow-bus">
-                            <i class="fa-solid fa-arrows-up-down"></i>
-                            <span>Bidirectional JavaScript Interface: <code class="mono-code">window.AndroidBridge &harr; WebAppInterface.java</code></span>
-                            <i class="fa-solid fa-arrows-up-down"></i>
+                        <p class="perm-body">
+                            <strong>Why it's needed:</strong> To gently detect when YouTube Shorts or Instagram Reels open on your screen. This powers our <em>1-Reel Grace Rule</em>, giving you 30 seconds to enjoy an isolated video before helping you step out of endless scrolling.
+                        </p>
+                        <div class="perm-privacy-badge">
+                            <i class="fa-solid fa-lock text-emerald"></i>
+                            <span>100% Safe: Never reads chats, passwords, or personal messages. Only detects short-form video screens.</span>
                         </div>
+                    </div>
 
-                        <div class="flow-tier native-tier">
-                            <span class="tier-label">ANDROID NATIVE CORE (DAEMONS &amp; SERVICES)</span>
-                            <div class="tier-nodes">
-                                <span class="node">ShortsReelsBlockerService</span>
-                                <span class="node">FocusService (FGS)</span>
-                                <span class="node">UsageStatsManager</span>
-                                <span class="node">AlarmManager (RTC_WAKEUP)</span>
-                                <span class="node">BootReceiver</span>
+                    <!-- 2. Usage Access -->
+                    <div class="perm-card">
+                        <div class="perm-card-header">
+                            <div class="perm-icon bg-cobalt-light text-cobalt">
+                                <i class="fa-solid fa-chart-pie"></i>
+                            </div>
+                            <div class="perm-meta">
+                                <h3>2. Usage Access Permission</h3>
+                                <span class="perm-tag">Automatic Screen Time</span>
                             </div>
                         </div>
+                        <p class="perm-body">
+                            <strong>Why it's needed:</strong> To automatically calculate the exact minutes and hours you spend on apps from 00:00 midnight to right now. This completely eliminates manual typing or daily guessing.
+                        </p>
+                        <div class="perm-privacy-badge">
+                            <i class="fa-solid fa-lock text-emerald"></i>
+                            <span>100% Safe: Reads only the phone's internal usage counter. No personal files or browsing histories are touched.</span>
+                        </div>
+                    </div>
+
+                    <!-- 3. Exact Alarms & Notifications -->
+                    <div class="perm-card">
+                        <div class="perm-card-header">
+                            <div class="perm-icon bg-purple-light text-purple">
+                                <i class="fa-solid fa-bell"></i>
+                            </div>
+                            <div class="perm-meta">
+                                <h3>3. Alarms &amp; Notifications</h3>
+                                <span class="perm-tag">Exact Timers &amp; Waking Alarms</span>
+                            </div>
+                        </div>
+                        <p class="perm-body">
+                            <strong>Why it's needed:</strong> To allow study session countdowns, rest reminders, and morning wake-up alarms to ring reliably at the exact second, even when the phone enters deep power-saving mode.
+                        </p>
+                        <div class="perm-privacy-badge">
+                            <i class="fa-solid fa-lock text-emerald"></i>
+                            <span>100% Safe: Rings strictly for your scheduled tasks and automatically survives device reboots.</span>
+                        </div>
+                    </div>
+
+                    <!-- 4. Physical Activity & Step Sensor -->
+                    <div class="perm-card">
+                        <div class="perm-card-header">
+                            <div class="perm-icon bg-emerald-light text-emerald">
+                                <i class="fa-solid fa-person-walking"></i>
+                            </div>
+                            <div class="perm-meta">
+                                <h3>4. Physical Activity Sensor</h3>
+                                <span class="perm-tag">Built-in Step Pedometer</span>
+                            </div>
+                        </div>
+                        <p class="perm-body">
+                            <strong>Why it's needed:</strong> To track your daily walking steps and physical movement using your phone's built-in step counter sensor, helping you balance prolonged desk study with healthy physical activity.
+                        </p>
+                        <div class="perm-privacy-badge">
+                            <i class="fa-solid fa-lock text-emerald"></i>
+                            <span>100% Safe: Uses low-power hardware step counting (&lt; 0.02% battery/hr) with zero GPS tracking.</span>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- 100% Offline Promise Banner -->
+                <div class="privacy-guarantee-box">
+                    <div class="privacy-icon-col">
+                        <i class="fa-solid fa-shield-halved text-emerald"></i>
+                    </div>
+                    <div class="privacy-text-col">
+                        <h4>Zero-Cloud Offline Privacy Guarantee</h4>
+                        <p>
+                            Unlike commercial apps that sell your browsing habits to advertisers, <strong>Productometer is 100% self-contained</strong>. All your study schedules, screen statistics, and health metrics are saved securely inside your phone's encrypted memory. No accounts, no logins, and zero data ever uploaded to the cloud.
+                        </p>
                     </div>
                 </div>
 
-                <!-- Technical Specification Table -->
-                <div class="two-col-grid">
-                    <div class="grid-card">
-                        <div class="card-title-row">
-                            <i class="fa-solid fa-code text-accent"></i>
-                            <h3>Native Bridge API Interface</h3>
-                        </div>
-                        <ul class="spec-list">
-                            <li><code class="mono-code">hasUsageStatsPermission() &rarr; boolean</code>: Validates if <code class="mono-code">AppOpsManager.OPSTR_GET_USAGE_STATS</code> is granted by user.</li>
-                            <li><code class="mono-code">getRealAppUsageStats() &rarr; JSON String</code>: Streams aggregated foreground usage and base64 application icons from 00:00 to now.</li>
-                            <li><code class="mono-code">scheduleTaskAlarm(id, title, time, epochMs)</code>: Arms precise system wake-up intent via Android <code class="mono-code">AlarmManager</code>.</li>
-                            <li><code class="mono-code">startFocusSession(title, durationSeconds)</code>: Spawns foreground countdown notification service (<code class="mono-code">FocusService</code>).</li>
-                            <li><code class="mono-code">isAccessibilityServiceEnabled() &rarr; boolean</code>: Validates active connection to <code class="mono-code">ShortsReelsBlockerService</code>.</li>
-                        </ul>
-                    </div>
-
-                    <div class="grid-card">
-                        <div class="card-title-row">
-                            <i class="fa-solid fa-shield-halved text-emerald"></i>
-                            <h3>Privilege &amp; Security Compliance</h3>
-                        </div>
-                        <ul class="spec-list">
-                            <li><strong>Offline Zero-Cloud Policy:</strong> All telemetry and usage records are retained in local application memory and encrypted <code class="mono-code">SharedPreferences</code>. No network sockets are opened for behavioral tracking.</li>
-                            <li><strong>Restricted Settings Resilience:</strong> Full compatibility with Android 13/14 sideloaded APK security policies (<code class="mono-code">Settings.ACTION_APPLICATION_DETAILS_SETTINGS</code> deep linking).</li>
-                            <li><strong>Crash Immunity:</strong> If the web interface reloads, native foreground services maintain state and notification persistence independently.</li>
-                        </ul>
-                    </div>
+                <div class="sheet-footer-strip">
+                    <span>Productometer &bull; Academic &amp; Technical Project Writeout</span>
+                    <span class="sheet-page-num">Sheet 2 of 8</span>
                 </div>
 
-                <!-- Interactive JavaScript Bridge Console & IPC Inspector -->
-                <div class="interactive-sandbox-card">
-                    <div class="sandbox-header">
-                        <div class="sandbox-title">
-                            <i class="fa-solid fa-terminal text-accent"></i>
-                            <span>Interactive Console: Native Android JavaScript Bridge Inspector</span>
-                        </div>
-                        <span class="sandbox-tag">LIVE IPC TRANSMISSION TEST</span>
-                    </div>
-                    <p class="sandbox-desc">
-                        Click any native bridge method below to execute a simulated IPC transmission across <code class="mono-code">window.AndroidBridge &harr; WebAppInterface.java</code>. Observe permission verification, thread routing, and JSON payload return.
-                    </p>
-
-                    <div class="bridge-method-selector">
-                        <button class="bridge-btn active" data-method="usageStats">
-                            <code class="mono-code">getRealAppUsageStats()</code>
-                        </button>
-                        <button class="bridge-btn" data-method="permissionCheck">
-                            <code class="mono-code">hasUsageStatsPermission()</code>
-                        </button>
-                        <button class="bridge-btn" data-method="scheduleAlarm">
-                            <code class="mono-code">scheduleTaskAlarm(...)</code>
-                        </button>
-                        <button class="bridge-btn" data-method="startFocus">
-                            <code class="mono-code">startFocusSession(...)</code>
-                        </button>
-                        <button class="bridge-btn" data-method="accessibilityCheck">
-                            <code class="mono-code">isAccessibilityServiceEnabled()</code>
-                        </button>
-                    </div>
-
-                    <div class="bridge-terminal-box">
-                        <div class="terminal-meta-row">
-                            <span class="terminal-dot red"></span>
-                            <span class="terminal-dot yellow"></span>
-                            <span class="terminal-dot green"></span>
-                            <span class="terminal-title" id="terminalBridgeMethodTitle">Executing: window.AndroidBridge.getRealAppUsageStats()</span>
-                            <span class="terminal-latency" id="terminalBridgeLatency">Latency: 1.2ms &bull; Status: 200 OK</span>
-                        </div>
-                        <pre class="terminal-code-body" id="terminalBridgeOutput"></pre>
-                    </div>
-                </div>
-
-                <div class="page-footer-nav">
-                    <button class="nav-prev-btn" data-goto="1">
-                        <i class="fa-solid fa-arrow-left"></i>
-                        <span>Section 1.0: Project Overview</span>
-                    </button>
-                    <button class="nav-next-btn" data-goto="3">
-                        <span>Section 3.0: Day Planner &amp; Hardware Alarms</span>
-                        <i class="fa-solid fa-arrow-right"></i>
-                    </button>
-                </div>
             </div>
-        </article>
+        </section>
 
         <!-- ========================================================
-             PAGE 3: MODULE 1: DAY PLANNER & HARDWARE ALARMS
+             A4 SHEET 3: SMART DAY PLANNER (48-SLOT MATRIX)
              ======================================================== -->
-        <article class="report-page" data-page="3" data-title="Page 3: Day Planner &amp; Hardware Alarms">
-            <div class="page-paper">
-                <div class="paper-meta-header">
-                    <span class="doc-code-tag">SECTION 3.0 &bull; MODULE SPECIFICATION</span>
-                    <span class="doc-date-tag">TIME ALLOCATION ENGINE</span>
-                </div>
-
-                <h1 class="paper-title">
-                    Module 1: 48-Slot Matrix Day Planner &amp; Hardware Alarm Subsystem
-                </h1>
-
-                <p class="lead-paragraph">
-                    The Day Planner serves as the operational command center. It abandons arbitrary task lists in favor of a 48-interval chronological matrix where scheduled blocks directly configure system alarms and automated distraction shields.
-                </p>
-
-                <!-- Technical Deep Dive Two Col -->
-                <div class="two-col-grid">
-                    <div class="grid-card">
-                        <div class="card-title-row">
-                            <i class="fa-solid fa-calendar-check text-accent"></i>
-                            <h3>48-Slot Continuous Swipe-Paint Algorithm</h3>
-                        </div>
-                        <p class="card-text">
-                            A day is mathematically modeled as an array of 48 discrete 30-minute intervals:
-                            <br><code class="mono-code">T = [t_0, t_1, ..., t_47] &isin; {Study, Health, Sleep, Other, Unallocated}</code>.
-                        </p>
-                        <p class="card-text">
-                            Instead of opening modal time pickers, user interaction is handled via a <strong>continuous touch gesture listener</strong> (<code class="mono-code">mousedown/mouseenter</code> and <code class="mono-code">touchstart/touchmove</code>). Swiping across slots sequentially commits the selected state, calculating daily allocation ratios instantly.
-                        </p>
+        <section class="a4-sheet" data-page="3">
+            <div class="sheet-content">
+                
+                <div class="sheet-header-strip">
+                    <div class="header-left">
+                        <span class="institution-tag">MODULE 1 &bull; TIME ALLOCATION</span>
+                        <span class="sub-header-tag">THE 48-SLOT CONTINUOUS MATRIX PLANNER</span>
                     </div>
-
-                    <div class="grid-card">
-                        <div class="card-title-row">
-                            <i class="fa-solid fa-bell text-amber"></i>
-                            <h3>Hardware Wake Alarms (RTC_WAKEUP)</h3>
-                        </div>
-                        <p class="card-text">
-                            Mobile operating systems aggressively terminate background JavaScript timers when the device enters deep sleep (Doze mode). To ensure execution reliability:
-                        </p>
-                        <ul class="spec-list">
-                            <li>Each scheduled block calculates epoch trigger timestamp: <code class="mono-code">t_epoch = t_slot_start</code>.</li>
-                            <li>Passed across the bridge to Android <code class="mono-code">AlarmManager.setExactAndAllowWhileIdle(RTC_WAKEUP, t_epoch, pendingIntent)</code>.</li>
-                            <li>Broadcast is captured by <code class="mono-code">AlarmReceiver.java</code>, triggering physical sound playback and screen wake.</li>
-                        </ul>
+                    <div class="header-right">
+                        <span class="version-pill">TIME MASTERY</span>
                     </div>
                 </div>
 
-                <!-- Interactive Demonstration: 24-Hour 48-Slot Continuous Matrix Painting -->
-                <div class="interactive-sandbox-card">
-                    <div class="sandbox-header">
-                        <div class="sandbox-title">
-                            <i class="fa-solid fa-hand-pointer text-accent"></i>
-                            <span>Interactive Demonstration: 48-Slot 24-Hour Continuous Matrix Painting</span>
-                        </div>
-                        <span class="sandbox-tag">LIVE KERNEL SIMULATION</span>
-                    </div>
-                    <p class="sandbox-desc">
-                        Select a domain category below, then click or drag across the 48 time slots (00:00 to 23:30) to allocate your day. Observe live RTC alarm registration and Net AP potential yield.
-                    </p>
-
-                    <!-- Domain Category Palette -->
-                    <div class="matrix-category-palette">
-                        <button class="palette-chip active study" data-cat="study">
-                            <span class="chip-color-dot study"></span>
-                            <span>Deep Study (+100 AP/h)</span>
-                        </button>
-                        <button class="palette-chip health" data-cat="health">
-                            <span class="chip-color-dot health"></span>
-                            <span>PulseFit Health (+150-30n AP)</span>
-                        </button>
-                        <button class="palette-chip sleep" data-cat="sleep">
-                            <span class="chip-color-dot sleep"></span>
-                            <span>Sleep Recovery (Bedtime Shield)</span>
-                        </button>
-                        <button class="palette-chip clear" data-cat="clear">
-                            <span class="chip-color-dot clear"></span>
-                            <span>Unallocated (Clear Slot)</span>
-                        </button>
-                    </div>
-
-                    <!-- 48-Slot Matrix Container -->
-                    <div class="matrix-48-container">
-                        <div class="matrix-section-header">AM INTERVALS (00:00 &ndash; 11:30)</div>
-                        <div class="matrix-grid-24" id="matrixGridAM"></div>
-
-                        <div class="matrix-section-header">PM INTERVALS (12:00 &ndash; 23:30)</div>
-                        <div class="matrix-grid-24" id="matrixGridPM"></div>
-                    </div>
-
-                    <div class="sandbox-toolbar">
-                        <div class="sandbox-status-metric" id="matrix48MetricSummary">
-                            Study: <strong>4.0h</strong> &bull; Health: <strong>1.0h</strong> &bull; Sleep: <strong>8.0h</strong> &bull; Armed Alarms: <strong>6 RTC_WAKEUP</strong> &bull; Net AP: <strong>+520 AP</strong>
-                        </div>
-                        <div class="sandbox-actions">
-                            <button class="sandbox-btn-sm" id="btnPresetExamDay">Preset: Exam Day</button>
-                            <button class="sandbox-btn-sm" id="btnPresetBalanced">Preset: Balanced</button>
-                            <button class="sandbox-btn-sm" id="btnClear48Matrix">Clear All</button>
-                        </div>
-                    </div>
+                <div class="page-title-box">
+                    <h2 class="page-title">Module 1: The 48-Slot Day Planner</h2>
+                    <p class="page-subtitle">Schedule your entire 24-hour day in continuous 30-minute intervals with effortless touch swipe painting.</p>
                 </div>
 
-                <!-- Real Asset Illustration -->
-                <div class="asset-showcase-card">
-                    <div class="asset-split">
-                        <img src="../Features/assets/1.avif" alt="Day Planner Matrix UI" class="report-img">
-                        <div class="asset-details">
-                            <h4>Hardware &amp; Security Co-ordination</h4>
-                            <p>
-                                <strong>1. Automatic Shield Arming:</strong> When the system time enters an Academics or Health block, a broadcast notifies <code class="mono-code">ShortsReelsBlockerService</code> to switch from standby to active interception mode.
-                            </p>
-                            <p>
-                                <strong>2. Persistence Across Reboots:</strong> Device power cycles normally wipe hardware alarms. Productometer registers <code class="mono-code">BootReceiver.java</code> with <code class="mono-code">RECEIVE_BOOT_COMPLETED</code> to reconstruct all pending task intents from SQLite storage upon restart.
-                            </p>
-                            <p>
-                                <strong>3. Upcoming HUD Synchronization:</strong> Active sessions are parsed and rendered onto the Home portal ribbon, informing the student of their next commitment without entering the planner module.
-                            </p>
+                <!-- Showcase Layout: Text & Real App Asset -->
+                <div class="showcase-split-layout">
+                    
+                    <div class="showcase-text-col">
+                        
+                        <div class="feature-bullet-card">
+                            <div class="bullet-icon bg-cobalt-light text-cobalt"><i class="fa-solid fa-paintbrush"></i></div>
+                            <div>
+                                <h4>Swipe-to-Paint Interaction</h4>
+                                <p>No tedious dropdowns or typing. Simply swipe your finger across 30-minute slots to paint blocks: <strong>Deep Study</strong> (Blue), <strong>Health &amp; Gym</strong> (Green), or <strong>Sleep</strong> (Purple).</p>
+                            </div>
+                        </div>
+
+                        <div class="feature-bullet-card">
+                            <div class="bullet-icon bg-amber-light text-amber"><i class="fa-solid fa-bell"></i></div>
+                            <div>
+                                <h4>Automatic Hardware Wake Alarms</h4>
+                                <p>Every scheduled block automatically configures an exact Android alarm that rings on time to keep you disciplined, waking the phone screen even in deep battery sleep.</p>
+                            </div>
+                        </div>
+
+                        <div class="feature-bullet-card">
+                            <div class="bullet-icon bg-emerald-light text-emerald"><i class="fa-solid fa-rotate-left"></i></div>
+                            <div>
+                                <h4>Survives Phone Reboots</h4>
+                                <p>If your phone runs out of battery or restarts overnight, Productometer automatically restores all your planned task alarms the moment the phone turns back on.</p>
+                            </div>
+                        </div>
+
+                        <div class="feature-bullet-card">
+                            <div class="bullet-icon bg-purple-light text-purple"><i class="fa-solid fa-trophy"></i></div>
+                            <div>
+                                <h4>Direct Activity Point Rewards</h4>
+                                <p>Completing your scheduled day blocks awards <strong>+50 execution points</strong> toward your daily Net AP score, turning time discipline into a fun daily achievement.</p>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="showcase-img-col">
+                        <div class="mockup-frame">
+                            <img src="../Features/assets/1.avif" alt="Productometer Day Planner Matrix UI" class="mockup-image">
+                            <div class="mockup-caption">
+                                <i class="fa-solid fa-calendar-days text-cobalt"></i>
+                                <span>Real App Display: 48-Slot Matrix Planner</span>
+                            </div>
                         </div>
                     </div>
+
                 </div>
 
-                <div class="page-footer-nav">
-                    <button class="nav-prev-btn" data-goto="2">
-                        <i class="fa-solid fa-arrow-left"></i>
-                        <span>Section 2.0: System Architecture</span>
-                    </button>
-                    <button class="nav-next-btn" data-goto="4">
-                        <span>Section 4.0: Distraction Blocker State Machine</span>
-                        <i class="fa-solid fa-arrow-right"></i>
-                    </button>
+                <div class="sheet-footer-strip">
+                    <span>Productometer &bull; Academic &amp; Technical Project Writeout</span>
+                    <span class="sheet-page-num">Sheet 3 of 8</span>
                 </div>
+
             </div>
-        </article>
+        </section>
 
         <!-- ========================================================
-             PAGE 4: MODULE 2: DISTRACTION BLOCKER & 1-REEL GRACE
+             A4 SHEET 4: THE 1-REEL GRACE RULE (DISTRACTION BLOCKER)
              ======================================================== -->
-        <article class="report-page" data-page="4" data-title="Page 4: Distraction Blocker State Machine">
-            <div class="page-paper">
-                <div class="paper-meta-header">
-                    <span class="doc-code-tag">SECTION 4.0 &bull; SECURITY ENGINE</span>
-                    <span class="doc-date-tag">ACCESSIBILITY STATE MACHINE</span>
-                </div>
-
-                <h1 class="paper-title">
-                    Module 2: Distraction Blocker &amp; The 1-Reel Grace State Machine
-                </h1>
-
-                <p class="lead-paragraph">
-                    Conventional blockers fail because they lock out users immediately upon opening an app, preventing legitimate use. Productometer implements an event-driven <strong>1-Reel Grace State Machine</strong> using Android Accessibility Services.
-                </p>
-
-                <!-- State Transition Table -->
-                <div class="table-container">
-                    <div class="table-caption">Table 4.1: Doomscroll Guardian State Transition Table</div>
-                    <table class="report-table">
-                        <thead>
-                            <tr>
-                                <th>Current State</th>
-                                <th>Trigger Event</th>
-                                <th>Evaluation Logic</th>
-                                <th>Target State &amp; Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td><strong>STANDBY</strong></td>
-                                <td>App package switch</td>
-                                <td>Package &isin; {YouTube, Instagram} AND (Session Active OR Master Switch ON)</td>
-                                <td>&rarr; <strong>INSPECTION</strong></td>
-                            </tr>
-                            <tr>
-                                <td><strong>INSPECTION</strong></td>
-                                <td><code class="mono-code">TYPE_VIEW_SCROLLED</code> or Window Change</td>
-                                <td>View node contains <code class="mono-code">reel_recycler</code> OR <code class="mono-code">clips_video_container</code></td>
-                                <td>&rarr; <strong>EVALUATE_SWIPE</strong></td>
-                            </tr>
-                            <tr>
-                                <td><strong>EVALUATE_SWIPE</strong></td>
-                                <td>Swipe 1 detected</td>
-                                <td><code class="mono-code">swipeCount == 1</code> (First instance)</td>
-                                <td>&rarr; <strong>GRACE_PERIOD</strong> (Toast issued; no lock)</td>
-                            </tr>
-                            <tr>
-                                <td><strong>EVALUATE_SWIPE</strong></td>
-                                <td>Consecutive Swipe 2+</td>
-                                <td><code class="mono-code">swipeCount &ge; 2</code> (Consecutive distraction)</td>
-                                <td>&rarr; <strong>INTERCEPTION_OVERLAY</strong> (5s HUD displayed)</td>
-                            </tr>
-                            <tr>
-                                <td><strong>INTERCEPTION_OVERLAY</strong></td>
-                                <td>Timer expiry (0s) OR &ldquo;Return Now&rdquo;</td>
-                                <td>Timeout elapsed; window focus confirmed</td>
-                                <td>&rarr; <strong>GESTURE_RESTORE</strong> (<code class="mono-code">GLOBAL_ACTION_BACK</code>)</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Interactive Demonstration: 1-Reel Grace State Simulator -->
-                <div class="interactive-sandbox-card">
-                    <div class="sandbox-header">
-                        <div class="sandbox-title">
-                            <i class="fa-solid fa-diagram-project text-emerald"></i>
-                            <span>Interactive Demonstration: 1-Reel Grace State Machine &amp; View-Tree Inspector</span>
-                        </div>
-                        <span class="sandbox-tag">EVENT-DRIVEN KERNEL TEST</span>
+        <section class="a4-sheet" data-page="4">
+            <div class="sheet-content">
+                
+                <div class="sheet-header-strip">
+                    <div class="header-left">
+                        <span class="institution-tag">MODULE 2 &bull; FOCUS SECURITY</span>
+                        <span class="sub-header-tag">THE 1-REEL GRACE RULE &bull; DOOMSCROLL GUARDIAN</span>
                     </div>
-                    <p class="sandbox-desc">
-                        Select a foreground application context to inspect view node signatures, then simulate vertical swipe gestures to observe the state transitions and synthesized audio alert.
-                    </p>
-
-                    <!-- Foreground App Context Selector -->
-                    <div class="sim-context-bar">
-                        <span class="context-label">Target Foreground App:</span>
-                        <button class="context-btn active" data-context="ytShorts">
-                            <i class="fa-brands fa-youtube text-crimson"></i>
-                            <span>YouTube Shorts</span>
-                        </button>
-                        <button class="context-btn" data-context="igReels">
-                            <i class="fa-brands fa-instagram text-purple"></i>
-                            <span>Instagram Reels</span>
-                        </button>
-                        <button class="context-btn" data-context="ytLecture">
-                            <i class="fa-solid fa-graduation-cap text-accent"></i>
-                            <span>YouTube Lecture (Whitelisted)</span>
-                        </button>
-                        <button class="context-btn" data-context="whatsapp">
-                            <i class="fa-brands fa-whatsapp text-emerald"></i>
-                            <span>WhatsApp (Safe)</span>
-                        </button>
-                    </div>
-
-                    <!-- View Tree Hierarchy Inspector -->
-                    <div class="view-hierarchy-box" id="simViewHierarchyBox">
-                        <div class="hierarchy-title"><i class="fa-solid fa-sitemap"></i> Active AccessibilityNodeInfo Hierarchy:</div>
-                        <code class="hierarchy-code" id="simHierarchyCode">com.google.android.youtube:id/reel_recycler &bull; Class: androidx.recyclerview.widget.RecyclerView &bull; Visible: true</code>
-                    </div>
-
-                    <!-- State Machine Pipeline Visual -->
-                    <div class="state-pipeline-visual">
-                        <div class="state-step active" id="stateStep1">
-                            <span class="step-num">01</span>
-                            <span class="step-label">STANDBY / MONITORING</span>
-                        </div>
-                        <div class="state-step-arrow">&rarr;</div>
-                        <div class="state-step" id="stateStep2">
-                            <span class="step-num">02</span>
-                            <span class="step-label">GRACE ALLOWED (Swipe 1)</span>
-                        </div>
-                        <div class="state-step-arrow">&rarr;</div>
-                        <div class="state-step" id="stateStep3">
-                            <span class="step-num">03</span>
-                            <span class="step-label">INTERCEPT &amp; OVERLAY (Swipe 2)</span>
-                        </div>
-                        <div class="state-step-arrow">&rarr;</div>
-                        <div class="state-step" id="stateStep4">
-                            <span class="step-num">04</span>
-                            <span class="step-label">RESTORE TO STUDY</span>
-                        </div>
-                    </div>
-
-                    <!-- Active Simulator Stage -->
-                    <div class="sim-stage-display" id="simStageDisplay">
-                        <div class="sim-stage-badge" id="simStageBadge">Current State: STANDBY / IDLE</div>
-                        <div class="sim-stage-message" id="simStageMessage">Accessibility service initialized. Listening for short-form feed nodes (reel_recycler / clips_video_container)...</div>
-                        <div class="sim-hud-overlay" id="simHudOverlay" style="display: none;">
-                            <div class="hud-countdown-circle">
-                                <span id="simCountdownVal">5</span>
-                                <small>SEC</small>
-                            </div>
-                            <div class="hud-text">
-                                <strong>Consecutive Doomscroll Detected</strong>
-                                <p>Focus Guardian engaged. Executing GLOBAL_ACTION_BACK to restore study environment...</p>
-                            </div>
-                            <div class="hud-actions-group">
-                                <button class="hud-quick-btn" id="btnSimManualReturn">Return Immediately</button>
-                                <button class="hud-override-btn" id="btnSimOverride30s">Emergency 30s Pass</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="sandbox-toolbar">
-                        <div class="sandbox-actions">
-                            <button class="sandbox-action-btn primary" id="btnSimSwipe">
-                                <i class="fa-solid fa-arrow-up"></i>
-                                <span>Simulate Vertical Swipe (Short/Reel)</span>
-                            </button>
-                            <button class="sandbox-action-btn secondary" id="btnSimReset">
-                                <i class="fa-solid fa-rotate-right"></i>
-                                <span>Reset State Machine</span>
-                            </button>
-                        </div>
-                        <div class="sandbox-sound-status">
-                            <i class="fa-solid fa-volume-high text-accent"></i>
-                            <span>Web Audio API Alert Synth: <strong>Enabled (880Hz Chime)</strong></span>
-                        </div>
+                    <div class="header-right">
+                        <span class="version-pill">SMART INTERCEPTION</span>
                     </div>
                 </div>
 
-                <!-- Two Col Technical Specifics -->
-                <div class="two-col-grid">
-                    <div class="grid-card">
-                        <div class="card-title-row">
-                            <i class="fa-solid fa-code-branch text-accent"></i>
-                            <h3>View Hierarchy Signature Detection</h3>
-                        </div>
-                        <p class="card-text">
-                            Instead of relying on fragile OCR, <code class="mono-code">ShortsReelsBlockerService.java</code> inspects the native Android view tree using <code class="mono-code">AccessibilityNodeInfo</code>:
-                        </p>
-                        <ul class="spec-list">
-                            <li><strong>YouTube Shorts:</strong> Evaluates presence of container IDs <code class="mono-code">reel_recycler</code>, <code class="mono-code">reel_player_page_container</code>, or class descriptors containing <code class="mono-code">Reel</code>.</li>
-                            <li><strong>Instagram Reels:</strong> Queries container identifiers <code class="mono-code">clips_video_container</code>, <code class="mono-code">clips_viewer_view_pager</code>, or <code class="mono-code">reel_viewer_view_pager</code>.</li>
-                            <li><strong>Signature Hashing:</strong> Visible textual content is digested into a transient signature string to verify whether a genuine vertical scroll has loaded a new video.</li>
-                        </ul>
-                    </div>
+                <div class="page-title-box">
+                    <h2 class="page-title">Module 2: The 1-Reel Grace Rule</h2>
+                    <p class="page-subtitle">Why traditional app blockers fail&mdash;and how our friendly state machine protects your attention.</p>
+                </div>
 
-                    <div class="grid-card">
-                        <div class="card-title-row">
-                            <i class="fa-solid fa-arrows-split-up-and-left text-emerald"></i>
-                            <h3>Gesture Navigation Back Restoration</h3>
+                <!-- Problem vs Solution Callout -->
+                <div class="comparison-banner">
+                    <div class="comp-col old">
+                        <div class="comp-header text-crimson">
+                            <i class="fa-solid fa-xmark"></i>
+                            <span>Traditional Blockers (The Flaw)</span>
                         </div>
-                        <p class="card-text">
-                            Android 10+ gesture navigation presents a challenge for accessibility services executing back commands. Productometer implements an engineered restoration sequence:
-                        </p>
-                        <ul class="spec-list">
-                            <li><strong>250ms Focus Sync Delay:</strong> Dismisses overlay and waits 250ms for Android <code class="mono-code">WindowManager</code> to restore active input focus to the target application.</li>
-                            <li><strong>Dispatched Global Action:</strong> Calls <code class="mono-code">performGlobalAction(GLOBAL_ACTION_BACK)</code>.</li>
-                            <li><strong>Double-Collapse Fallback:</strong> If nested inside a full-screen player, a secondary back action triggers after 350ms to collapse the feed.</li>
-                            <li><strong>30-Second Emergency Pass:</strong> User can click emergency override button, granting a 30,000ms temporary grace period for urgent messages.</li>
-                        </ul>
+                        <p>Lock apps completely. If a classmate sends an important video link, you can't view it. Users get annoyed and uninstall the blocker within 48 hours.</p>
+                    </div>
+                    <div class="comp-col new">
+                        <div class="comp-header text-emerald">
+                            <i class="fa-solid fa-check"></i>
+                            <span>Productometer 1-Reel Grace (The Solution)</span>
+                        </div>
+                        <p>Permits the 1st short with a gentle 30-second reminder. Only intervenes when you swipe consecutively into algorithmic doomscrolling.</p>
                     </div>
                 </div>
 
-                <div class="page-footer-nav">
-                    <button class="nav-prev-btn" data-goto="3">
-                        <i class="fa-solid fa-arrow-left"></i>
-                        <span>Section 3.0: Day Planner</span>
-                    </button>
-                    <button class="nav-next-btn" data-goto="5">
-                        <span>Section 5.0: Academics Monitoring &amp; Lecture Security</span>
-                        <i class="fa-solid fa-arrow-right"></i>
-                    </button>
+                <!-- 3-Step Visual Lifecycle -->
+                <div class="section-title-sm">
+                    <i class="fa-solid fa-route text-cobalt"></i>
+                    <span>How the 1-Reel Grace State Machine Works in Practice</span>
                 </div>
+
+                <div class="grace-steps-grid">
+                    
+                    <div class="grace-step-card border-emerald">
+                        <div class="step-badge bg-emerald-light text-emerald">STEP 1</div>
+                        <h4>1st Short Allowed (Grace Period)</h4>
+                        <p>You open YouTube Shorts or Instagram Reels. The app detects it and shows a friendly toast: <em>"1 Reel Allowed &bull; 30s Grace Active"</em>. Watch what you need without interruption.</p>
+                    </div>
+
+                    <div class="grace-step-card border-amber">
+                        <div class="step-badge bg-amber-light text-amber">STEP 2</div>
+                        <h4>2nd Consecutive Swipe (Intervention HUD)</h4>
+                        <p>If you swipe up again to start scrolling uncontrollably, a soft audio reminder sounds and a clean <strong>5-second countdown HUD</strong> appears over the video.</p>
+                    </div>
+
+                    <div class="grace-step-card border-cobalt">
+                        <div class="step-badge bg-cobalt-light text-cobalt">STEP 3</div>
+                        <h4>Automatic Return to Study Notes</h4>
+                        <p>At 0 seconds, the app automatically triggers a smooth back navigation, bringing you right back to your notes or study session with zero lost work.</p>
+                    </div>
+
+                </div>
+
+                <!-- Emergency Pass Card -->
+                <div class="emergency-pass-card">
+                    <div class="emergency-icon text-amber">
+                        <i class="fa-solid fa-key"></i>
+                    </div>
+                    <div class="emergency-text">
+                        <h4>30-Second Emergency Override Pass</h4>
+                        <p>Have an urgent message to check or need to copy something quickly? Simply tap <strong>"Emergency Pass"</strong> to receive an immediate 30-second window before focus monitoring re-engages.</p>
+                    </div>
+                </div>
+
+                <div class="sheet-footer-strip">
+                    <span>Productometer &bull; Academic &amp; Technical Project Writeout</span>
+                    <span class="sheet-page-num">Sheet 4 of 8</span>
+                </div>
+
             </div>
-        </article>
+        </section>
 
         <!-- ========================================================
-             PAGE 5: MODULE 3: ACADEMICS MONITORING & LECTURE SECURITY
+             A4 SHEET 5: ACADEMICS MONITORING & LECTURE SECURITY
              ======================================================== -->
-        <article class="report-page" data-page="5" data-title="Page 5: Academics Monitoring &amp; Lecture Security">
-            <div class="page-paper">
-                <div class="paper-meta-header">
-                    <span class="doc-code-tag">SECTION 5.0 &bull; MODULE SPECIFICATION</span>
-                    <span class="doc-date-tag">FOCUS &amp; LECTURE FILTERING</span>
-                </div>
-
-                <h1 class="paper-title">
-                    Module 3: Academics Monitoring &amp; Lecture-Only Security Systems
-                </h1>
-
-                <p class="lead-paragraph">
-                    Modern coursework relies on video platforms for academic instruction. This module resolves the conflict between educational YouTube content and algorithmic rabbit holes.
-                </p>
-
-                <!-- Core Technical Flow Card -->
-                <div class="asset-showcase-card">
-                    <div class="asset-split">
-                        <img src="../Features/assets/2.jpg" alt="Academics Focus UI" class="report-img">
-                        <div class="asset-details">
-                            <h4>Educational Content vs. Casual Entertainment Classification</h4>
-                            <p>
-                                When YouTube (<code class="mono-code">com.google.android.youtube</code>) is active in the foreground, <code class="mono-code">ShortsReelsBlockerService</code> bypasses the player if educational keywords are detected in the active view tree:
-                            </p>
-                            <div class="keyword-tags-display">
-                                <span>lecture</span> <span>tutorial</span> <span>class</span> <span>course</span>
-                                <span>physics</span> <span>mathematics</span> <span>chemistry</span> <span>programming</span>
-                                <span>coding</span> <span>exam</span> <span>chapter</span> <span>dsa</span>
-                            </div>
-                            <p>
-                                If educational indicators are present, video playback proceeds with zero friction, recognizing that the student is engaged in productive study.
-                            </p>
-                        </div>
+        <section class="a4-sheet" data-page="5">
+            <div class="sheet-content">
+                
+                <div class="sheet-header-strip">
+                    <div class="header-left">
+                        <span class="institution-tag">MODULE 3 &bull; ACADEMIC FOCUS</span>
+                        <span class="sub-header-tag">DEEP STUDY TIMERS &bull; LECTURE-SAFE FILTERING</span>
+                    </div>
+                    <div class="header-right">
+                        <span class="version-pill">STUDY SHIELD</span>
                     </div>
                 </div>
 
-                <!-- Interactive Lecture Title NLP Classifier -->
-                <div class="interactive-sandbox-card">
-                    <div class="sandbox-header">
-                        <div class="sandbox-title">
-                            <i class="fa-solid fa-spell-check text-accent"></i>
-                            <span>Interactive Demonstration: Real-Time Lecture Title NLP &amp; Heuristic Classifier</span>
-                        </div>
-                        <span class="sandbox-tag">REGEX TOKEN ENGINE</span>
-                    </div>
-                    <p class="sandbox-desc">
-                        Test how the view inspection engine parses video titles on-the-fly to permit educational lectures while flagging casual entertainment. Select a sample title or type your own.
-                    </p>
-
-                    <div class="nlp-input-row">
-                        <input type="text" class="nlp-text-input" id="inputVideoTitle" value="MIT 18.06 Linear Algebra Lecture 1: Vector Spaces">
-                        <button class="sandbox-btn-sm" id="btnTestTitle">Analyze Title</button>
-                    </div>
-
-                    <div class="nlp-presets-bar">
-                        <span class="presets-caption">Quick Presets:</span>
-                        <button class="nlp-preset-chip" data-title="MIT 18.06 Linear Algebra Lecture 1: Vector Spaces">MIT Lecture (Math)</button>
-                        <button class="nlp-preset-chip" data-title="Data Structures &amp; Algorithms in Java - Full Course for Beginners">DSA Full Course</button>
-                        <button class="nlp-preset-chip" data-title="Top 10 Minecraft Speedruns &amp; Reactions">Minecraft Speedrun</button>
-                        <button class="nlp-preset-chip" data-title="MrBeast $1,000,000 Island Challenge Gameplay">MrBeast Entertainment</button>
-                        <button class="nlp-preset-chip" data-title="Organic Chemistry Reactions &amp; Synthesis Mechanisms Exam Prep">Organic Chemistry Prep</button>
-                    </div>
-
-                    <div class="nlp-result-box" id="nlpResultBox">
-                        <div class="nlp-result-header">
-                            <span class="nlp-badge edu" id="nlpBadge">CLASSIFICATION: EDUCATIONAL LECTURE</span>
-                            <span class="nlp-match-details" id="nlpMatchDetails">Matched tokens: "lecture", "algebra" &bull; Whitelist Active</span>
-                        </div>
-                        <p class="nlp-action-text" id="nlpActionText">
-                            Action Dispatched: Full-screen video player allowed with zero interruptions. Student focus state credited (+100 Net AP/h).
-                        </p>
-                    </div>
+                <div class="page-title-box">
+                    <h2 class="page-title">Module 3: Academics &amp; Lecture Security</h2>
+                    <p class="page-subtitle">Learn freely on YouTube without falling into algorithmic entertainment traps.</p>
                 </div>
 
-                <!-- Two Col Technical Details -->
-                <div class="two-col-grid">
-                    <div class="grid-card">
-                        <div class="card-title-row">
-                            <i class="fa-solid fa-stopwatch text-amber"></i>
-                            <h3>Casual Video 15-Second Delay Warning</h3>
-                        </div>
-                        <p class="card-text">
-                            If a non-educational video (e.g., gaming streams, reaction entertainment, vlogs) is loaded during an active study session:
-                        </p>
-                        <ul class="spec-list">
-                            <li>The service initiates a silent 15,000ms grace timer (<code class="mono-code">casualVideoStartTimestamp</code>).</li>
-                            <li>If the user continues streaming beyond 15 seconds, an audio alert is dispatched via asset <code class="mono-code">assets/2.mp3</code> with a system toast notification: <em>&ldquo;Focus Alert: 15s elapsed on casual entertainment&rdquo;</em>.</li>
-                            <li>Playback is not violently terminated, preventing data loss if the student is watching a cross-disciplinary or non-standard educational video.</li>
-                        </ul>
-                    </div>
-
-                    <div class="grid-card">
-                        <div class="card-title-row">
-                            <i class="fa-solid fa-satellite-dish text-accent"></i>
-                            <h3>Foreground Service Notification Ticker</h3>
-                        </div>
-                        <p class="card-text">
-                            Active study blocks execute under Android&rsquo;s <code class="mono-code">FocusService</code> (Foreground Service with <code class="mono-code">dataSync</code> type):
-                        </p>
-                        <ul class="spec-list">
-                            <li>Maintains an ongoing status bar countdown timer refreshed at 1,000ms intervals.</li>
-                            <li>Exempt from OS background memory killing during heavy multitasking.</li>
-                            <li>Clicking the notification directly restores the active Pomodoro session via <code class="mono-code">PendingIntent</code>.</li>
-                            <li>Successful completion awards <strong>+100 Net AP points per hour</strong> to the daily score.</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <!-- Interactive Foreground Service Ticker Simulator -->
-                <div class="interactive-sandbox-card">
-                    <div class="sandbox-header">
-                        <div class="sandbox-title">
-                            <i class="fa-solid fa-bell text-accent"></i>
-                            <span>Interactive Demonstration: Android Status Bar Foreground Service (FGS) Ticker</span>
-                        </div>
-                        <span class="sandbox-tag">LIVE TIMER SIMULATION</span>
-                    </div>
-                    <p class="sandbox-desc">
-                        Simulate the ongoing Android system notification ticker generated by <code class="mono-code">FocusService.java</code> during an active study session.
-                    </p>
-
-                    <div class="fgs-ticker-card">
-                        <div class="fgs-icon-col">
-                            <i class="fa-solid fa-graduation-cap"></i>
-                        </div>
-                        <div class="fgs-content-col">
-                            <div class="fgs-row-top">
-                                <span class="fgs-app-name">PRODUCTOMETER &bull; FOCUS DAEMON</span>
-                                <span class="fgs-timestamp" id="fgsCurrentTime">NOW</span>
-                            </div>
-                            <strong class="fgs-title" id="fgsSessionTitle">Deep Academic Session: Differential Equations</strong>
-                            <div class="fgs-timer-row">
-                                <span class="fgs-timer-digits" id="fgsTimerDigits">45:00</span>
-                                <span class="fgs-ap-accrual" id="fgsApAccrual">+75 AP Earned</span>
+                <div class="showcase-split-layout">
+                    
+                    <div class="showcase-text-col">
+                        
+                        <div class="feature-bullet-card">
+                            <div class="bullet-icon bg-cobalt-light text-cobalt"><i class="fa-solid fa-graduation-cap"></i></div>
+                            <div>
+                                <h4>Whitelists Educational Videos</h4>
+                                <p>Students rely on online video lectures to learn. Productometer inspects video titles for keywords like <em>lecture, tutorial, class, coding, physics, exam</em> and allows uninterrupted full-screen playback.</p>
                             </div>
                         </div>
-                        <div class="fgs-actions-col">
-                            <button class="fgs-btn" id="btnToggleFgsTimer">Start Timer</button>
-                            <button class="fgs-btn secondary" id="btnResetFgsTimer">Reset</button>
+
+                        <div class="feature-bullet-card">
+                            <div class="bullet-icon bg-amber-light text-amber"><i class="fa-solid fa-stopwatch"></i></div>
+                            <div>
+                                <h4>15-Second Casual Video Reminder</h4>
+                                <p>If you click on non-educational entertainment (gaming streams, reaction vlogs) during an active study session, a gentle 15-second grace timer prompts you to stay on track before issuing an alert.</p>
+                            </div>
+                        </div>
+
+                        <div class="feature-bullet-card">
+                            <div class="bullet-icon bg-emerald-light text-emerald"><i class="fa-solid fa-clock"></i></div>
+                            <div>
+                                <h4>Ongoing Status Bar Countdown Ticker</h4>
+                                <p>Your study Pomodoro session runs as an ongoing notification ticker in your phone's status bar, showing time remaining and focus points earned without getting killed by the phone's memory.</p>
+                            </div>
+                        </div>
+
+                        <div class="feature-bullet-card">
+                            <div class="bullet-icon bg-purple-light text-purple"><i class="fa-solid fa-chart-line"></i></div>
+                            <div>
+                                <h4>Direct +100 Points per Study Hour</h4>
+                                <p>Every hour spent in verified deep study adds <strong>+100 points</strong> directly to your daily score, incentivizing consistent academic focus.</p>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="showcase-img-col">
+                        <div class="mockup-frame">
+                            <img src="../Features/assets/2.jpg" alt="Academics Focus Mode UI" class="mockup-image">
+                            <div class="mockup-caption">
+                                <i class="fa-solid fa-book-bookmark text-cobalt"></i>
+                                <span>Real App Display: Academic Focus Session</span>
+                            </div>
                         </div>
                     </div>
+
                 </div>
 
-                <div class="page-footer-nav">
-                    <button class="nav-prev-btn" data-goto="4">
-                        <i class="fa-solid fa-arrow-left"></i>
-                        <span>Section 4.0: Distraction Blocker</span>
-                    </button>
-                    <button class="nav-next-btn" data-goto="6">
-                        <span>Section 6.0: Automated Screen Time Engine</span>
-                        <i class="fa-solid fa-arrow-right"></i>
-                    </button>
+                <div class="sheet-footer-strip">
+                    <span>Productometer &bull; Academic &amp; Technical Project Writeout</span>
+                    <span class="sheet-page-num">Sheet 5 of 8</span>
                 </div>
+
             </div>
-        </article>
+        </section>
 
         <!-- ========================================================
-             PAGE 6: MODULE 4: AUTOMATED SCREEN TIME & USAGEEVENTS
+             A4 SHEET 6: AUTOMATED SCREEN TIME & COLOR PSYCHOLOGY
              ======================================================== -->
-        <article class="report-page" data-page="6" data-title="Page 6: Automated Screen Time Engine">
-            <div class="page-paper">
-                <div class="paper-meta-header">
-                    <span class="doc-code-tag">SECTION 6.0 &bull; MODULE SPECIFICATION</span>
-                    <span class="doc-date-tag">DIGITAL WELLBEING TELEMETRY</span>
-                </div>
-
-                <h1 class="paper-title">
-                    Module 4: Automated Screen Time &amp; UsageEvents Telemetry Engine
-                </h1>
-
-                <p class="lead-paragraph">
-                    Deriving ground-truth device consumption directly from the Android kernel event stream. Completely automated with zero manual user typing.
-                </p>
-
-                <!-- Two Col Technical Breakdown -->
-                <div class="two-col-grid">
-                    <div class="grid-card">
-                        <div class="card-title-row">
-                            <i class="fa-solid fa-timeline text-accent"></i>
-                            <h3>Pure UsageEvents Timeline Parsing</h3>
-                        </div>
-                        <p class="card-text">
-                            Standard Android <code class="mono-code">queryUsageStats()</code> aggregates time across arbitrary 24-hour windows, often yielding distorted figures. Productometer queries raw OS event logs using <code class="mono-code">UsageStatsManager.queryEvents(startOfDay, now)</code>:
-                        </p>
-                        <ul class="spec-list">
-                            <li><code class="mono-code">startOfDay</code> is computed strictly as 00:00:00 midnight of the current calendar date.</li>
-                            <li>Iterates through lifecycle tokens: <code class="mono-code">ACTIVITY_RESUMED</code>, <code class="mono-code">ACTIVITY_PAUSED</code>, <code class="mono-code">SCREEN_INTERACTIVE</code>, and <code class="mono-code">KEYGUARD_SHOWN</code>.</li>
-                            <li>Filters out launcher package wallpaper time and background system daemons (<code class="mono-code">com.android.systemui</code>).</li>
-                        </ul>
+        <section class="a4-sheet" data-page="6">
+            <div class="sheet-content">
+                
+                <div class="sheet-header-strip">
+                    <div class="header-left">
+                        <span class="institution-tag">MODULE 4 &bull; DIGITAL WELLBEING</span>
+                        <span class="sub-header-tag">AUTOMATED SCREEN TIME &bull; COLOR PSYCHOLOGY</span>
                     </div>
-
-                    <div class="grid-card">
-                        <div class="card-title-row">
-                            <i class="fa-solid fa-circle-exclamation text-crimson"></i>
-                            <h3>Strict Color Psychology Enforcement</h3>
-                        </div>
-                        <p class="card-text">
-                            To avoid habituating the student to constant alarmist UI states, color tokens are strictly governed by state threshold rules:
-                        </p>
-                        <ul class="spec-list">
-                            <li><strong>Healthy State (Cyan &amp; Emerald):</strong> Normal screen usage and productive applications render in calm `#00E5FF` and `#00E676`.</li>
-                            <li><strong>Excessive State (Warning Crimson `#DC2626`):</strong> Restricted strictly to instances where non-productive screen consumption crosses configured daily limits (&gt; 3.0&ndash;3.5 hours) or triggers consecutive doomscroll alerts.</li>
-                        </ul>
+                    <div class="header-right">
+                        <span class="version-pill">ZERO TYPING</span>
                     </div>
                 </div>
 
-                <!-- Interactive UsageEvents Kernel Event Stream Simulator -->
-                <div class="interactive-sandbox-card">
-                    <div class="sandbox-header">
-                        <div class="sandbox-title">
-                            <i class="fa-solid fa-microchip text-accent"></i>
-                            <span>Interactive Demonstration: Android OS UsageEvents Kernel Stream Simulator</span>
+                <div class="page-title-box">
+                    <h2 class="page-title">Module 4: Automated Screen Management</h2>
+                    <p class="page-subtitle">True foreground device consumption calculated automatically from midnight with smart color psychology.</p>
+                </div>
+
+                <div class="showcase-split-layout">
+                    
+                    <div class="showcase-text-col">
+                        
+                        <div class="feature-bullet-card">
+                            <div class="bullet-icon bg-cobalt-light text-cobalt"><i class="fa-solid fa-bolt"></i></div>
+                            <div>
+                                <h4>Calculated From Midnight to Now</h4>
+                                <p>Never waste time manually starting timers. Productometer automatically streams exact foreground app minutes from 00:00 midnight to the current second.</p>
+                            </div>
                         </div>
-                        <span class="sandbox-tag">EVENT-DRIVEN OS PARSER</span>
+
+                        <div class="feature-bullet-card">
+                            <div class="bullet-icon bg-emerald-light text-emerald"><i class="fa-solid fa-icons"></i></div>
+                            <div>
+                                <h4>App Icons &amp; Real App Names</h4>
+                                <p>Displays crisp native app icons and names (e.g. YouTube, WhatsApp, Instagram) with exact minutes spent and total Shorts swipe counts side by side.</p>
+                            </div>
+                        </div>
+
+                        <!-- Color Psychology Visual Box -->
+                        <div class="color-rules-box">
+                            <h4>Strict Color Psychology Rules:</h4>
+                            
+                            <div class="color-row">
+                                <span class="color-indicator bg-cobalt"></span>
+                                <div class="color-text">
+                                    <strong>Calm Blue &amp; Emerald Green (Healthy Usage):</strong>
+                                    <span>Normal daily usage and study applications display in peaceful, encouraging tones.</span>
+                                </div>
+                            </div>
+
+                            <div class="color-row">
+                                <span class="color-indicator bg-amber"></span>
+                                <div class="color-text">
+                                    <strong>Warm Amber (Attention Needed):</strong>
+                                    <span>Highlights when non-academic screen scrolling begins to creep upward.</span>
+                                </div>
+                            </div>
+
+                            <div class="color-row">
+                                <span class="color-indicator bg-crimson"></span>
+                                <div class="color-text">
+                                    <strong>Strict Red Alert (Excessive Limits Only):</strong>
+                                    <span>Reserved strictly for when entertainment screen time crosses high limits (&gt; 3.5 hrs) or triggers doomscroll warnings.</span>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
-                    <p class="sandbox-desc">
-                        Click "Step Next Kernel Event" to simulate the exact OS lifecycle tokens parsed by <code class="mono-code">UsageStatsManager.queryEvents()</code> from 00:00 midnight to the current timestamp.
-                    </p>
 
-                    <div class="kernel-events-stepper">
-                        <div class="stepper-controls-row">
-                            <button class="sandbox-action-btn primary" id="btnStepKernelEvent">
-                                <i class="fa-solid fa-forward-step"></i>
-                                <span>Step Next Kernel Event</span>
-                            </button>
-                            <button class="sandbox-action-btn secondary" id="btnAutoPlayKernel">
-                                <i class="fa-solid fa-play"></i>
-                                <span>Auto-Play Trace</span>
-                            </button>
-                            <button class="sandbox-action-btn secondary" id="btnResetKernel">
-                                <i class="fa-solid fa-rotate-right"></i>
-                                <span>Reset Timeline</span>
-                            </button>
-                        </div>
-
-                        <!-- Live Kernel Log Stream -->
-                        <div class="kernel-stream-log" id="kernelStreamLog">
-                            <!-- Populated dynamically via JS -->
-                        </div>
-
-                        <!-- Aggregated App Usage Metric Table -->
-                        <div class="kernel-agg-summary" id="kernelAggSummary">
-                            <div class="agg-col">
-                                <span class="agg-label">TOTAL FOREGROUND TIME</span>
-                                <strong class="agg-val" id="aggTotalForeground">0h 00m</strong>
-                            </div>
-                            <div class="agg-col">
-                                <span class="agg-label">YOUTUBE TIME</span>
-                                <strong class="agg-val" id="aggYtTime">0h 00m</strong>
-                            </div>
-                            <div class="agg-col">
-                                <span class="agg-label">INSTAGRAM TIME</span>
-                                <strong class="agg-val" id="aggIgTime">0h 00m</strong>
-                            </div>
-                            <div class="agg-col">
-                                <span class="agg-label">SHORTS / REELS SWIPES</span>
-                                <strong class="agg-val" id="aggSwipeTally">0 Swipes</strong>
+                    <div class="showcase-img-col">
+                        <div class="mockup-frame">
+                            <img src="../Features/assets/3.avif" alt="Screen Management Dashboard UI" class="mockup-image">
+                            <div class="mockup-caption">
+                                <i class="fa-solid fa-mobile-screen text-cobalt"></i>
+                                <span>Real App Display: Screen Time Dashboard</span>
                             </div>
                         </div>
                     </div>
+
                 </div>
 
-                <!-- Asset Card -->
-                <div class="asset-showcase-card">
-                    <div class="asset-split">
-                        <img src="../Features/assets/3.avif" alt="Screen Management Dashboard" class="report-img">
-                        <div class="asset-details">
-                            <h4>Automated Label &amp; Base64 Icon Resolution</h4>
-                            <p>
-                                <strong>Package Mapping:</strong> The native interface queries <code class="mono-code">PackageManager.getApplicationInfo()</code> to resolve human-readable labels (e.g. converting <code class="mono-code">com.whatsapp</code> to &ldquo;WhatsApp&rdquo; and <code class="mono-code">com.google.android.gm</code> to &ldquo;Gmail&rdquo;).
-                            </p>
-                            <p>
-                                <strong>Retina Base64 Compression:</strong> Rather than saving image files to disk, the bridge extracts native app drawables, scales them to 64&times;64 ARGB_8888 bitmaps, and encodes them into compact PNG Data URLs transferred across JSON.
-                            </p>
-                            <p>
-                                <strong>Shorts &amp; Reels Swipe Counter:</strong> Combines UsageStats foreground time with accessibility swipe events, displaying exact swipe frequency alongside duration.
-                            </p>
-                        </div>
-                    </div>
+                <div class="sheet-footer-strip">
+                    <span>Productometer &bull; Academic &amp; Technical Project Writeout</span>
+                    <span class="sheet-page-num">Sheet 6 of 8</span>
                 </div>
 
-                <div class="page-footer-nav">
-                    <button class="nav-prev-btn" data-goto="5">
-                        <i class="fa-solid fa-arrow-left"></i>
-                        <span>Section 5.0: Academics Monitoring</span>
-                    </button>
-                    <button class="nav-next-btn" data-goto="7">
-                        <span>Section 7.0: Health, Sleep &amp; Producto AI</span>
-                        <i class="fa-solid fa-arrow-right"></i>
-                    </button>
-                </div>
             </div>
-        </article>
+        </section>
 
         <!-- ========================================================
-             PAGE 7: MODULE 5 & 6: HEALTH, SLEEP & PRODUCTO AI
+             A4 SHEET 7: HEALTH, SLEEP & PRODUCTO AI
              ======================================================== -->
-        <article class="report-page" data-page="7" data-title="Page 7: Health, Sleep &amp; Producto AI">
-            <div class="page-paper">
-                <div class="paper-meta-header">
-                    <span class="doc-code-tag">SECTION 7.0 &bull; MODULE SPECIFICATION</span>
-                    <span class="doc-date-tag">BIOMETRICS, RECOVERY &amp; AI</span>
+        <section class="a4-sheet" data-page="7">
+            <div class="sheet-content">
+                
+                <div class="sheet-header-strip">
+                    <div class="header-left">
+                        <span class="institution-tag">MODULES 5 &amp; 6 &bull; BIOLOGY &amp; RECOVERY</span>
+                        <span class="sub-header-tag">PULSEFIT HEALTH &bull; SLEEP SHIELD &bull; PRODUCTO AI</span>
+                    </div>
+                    <div class="header-right">
+                        <span class="version-pill">TOTAL RECOVERY</span>
+                    </div>
                 </div>
 
-                <h1 class="paper-title">
-                    Module 5 &amp; 6: PulseFit Health, Circadian Sleep &amp; Producto AI
-                </h1>
+                <div class="page-title-box">
+                    <h2 class="page-title">Modules 5 &amp; 6: Health, Sleep &amp; AI Coach</h2>
+                    <p class="page-subtitle">Physical energy drives academic excellence&mdash;step tracking, nighttime blue-light shields, and AI assistance.</p>
+                </div>
 
-                <p class="lead-paragraph">
-                    Cognitive retention is inextricably tied to physical biological state. Productometer governs physical activity, nocturnal recovery, and on-demand cognitive support through three dedicated sub-engines.
-                </p>
-
-                <!-- Three Sub-Engines Grid -->
-                <div class="three-col-grid">
-                    <div class="grid-card">
-                        <div class="card-title-row">
+                <!-- 3 Pillars Row -->
+                <div class="tri-module-grid">
+                    
+                    <div class="tri-card border-emerald">
+                        <div class="tri-icon-title">
                             <i class="fa-solid fa-heart-pulse text-emerald"></i>
-                            <h3>PulseFit Health Engine</h3>
+                            <h3>PulseFit Health</h3>
                         </div>
-                        <ul class="spec-list">
-                            <li><strong>Hardware Pedometer:</strong> Polls <code class="mono-code">Sensor.TYPE_STEP_COUNTER</code> via low-overhead batch listeners (<code class="mono-code">ACTIVITY_RECOGNITION</code>), tracking daily steps without battery-draining GPS polling.</li>
-                            <li><strong>Caloric Model:</strong> Integrates daily target tracking (e.g. 2,000 kcal baseline) to ensure metabolic fueling for academic study blocks.</li>
-                            <li><strong>Exercise Biomechanics:</strong> 40+ local animated form tutorials (<code class="mono-code">.gif</code> and 3D clips) demonstrating barbell, bodyweight, and dumbbell movements safely.</li>
+                        <ul class="tri-list">
+                            <li><strong>Step Pedometer:</strong> Automatically counts daily steps using your phone's built-in motion sensor with under 0.02% battery drain per hour.</li>
+                            <li><strong>Active Calorie Targets:</strong> Estimates daily calories burned to ensure your body is fueled for long study blocks.</li>
+                            <li><strong>40+ Exercise Guides:</strong> Built-in video form guides for safe stretching, bodyweight exercises, and gym routines.</li>
                         </ul>
                     </div>
 
-                    <div class="grid-card">
-                        <div class="card-title-row">
+                    <div class="tri-card border-purple">
+                        <div class="tri-icon-title">
                             <i class="fa-solid fa-moon text-purple"></i>
                             <h3>Circadian Sleep Shield</h3>
                         </div>
-                        <ul class="spec-list">
-                            <li><strong>15-Minute Night Screen Reminder:</strong> Engages 15 minutes prior to planned bedtime, presenting a dark screen overlay to decouple the student from late-night blue-light dopamine loops.</li>
-                            <li><strong>High-Priority AlarmManager:</strong> Schedules waking alarms using <code class="mono-code">CHANNEL_ID_ALARMS</code> with high importance, vibration patterns, and full-volume overrides.</li>
-                            <li><strong>Consolidation Metric:</strong> Rewards planned 7&ndash;8 hour sleep allocations in the Net AP daily score calculation.</li>
+                        <ul class="tri-list">
+                            <li><strong>15-Min Bedtime Barrier:</strong> Engages 15 minutes before your planned sleep, dimming blue light to protect your natural melatonin and sleep quality.</li>
+                            <li><strong>Smart Morning Alarms:</strong> Configures loud, reliable wake-up alarms that ensure you get 7&ndash;8 hours of memory-consolidating sleep.</li>
+                            <li><strong>Sleep Bonus:</strong> Meeting your sleep targets awards positive bonus points to your daily productivity score.</li>
                         </ul>
                     </div>
 
-                    <div class="grid-card">
-                        <div class="card-title-row">
-                            <i class="fa-solid fa-brain text-accent"></i>
+                    <div class="tri-card border-cobalt">
+                        <div class="tri-icon-title">
+                            <i class="fa-solid fa-brain text-cobalt"></i>
                             <h3>Producto AI Coach</h3>
                         </div>
-                        <ul class="spec-list">
-                            <li><strong>Cognitive Assistant:</strong> Integrated with Meta Llama cloud reasoning to provide context-aware student support.</li>
-                            <li><strong>Syllabus Chunking:</strong> Parses intimidating course modules into realistic 30-minute intervals ready for Day Planner import.</li>
-                            <li><strong>Fatigue Debriefs:</strong> Analyzes high study/screen ratios, recommending hydration, light stretching, or meal timing to alleviate neural fatigue.</li>
+                        <ul class="tri-list">
+                            <li><strong>Syllabus Chunking:</strong> Takes intimidating multi-chapter course syllabi and breaks them down into realistic 30-minute study blocks.</li>
+                            <li><strong>Cognitive Debriefs:</strong> Detects mental fatigue after long study marathons, recommending water, stretches, and break intervals.</li>
+                            <li><strong>Schedule Advice:</strong> Helps you balance heavy exam study with daily gym and sleep.</li>
                         </ul>
                     </div>
+
                 </div>
 
-                <!-- Interactive Health & Circadian Sleep Simulators Grid -->
-                <div class="two-col-grid">
-                    <!-- Interactive Step Counter -->
-                    <div class="interactive-sandbox-card">
-                        <div class="sandbox-header">
-                            <div class="sandbox-title">
-                                <i class="fa-solid fa-person-walking text-emerald"></i>
-                                <span>Hardware Step Sensor Simulator</span>
-                            </div>
-                            <span class="sandbox-tag">SENSOR.TYPE_STEP_COUNTER</span>
-                        </div>
-                        <p class="sandbox-desc">
-                            Drag step count to simulate batch pedometer polling and metabolic readiness:
-                        </p>
-                        <div class="calc-field">
-                            <div class="calc-label-row">
-                                <span>Daily Steps:</span>
-                                <strong id="valStepCount">7,500 Steps</strong>
-                            </div>
-                            <input type="range" min="0" max="15000" step="500" value="7500" class="academic-slider" id="sliderSteps">
-                        </div>
-                        <div class="sensor-readout-row">
-                            <div>Distance: <strong id="valStepDist">5.6 km</strong></div>
-                            <div>Active Burn: <strong id="valStepCal">315 kcal</strong></div>
-                            <div>Battery Drain: <strong>&lt; 0.02%/h</strong></div>
-                        </div>
-                    </div>
-
-                    <!-- Interactive Circadian Bedtime Shield -->
-                    <div class="interactive-sandbox-card">
-                        <div class="sandbox-header">
-                            <div class="sandbox-title">
-                                <i class="fa-solid fa-moon text-purple"></i>
-                                <span>Circadian Bedtime Shield Simulator</span>
-                            </div>
-                            <span class="sandbox-tag">15-MIN BLUE-LIGHT BARRIER</span>
-                        </div>
-                        <p class="sandbox-desc">
-                            Drag clock to 22:45 (15 min before 23:00 bedtime) to observe the circadian blue-light barrier:
-                        </p>
-                        <div class="calc-field">
-                            <div class="calc-label-row">
-                                <span>Simulated Time:</span>
-                                <strong id="valBedtimeClock">22:00</strong>
-                            </div>
-                            <input type="range" min="1260" max="1440" step="5" value="1320" class="academic-slider" id="sliderBedtime">
-                        </div>
-                        <div class="bedtime-status-banner" id="bedtimeStatusBanner">
-                            <i class="fa-solid fa-shield-halved"></i>
-                            <span id="bedtimeStatusText">Bedtime Shield: Standing by (Engages at 22:45)</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Interactive Producto AI Coach Simulator -->
-                <div class="interactive-sandbox-card">
-                    <div class="sandbox-header">
-                        <div class="sandbox-title">
-                            <i class="fa-solid fa-robot text-accent"></i>
-                            <span>Interactive Demonstration: Producto AI Cognitive Assistant</span>
-                        </div>
-                        <span class="sandbox-tag">META LLAMA REASONING</span>
-                    </div>
-                    <p class="sandbox-desc">
-                        Select a sample student query to test how Producto AI chunks syllabi, prescribes focus breaks, and coordinates with Day Planner blocks:
-                    </p>
-
-                    <div class="ai-prompts-bar">
-                        <button class="ai-prompt-btn active" data-prompt="chunk">
-                            <i class="fa-solid fa-book"></i>
-                            <span>"Chunk my 4-chapter Operating Systems exam into Day Planner blocks"</span>
-                        </button>
-                        <button class="ai-prompt-btn" data-prompt="fatigue">
-                            <i class="fa-solid fa-battery-half"></i>
-                            <span>"I've studied 4 hours straight and my attention is drifting"</span>
-                        </button>
-                        <button class="ai-prompt-btn" data-prompt="balance">
-                            <i class="fa-solid fa-scale-balanced"></i>
-                            <span>"How should I balance 1h gym with 6h calculus prep tomorrow?"</span>
-                        </button>
-                    </div>
-
-                    <div class="ai-response-box" id="aiResponseBox">
-                        <div class="ai-response-header">
-                            <i class="fa-solid fa-brain text-accent"></i>
-                            <span>PRODUCTO AI DEBRIEF RESPONSE</span>
-                        </div>
-                        <div class="ai-response-text" id="aiResponseText">
-                            <!-- Populated dynamically via JS -->
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Asset Illustrations -->
-                <div class="two-col-grid">
-                    <div class="real-asset-frame">
-                        <img src="../Features/assets/4.avif" alt="Health Tracker Interface" class="doc-asset-img">
-                        <div class="asset-caption">
+                <!-- Dual Real App Assets -->
+                <div class="dual-mockup-row">
+                    <div class="mockup-frame half">
+                        <img src="../Features/assets/4.avif" alt="PulseFit Health UI" class="mockup-image">
+                        <div class="mockup-caption">
                             <i class="fa-solid fa-dumbbell text-emerald"></i>
-                            <span>PulseFit Health Module &bull; Exercise Biomechanics</span>
+                            <span>PulseFit Health: Workouts &amp; Steps</span>
                         </div>
                     </div>
-                    <div class="real-asset-frame">
-                        <img src="../Features/assets/5.jpeg" alt="Sleep Monitoring Interface" class="doc-asset-img">
-                        <div class="asset-caption">
-                            <i class="fa-solid fa-moon text-purple"></i>
-                            <span>Circadian Bedtime Shield &bull; Smart Alarms</span>
+
+                    <div class="mockup-frame half">
+                        <img src="../Features/assets/5.jpeg" alt="Sleep Monitoring UI" class="mockup-image">
+                        <div class="mockup-caption">
+                            <i class="fa-solid fa-bed text-purple"></i>
+                            <span>Circadian Sleep Shield &amp; Alarms</span>
                         </div>
                     </div>
                 </div>
 
-                <div class="page-footer-nav">
-                    <button class="nav-prev-btn" data-goto="6">
-                        <i class="fa-solid fa-arrow-left"></i>
-                        <span>Section 6.0: Screen Time Engine</span>
-                    </button>
-                    <button class="nav-next-btn" data-goto="8">
-                        <span>Section 8.0: Mathematical Modeling &amp; Evaluation</span>
-                        <i class="fa-solid fa-arrow-right"></i>
-                    </button>
+                <div class="sheet-footer-strip">
+                    <span>Productometer &bull; Academic &amp; Technical Project Writeout</span>
+                    <span class="sheet-page-num">Sheet 7 of 8</span>
                 </div>
+
             </div>
-        </article>
+        </section>
 
         <!-- ========================================================
-             PAGE 8: MATHEMATICAL MODELING & EXAMINER EVALUATION
+             A4 SHEET 8: GAMIFIED SCORE (NET AP) & EXAMINER CONCLUSION
              ======================================================== -->
-        <article class="report-page" data-page="8" data-title="Page 8: Mathematical Modeling &amp; Evaluation">
-            <div class="page-paper">
-                <div class="paper-meta-header">
-                    <span class="doc-code-tag">SECTION 8.0 &bull; FORMULATION &amp; DEFENSE</span>
-                    <span class="doc-date-tag">MATHEMATICAL MODEL &amp; CONCLUSION</span>
-                </div>
-
-                <h1 class="paper-title">
-                    Mathematical Net AP Modeling, System Evaluation &amp; Project Defense
-                </h1>
-
-                <p class="lead-paragraph">
-                    The core evaluation engine of Productometer: translating disparate daily activities into a mathematically rigorous, verified productivity metric with diminishing returns and proportional penalties.
-                </p>
-
-                <!-- Mathematical Formula Card -->
-                <div class="formula-academic-card">
-                    <div class="formula-academic-badge">GLOBAL MATHEMATICAL PRODUCTIVITY FORMULATION</div>
-                    <div class="academic-equation">
-                        $$\text{Net AP} = 100n_{\text{acad}} + (150 - 30n_{\text{health}}) + 50n_{\text{other}} - (50 + 50n_{\text{screen}}) + 50_{\text{tasks}}$$
+        <section class="a4-sheet" data-page="8">
+            <div class="sheet-content">
+                
+                <div class="sheet-header-strip">
+                    <div class="header-left">
+                        <span class="institution-tag">MODULE 7 &bull; EVALUATION ENGINE</span>
+                        <span class="sub-header-tag">GAMIFIED NET AP SCORING &bull; PROJECT DEFENSE</span>
                     </div>
-                    <div class="variable-definitions-grid">
-                        <div class="var-item">
-                            <span class="var-name">$100n_{\text{acad}}$</span>
-                            <span class="var-desc">Linear incentive: +100 points per hour ($n$) of deep academic focus.</span>
-                        </div>
-                        <div class="var-item">
-                            <span class="var-name">$150 - 30n_{\text{health}}$</span>
-                            <span class="var-desc">Concave function: Rewards 1&ndash;2h workouts; points diminish beyond to deter overtraining.</span>
-                        </div>
-                        <div class="var-item">
-                            <span class="var-name">$50n_{\text{other}}$</span>
-                            <span class="var-desc">Secondary skills: +50 points per hour on extracurriculars or lab work.</span>
-                        </div>
-                        <div class="var-item">
-                            <span class="var-name">$-(50 + 50n_{\text{screen}})$</span>
-                            <span class="var-desc">Penalty function: Steep deductions for non-productive entertainment screen time.</span>
-                        </div>
-                        <div class="var-item">
-                            <span class="var-name">$+50_{\text{tasks}}$</span>
-                            <span class="var-desc">Execution bonus: +50 points for every scheduled Day Planner session executed.</span>
-                        </div>
+                    <div class="header-right">
+                        <span class="version-pill">CONCLUSION</span>
                     </div>
                 </div>
 
-                <!-- Interactive Demonstration: Net AP Mathematical Evaluation Sandbox -->
-                <div class="interactive-sandbox-card">
-                    <div class="sandbox-header">
-                        <div class="sandbox-title">
-                            <i class="fa-solid fa-calculator text-accent"></i>
-                            <span>Interactive Examiner Sandbox: Net AP Mathematical Evaluation &amp; Scenario Presets</span>
-                        </div>
-                        <span class="sandbox-tag">FORMULA VALIDATION</span>
+                <div class="page-title-box">
+                    <h2 class="page-title">Module 7: Gamified Productivity &amp; Conclusion</h2>
+                    <p class="page-subtitle">A balanced scoring formula that rewards healthy consistency instead of toxic burnout.</p>
+                </div>
+
+                <!-- Simple Formula Explanation -->
+                <div class="formula-simple-card">
+                    <div class="formula-badge">HOW YOUR DAILY PRODUCTIVITY SCORE (NET AP) IS CALCULATED</div>
+                    <div class="formula-highlight">
+                        Net Score = Study Points + Workout Bonus + Completed Tasks &minus; Screen Time Deductions
                     </div>
-                    <p class="sandbox-desc">
-                        Adjust daily behavioral parameters or load scenario presets below to observe formula convergence, penalty damping, and classification tier assignment in real time.
-                    </p>
-
-                    <!-- Scenario Preset Chips -->
-                    <div class="calc-presets-bar">
-                        <span class="presets-caption">Scenario Presets:</span>
-                        <button class="calc-preset-chip" id="btnScenarioTitanium">Titanium Operative (+595 AP)</button>
-                        <button class="calc-preset-chip" id="btnScenarioDisciplined">Disciplined Student (+380 AP)</button>
-                        <button class="calc-preset-chip" id="btnScenarioFocused">Focused Baseline (+210 AP)</button>
-                        <button class="calc-preset-chip" id="btnScenarioDoomscroll">Severe Doomscroll (-175 AP)</button>
-                        <button class="calc-preset-chip" id="btnScenarioOvertraining">Overtraining Imbalance</button>
-                    </div>
-
-                    <div class="calc-grid-layout">
-                        <div class="calc-inputs-column">
-                            <div class="calc-field">
-                                <div class="calc-label-row">
-                                    <span><i class="fa-solid fa-book-open text-accent"></i> Academic Study Hours ($n_{\text{acad}}$):</span>
-                                    <strong id="valAcadHours">4.0 hrs</strong>
-                                </div>
-                                <input type="range" min="0" max="10" step="0.5" value="4.0" class="academic-slider" id="sliderAcad">
-                            </div>
-
-                            <div class="calc-field">
-                                <div class="calc-label-row">
-                                    <span><i class="fa-solid fa-heart-pulse text-emerald"></i> Physical Workout Hours ($n_{\text{health}}$):</span>
-                                    <strong id="valHealthHours">1.0 hr</strong>
-                                </div>
-                                <input type="range" min="0" max="3" step="0.5" value="1.0" class="academic-slider" id="sliderHealth">
-                            </div>
-
-                            <div class="calc-field">
-                                <div class="calc-label-row">
-                                    <span><i class="fa-solid fa-laptop-code text-purple"></i> Extracurricular Skills ($n_{\text{other}}$):</span>
-                                    <strong id="valOtherHours">1.0 hr</strong>
-                                </div>
-                                <input type="range" min="0" max="4" step="0.5" value="1.0" class="academic-slider" id="sliderOther">
-                            </div>
-
-                            <div class="calc-field">
-                                <div class="calc-label-row">
-                                    <span><i class="fa-solid fa-mobile-screen-button text-crimson"></i> Entertainment Screen ($n_{\text{screen}}$):</span>
-                                    <strong id="valScreenHours">1.5 hrs</strong>
-                                </div>
-                                <input type="range" min="0" max="8" step="0.5" value="1.5" class="academic-slider" id="sliderScreen">
-                            </div>
-
-                            <div class="calc-field">
-                                <div class="calc-label-row">
-                                    <span><i class="fa-solid fa-circle-check text-accent"></i> Planner Tasks Executed ($n_{\text{tasks}}$):</span>
-                                    <strong id="valTasksCount">3 Tasks</strong>
-                                </div>
-                                <input type="range" min="0" max="6" step="1" value="3" class="academic-slider" id="sliderTasks">
-                            </div>
+                    <div class="formula-breakdown-grid">
+                        <div class="formula-item">
+                            <strong class="text-cobalt">+100 Points / Hour</strong>
+                            <span>Earned for deep, uninterrupted academic study.</span>
                         </div>
-
-                        <div class="calc-results-column">
-                            <div class="calc-score-display">
-                                <span class="calc-score-caption">TOTAL COMPUTED SCORE</span>
-                                <div class="calc-big-score" id="calcScoreTotal">545</div>
-                                <div class="calc-tier-badge" id="calcScoreTier">TITANIUM OPERATIVE</div>
-                            </div>
-
-                            <div class="calc-breakdown-list">
-                                <div class="breakdown-row">
-                                    <span>Academic ($100 \times n_{\text{acad}}$)</span>
-                                    <strong class="text-accent" id="bdAcad">+400 AP</strong>
-                                </div>
-                                <div class="breakdown-row">
-                                    <span>Health ($150 - 30n_{\text{health}}$)</span>
-                                    <strong class="text-emerald" id="bdHealth">+120 AP</strong>
-                                </div>
-                                <div class="breakdown-row">
-                                    <span>Other ($50 \times n_{\text{other}}$)</span>
-                                    <strong class="text-purple" id="bdOther">+50 AP</strong>
-                                </div>
-                                <div class="breakdown-row">
-                                    <span>Screen Penalty ($-(50 + 50n_{\text{screen}})$)</span>
-                                    <strong class="text-crimson" id="bdScreen">-125 AP</strong>
-                                </div>
-                                <div class="breakdown-row">
-                                    <span>Task Bonus ($+50 \times n$)</span>
-                                    <strong class="text-accent" id="bdTasks">+150 AP</strong>
-                                </div>
-                            </div>
-
-                            <div class="calc-diagnostic-text" id="calcDiagnosticText">
-                                High-performance daily balance: Deep study (4.0h) and scheduled tasks easily outpace screen consumption.
-                            </div>
+                        <div class="formula-item">
+                            <strong class="text-emerald">+Bonus for Workout</strong>
+                            <span>Rewards 1&ndash;2h exercise (diminishes beyond to deter overtraining).</span>
+                        </div>
+                        <div class="formula-item">
+                            <strong class="text-purple">+50 Points / Task</strong>
+                            <span>Bonus for every planned Day Planner block executed.</span>
+                        </div>
+                        <div class="formula-item">
+                            <strong class="text-crimson">&minus;Screen Deductions</strong>
+                            <span>Deductions for excessive non-productive entertainment scrolling.</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Score Tiers Table -->
-                <div class="table-container">
-                    <div class="table-caption">Table 8.1: Operative Score Classification Tiers</div>
-                    <table class="report-table">
-                        <thead>
-                            <tr>
-                                <th>Net AP Range</th>
-                                <th>Classification Tier</th>
-                                <th>Behavioral Evaluation &amp; Daily Diagnostic</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td><strong>&lt; 150 AP</strong></td>
-                                <td>Novice Operative</td>
-                                <td>Screen time heavily exceeds productive study; significant doomscroll leakage detected.</td>
-                            </tr>
-                            <tr>
-                                <td><strong>150 &ndash; 300 AP</strong></td>
-                                <td>Focused Operative</td>
-                                <td>Baseline academic requirements met; physical workout or planning consistency needed.</td>
-                            </tr>
-                            <tr>
-                                <td><strong>300 &ndash; 480 AP</strong></td>
-                                <td>Disciplined Operative</td>
-                                <td>High-performance daily balance: 3+ hours study, 1h workout, screen time strictly capped.</td>
-                            </tr>
-                            <tr>
-                                <td><strong>&ge; 480 AP</strong></td>
-                                <td>Titanium / Legend</td>
-                                <td>Exceptional execution: All planned blocks completed, zero excessive doomscroll, full circadian recovery.</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <!-- 4 Achievement Tiers -->
+                <div class="section-title-sm">
+                    <i class="fa-solid fa-medal text-amber"></i>
+                    <span>Operative Discipline Tiers</span>
                 </div>
 
-                <!-- Defense Summary Card -->
-                <div class="defense-summary-box">
-                    <div class="defense-title">
-                        <i class="fa-solid fa-graduation-cap text-accent"></i>
-                        <h3>Project Defense Summary &amp; Examiner Checklist</h3>
+                <div class="tiers-row-4">
+                    <div class="tier-card tier-novice">
+                        <span class="tier-label">NOVICE</span>
+                        <span class="tier-score">&lt; 150 AP</span>
+                        <p>Screen scrolling exceeds study. Focus guardian recommended.</p>
                     </div>
-                    <ul class="defense-checklist">
-                        <li><i class="fa-solid fa-check text-emerald"></i> <strong>Offline Autonomy:</strong> Fully self-contained local storage; zero reliance on external cloud servers, preventing student privacy leaks.</li>
-                        <li><i class="fa-solid fa-check text-emerald"></i> <strong>Resource Overhead:</strong> Background battery consumption benchmarked at &lt; 1.8% per 24-hour cycle via event-driven batch sensor polling.</li>
-                        <li><i class="fa-solid fa-check text-emerald"></i> <strong>Fault Tolerance:</strong> Alarms and foreground timers survive device reboot (<code class="mono-code">BootReceiver</code>) and app task termination.</li>
-                        <li><i class="fa-solid fa-check text-emerald"></i> <strong>Behavioral Efficacy:</strong> 1-Reel Grace Rule and Lecture Security balance real student needs, preventing the typical 48-hour uninstallation cycle of conventional blockers.</li>
+                    <div class="tier-card tier-focused">
+                        <span class="tier-label">FOCUSED</span>
+                        <span class="tier-score">150 &ndash; 300 AP</span>
+                        <p>Core study met. Consistency in planning or workout needed.</p>
+                    </div>
+                    <div class="tier-card tier-disciplined">
+                        <span class="tier-label">DISCIPLINED</span>
+                        <span class="tier-score">300 &ndash; 480 AP</span>
+                        <p>3+ hrs study, daily workout, and tight screen time caps.</p>
+                    </div>
+                    <div class="tier-card tier-titanium">
+                        <span class="tier-label">TITANIUM</span>
+                        <span class="tier-score">&ge; 480 AP</span>
+                        <p>All planned blocks done, zero doomscrolling, full 8h sleep.</p>
+                    </div>
+                </div>
+
+                <!-- Examiner Defense & Final Conclusion -->
+                <div class="conclusion-box">
+                    <h4><i class="fa-solid fa-graduation-cap text-cobalt"></i> Examiner Defense &amp; Project Takeaways</h4>
+                    <ul class="conclusion-list">
+                        <li><strong>Complete Offline Autonomy:</strong> 100% private, self-contained local storage with zero cloud tracking servers.</li>
+                        <li><strong>Negligible Battery Overhead:</strong> Total background battery impact benchmarked at under 1.8% per 24 hours.</li>
+                        <li><strong>Human-Centered Discipline:</strong> The 1-Reel Grace Rule and Lecture Security respect real student needs, preventing the typical 48-hour uninstallation cycle of conventional blockers.</li>
                     </ul>
                 </div>
 
-                <!-- Interactive Examiner Defense Q&A Accordion -->
-                <div class="interactive-sandbox-card">
-                    <div class="sandbox-header">
-                        <div class="sandbox-title">
-                            <i class="fa-solid fa-clipboard-question text-accent"></i>
-                            <span>Interactive Examiner Defense: Architectural Inquiries &amp; Technical Solutions</span>
-                        </div>
-                        <span class="sandbox-tag">ORAL DEFENSE PREPARATION</span>
-                    </div>
-                    <p class="sandbox-desc">
-                        Click on any technical defense question below to review the exact architectural solutions, Android API justifications, and fail-safe implementations:
-                    </p>
-
-                    <div class="defense-accordion">
-                        <div class="accordion-item">
-                            <button class="accordion-header">
-                                <span class="q-badge">Q1</span>
-                                <span class="q-title">How does Productometer prevent users from simply force-stopping the app or turning off permissions in Settings?</span>
-                                <i class="fa-solid fa-chevron-down accordion-arrow"></i>
-                            </button>
-                            <div class="accordion-body">
-                                <p>
-                                    Productometer registers a native <code class="mono-code">AccessibilityService</code> and a high-priority <code class="mono-code">ForegroundService</code> (<code class="mono-code">FocusService</code>). In Android 13/14, once Accessibility permission is granted, attempting to force-stop or clear data triggers a system confirmation dialog. Furthermore, during active study sessions, navigation into <code class="mono-code">com.android.settings</code> is actively audited by the window state change listener to alert the student before focus disruption occurs.
-                                </p>
-                            </div>
-                        </div>
-
-                        <div class="accordion-item">
-                            <button class="accordion-header">
-                                <span class="q-badge">Q2</span>
-                                <span class="q-title">What is the measured battery overhead of continuous view inspection and sensor polling?</span>
-                                <i class="fa-solid fa-chevron-down accordion-arrow"></i>
-                            </button>
-                            <div class="accordion-body">
-                                <p>
-                                    Battery impact is rigorously minimized to <strong>&lt; 1.8% per 24-hour cycle</strong> through three architectural decisions:
-                                    <br>1. <strong>Event-Driven Wakeups:</strong> The Accessibility Service does not run polling loops; it only executes on native OS callbacks (<code class="mono-code">TYPE_VIEW_SCROLLED</code>) in whitelisted target apps (YouTube &amp; Instagram).
-                                    <br>2. <strong>Hardware FIFO Step Counting:</strong> <code class="mono-code">Sensor.TYPE_STEP_COUNTER</code> batches sensor events in hardware buffers, eliminating CPU wakeups.
-                                    <br>3. <strong>Zero Cloud Telemetry:</strong> No background cellular/WiFi radios are kept active for analytical transmission.
-                                </p>
-                            </div>
-                        </div>
-
-                        <div class="accordion-item">
-                            <button class="accordion-header">
-                                <span class="q-badge">Q3</span>
-                                <span class="q-title">How does the system ensure hardware wake alarms survive sudden device reboots overnight?</span>
-                                <i class="fa-solid fa-chevron-down accordion-arrow"></i>
-                            </button>
-                            <div class="accordion-body">
-                                <p>
-                                    Android system reboots clear the internal queue of <code class="mono-code">AlarmManager</code>. Productometer declares <code class="mono-code">BootReceiver.java</code> in <code class="mono-code">AndroidManifest.xml</code> with the <code class="mono-code">RECEIVE_BOOT_COMPLETED</code> intent filter. When the device finishes booting, the receiver queries the encrypted local SQLite database, calculates remaining epoch trigger timestamps, and re-registers each exact <code class="mono-code">RTC_WAKEUP</code> pending intent automatically.
-                                </p>
-                            </div>
-                        </div>
-
-                        <div class="accordion-item">
-                            <button class="accordion-header">
-                                <span class="q-badge">Q4</span>
-                                <span class="q-title">Why is the 1-Reel Grace Rule behaviorally superior to rigid draconian lockouts?</span>
-                                <i class="fa-solid fa-chevron-down accordion-arrow"></i>
-                            </button>
-                            <div class="accordion-body">
-                                <p>
-                                    Behavioral psychology studies demonstrate that 0-tolerance blockers trigger the <em>forbidden fruit effect</em>: students feel frustrated by abrupt lockouts when quickly checking an educational link sent by a peer, leading to permanent app uninstallation within 48 hours. By permitting the 1st short with a 30-second reminder and only intervening on consecutive algorithmic doomscrolling (Swipe 2+), Productometer aligns with natural self-regulation while safeguarding focus.
-                                </p>
-                            </div>
-                        </div>
-
-                        <div class="accordion-item">
-                            <button class="accordion-header">
-                                <span class="q-badge">Q5</span>
-                                <span class="q-title">What prevents students from bypassing the lecture filter by typing 'lecture' into a gaming stream search?</span>
-                                <i class="fa-solid fa-chevron-down accordion-arrow"></i>
-                            </button>
-                            <div class="accordion-body">
-                                <p>
-                                    The filter inspects the active video title node (<code class="mono-code">video_title_text</code>) within the running player container rather than transient search query text nodes. In addition, if a student opens a non-academic video, the 15-second grace timer triggers an alert notification and sound cue, maintaining accountability while preserving player flexibility for cross-disciplinary lectures.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
+                <div class="sheet-footer-strip">
+                    <span>Productometer &bull; Academic &amp; Technical Project Writeout</span>
+                    <span class="sheet-page-num">Sheet 8 of 8 &bull; Project Complete</span>
                 </div>
 
-                <div class="page-footer-nav">
-                    <button class="nav-prev-btn" data-goto="7">
-                        <i class="fa-solid fa-arrow-left"></i>
-                        <span>Section 7.0: Health &amp; Sleep</span>
-                    </button>
-                    <button class="nav-next-btn" data-goto="1">
-                        <i class="fa-solid fa-rotate-left"></i>
-                        <span>Return to Section 1.0 (Overview)</span>
-                    </button>
-                </div>
             </div>
-        </article>
+        </section>
 
     </main>
 
-    <!-- Bottom Persistent Controls Bar -->
-    <footer class="doc-bottom-bar">
-        <div class="b-left">
-            <span>Press <kbd>&larr;</kbd> <kbd>&rarr;</kbd> or click pagination to navigate &bull; <kbd>Ctrl + P</kbd> for PDF</span>
-        </div>
-
-        <div class="b-center">
-            <button class="nav-arrow-btn" id="btnBottomPrev" title="Previous Page">
-                <i class="fa-solid fa-chevron-left"></i>
-            </button>
-            <div class="pagination-dots" id="pageDotsRail">
-                <!-- 8 Pagination Dots -->
-            </div>
-            <button class="nav-arrow-btn" id="btnBottomNext" title="Next Page">
-                <i class="fa-solid fa-chevron-right"></i>
-            </button>
-        </div>
-
-        <div class="b-right">
-            <button class="btn-top" id="btnBackToTop" title="Scroll to Top">
-                <i class="fa-solid fa-arrow-up"></i>
-                <span>Top</span>
-            </button>
-        </div>
-    </footer>
-
-    <!-- Script Engine -->
+    <!-- Scripts Engine -->
     <script src="./writeover-scripts.js"></script>
 </body>
 </html>

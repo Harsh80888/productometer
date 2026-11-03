@@ -551,13 +551,80 @@ document.addEventListener('DOMContentLoaded', () => {
         if (simShakeProgressBar) simShakeProgressBar.style.width = '0%';
     }
 
-    if (btnTestSmartAlarm && alarmSimulatorModal) {
+    // Web Audio synthesizer siren for browser preview testing
+    let browserAudioCtx = null;
+    let browserSirenOsc = null;
+    let browserSirenInterval = null;
+
+    function playBrowserAlarmSiren() {
+        try {
+            if (!browserAudioCtx) {
+                browserAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (browserAudioCtx.state === 'suspended') {
+                browserAudioCtx.resume();
+            }
+            stopBrowserAlarmSiren();
+
+            browserSirenOsc = browserAudioCtx.createOscillator();
+            const gain = browserAudioCtx.createGain();
+            browserSirenOsc.type = 'sawtooth';
+            browserSirenOsc.frequency.setValueAtTime(880, browserAudioCtx.currentTime); // 880 Hz
+            gain.gain.setValueAtTime(0.25, browserAudioCtx.currentTime);
+            browserSirenOsc.connect(gain);
+            gain.connect(browserAudioCtx.destination);
+            browserSirenOsc.start();
+
+            // Modulate pitch between 700Hz and 1100Hz every 350ms to simulate siren
+            let high = false;
+            browserSirenInterval = setInterval(() => {
+                if (!browserSirenOsc) return;
+                high = !high;
+                try {
+                    browserSirenOsc.frequency.setValueAtTime(high ? 1100 : 700, browserAudioCtx.currentTime);
+                } catch (e) {}
+            }, 350);
+        } catch (e) {}
+    }
+
+    function stopBrowserAlarmSiren() {
+        try {
+            if (browserSirenInterval) {
+                clearInterval(browserSirenInterval);
+                browserSirenInterval = null;
+            }
+            if (browserSirenOsc) {
+                browserSirenOsc.stop();
+                browserSirenOsc.disconnect();
+                browserSirenOsc = null;
+            }
+        } catch (e) {}
+    }
+
+    if (btnTestSmartAlarm) {
         btnTestSmartAlarm.addEventListener('click', () => {
+            // 1. If running inside the Android APK with NativeBridge: trigger the REAL phone alarm siren!
+            if (window.NativeBridge && window.NativeBridge.triggerWakeupAlarmNow) {
+                const triggered = window.NativeBridge.triggerWakeupAlarmNow();
+                if (triggered && window.NativeBridge.showToast) {
+                    window.NativeBridge.showToast('🚨 Real Alarm Triggered! Deliver 10 Hard Shakes.');
+                    return;
+                }
+            }
+
+            // 2. In browser fallback: play synthesizer siren and open simulator modal
             resetAlarmSimulator();
-            alarmSimulatorModal.showModal();
+            if (alarmSimulatorModal) alarmSimulatorModal.showModal();
+            playBrowserAlarmSiren();
             if (window.NativeBridge && window.NativeBridge.showToast) {
                 window.NativeBridge.showToast('🚨 Smart Alarm Triggered! Deliver 10 Hard Shakes.');
             }
+        });
+    }
+
+    if (alarmSimulatorModal) {
+        alarmSimulatorModal.addEventListener('close', () => {
+            stopBrowserAlarmSiren();
         });
     }
 
@@ -569,6 +636,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (simShakeCount >= 10) {
                 // Mission Phase 1 Cleared!
+                stopBrowserAlarmSiren();
                 const deadline = Date.now() + (15 * 60 * 1000);
                 localStorage.setItem('wakeup_step_mission_active', 'true');
                 localStorage.setItem('wakeup_step_mission_deadline', deadline.toString());

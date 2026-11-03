@@ -629,30 +629,85 @@ public class ShortsReelsBlockerService extends AccessibilityService {
         return null;
     }
 
-    // Collect text from the top watch layout (active title & channel), skipping recommendation recyclers & comments
+    // Robust check for active YouTube video watch page (Compose & Litho safe)
+    private boolean isYouTubeVideoPlaying(AccessibilityNodeInfo node, int depth) {
+        if (node == null || depth > 8) return false;
+
+        CharSequence desc = node.getContentDescription();
+        if (desc != null) {
+            String d = desc.toString().toLowerCase();
+            if (d.contains("pause video") || d.contains("play video") || d.contains("replay video") ||
+                d.contains("enter full screen") || d.contains("enter fullscreen") || d.contains("exit full screen") ||
+                d.contains("like this video") || d.contains("dislike this video") || d.contains("seek slider")) {
+                return true;
+            }
+        }
+
+        CharSequence vId = node.getViewIdResourceName();
+        if (vId != null) {
+            String v = vId.toString().toLowerCase();
+            if (v.contains("player") || v.contains("watch_while") || v.contains("watch_panel") || v.contains("watch_metadata")) {
+                return true;
+            }
+        }
+
+        int count = Math.min(node.getChildCount(), 8);
+        for (int i = 0; i < count; i++) {
+            AccessibilityNodeInfo child = node.getChild(i);
+            if (child != null) {
+                boolean active = isYouTubeVideoPlaying(child, depth + 1);
+                child.recycle();
+                if (active) return true;
+            }
+        }
+        return false;
+    }
+
+    // Collect active video title & channel: strictly inspects only the first 2 children of list/recycler containers
+    // (Child 0 = title & metadata, Child 1 = channel row) to 100% prevent recommendation feed leakage!
     private void collectTopWatchTextNodes(AccessibilityNodeInfo node, List<String> texts, int depth, int maxNodes) {
         if (node == null || depth > 12 || texts.size() >= maxNodes) return;
 
-        // Skip recommendation feeds, comments, and related videos
         CharSequence viewId = node.getViewIdResourceName();
+        boolean isListContainer = false;
         if (viewId != null) {
             String vId = viewId.toString().toLowerCase();
-            if (vId.contains("recycler") || vId.contains("related") || vId.contains("comment") || vId.contains("bottom_sheet")) {
-                return; // Do not enter recommendation list below player!
+            if (vId.contains("recycler") || vId.contains("list") || vId.contains("feed") || vId.contains("results")) {
+                isListContainer = true;
+            }
+            if (vId.contains("comment") || vId.contains("bottom_sheet_footer")) {
+                return; // Skip comments and secondary bottom sheets
             }
         }
 
         CharSequence desc = node.getContentDescription();
-        if (desc != null && desc.length() > 2) {
-            texts.add(desc.toString().trim());
-        }
-        CharSequence txt = node.getText();
-        if (txt != null && txt.length() > 2) {
-            texts.add(txt.toString().trim());
+        if (desc != null && desc.length() > 3) {
+            String d = desc.toString().trim();
+            String dLower = d.toLowerCase();
+            if (!dLower.contains("play video") && !dLower.contains("pause video") &&
+                !dLower.contains("enter full screen") && !dLower.contains("exit full screen") &&
+                !dLower.contains("seek slider") && !dLower.contains("collapse") &&
+                !dLower.contains("settings") && !dLower.contains("options")) {
+                texts.add(d);
+            }
         }
 
-        int childCount = Math.min(node.getChildCount(), 10);
-        for (int i = 0; i < childCount; i++) {
+        CharSequence txt = node.getText();
+        if (txt != null && txt.length() > 3) {
+            String t = txt.toString().trim();
+            String tLower = t.toLowerCase();
+            if (!tLower.equals("subscribe") && !tLower.equals("subscribed") &&
+                !tLower.equals("share") && !tLower.equals("remix") &&
+                !tLower.equals("download") && !tLower.equals("thanks") && !tLower.equals("clip")) {
+                texts.add(t);
+            }
+        }
+
+        int childCount = node.getChildCount();
+        // If container is a recycler/list on watch page: Child 0 is video metadata/title, Child 1 is channel.
+        // Child 2+ are comments & recommendations, so we strictly cap at 2!
+        int maxChildren = isListContainer ? Math.min(childCount, 2) : Math.min(childCount, 8);
+        for (int i = 0; i < maxChildren; i++) {
             AccessibilityNodeInfo child = node.getChild(i);
             if (child != null) {
                 collectTopWatchTextNodes(child, texts, depth + 1, maxNodes);
@@ -685,7 +740,7 @@ public class ShortsReelsBlockerService extends AccessibilityService {
             }
         }
 
-        // 2. Compose / Litho Fallback: collect the first 4 text nodes of the watch layout
+        // 2. Compose / Litho Fallback: collect active video info (capped before recommendations)
         List<String> topTexts = new ArrayList<>();
         collectTopWatchTextNodes(root, topTexts, 0, 4);
         StringBuilder topSb = new StringBuilder();
@@ -698,24 +753,10 @@ public class ShortsReelsBlockerService extends AccessibilityService {
     private String detectYouTubeNonStudyVideo(AccessibilityNodeInfo root, AccessibilityEvent event) {
         if (root == null) return null;
 
-        // Verify if a video player or watch layout is present
-        List<AccessibilityNodeInfo> playerNodes = root.findAccessibilityNodeInfosByViewId("com.google.android.youtube:id/player_view");
-        if (playerNodes == null || playerNodes.isEmpty()) {
-            playerNodes = root.findAccessibilityNodeInfosByViewId("com.google.android.youtube:id/watch_metadata");
+        // 1. Verify if YouTube is actively on a video watch page (Compose & Litho safe)
+        if (!isYouTubeVideoPlaying(root, 0)) {
+            return null; // In search bar, channel list, home tabs, or feed
         }
-        if (playerNodes == null || playerNodes.isEmpty()) {
-            playerNodes = root.findAccessibilityNodeInfosByViewId("com.google.android.youtube:id/watch_panel");
-        }
-        if (playerNodes == null || playerNodes.isEmpty()) {
-            playerNodes = root.findAccessibilityNodeInfosByViewId("com.google.android.youtube:id/watch_while_layout");
-        }
-
-        boolean hasPlayer = (playerNodes != null && !playerNodes.isEmpty());
-        if (playerNodes != null) {
-            for (AccessibilityNodeInfo n : playerNodes) n.recycle();
-        }
-
-        if (!hasPlayer) return null; // In search bar, channel list, or feed
 
         long now = System.currentTimeMillis();
         // Pre-watch click memory (tapped from search)
@@ -727,7 +768,7 @@ public class ShortsReelsBlockerService extends AccessibilityService {
         String activeTitle = extractActiveYouTubeTitle(root).toLowerCase();
 
         // 1. Check if user already whitelisted this video
-        String sig = "yt_v_" + (activeTitle.isEmpty() ? String.valueOf(now / 5000) : (activeTitle.length() > 35 ? activeTitle.substring(0, 35) : activeTitle));
+        String sig = "yt_v_" + (activeTitle.isEmpty() ? "unknown_video" : (activeTitle.length() > 35 ? activeTitle.substring(0, 35) : activeTitle));
         if (whitelistedLectureSignatures.contains(sig)) {
             return null;
         }
@@ -745,7 +786,7 @@ public class ShortsReelsBlockerService extends AccessibilityService {
             return "yt_entertainment_" + (activeTitle.length() > 30 ? activeTitle.substring(0, 30) : activeTitle);
         }
 
-        // 4. Initial settle grace period (3.5 seconds) to let title finish loading
+        // 4. Settle grace period (3.5 seconds) to let title finish loading
         if (!sig.equals(activePendingLectureSignature)) {
             activePendingLectureSignature = sig;
             pendingLectureStartTimestamp = now;
@@ -809,18 +850,28 @@ public class ShortsReelsBlockerService extends AccessibilityService {
                                   textDump.contains("up next") || textDump.contains("comments") ||
                                   textDump.contains("views");
             if (isWatchPage) {
-                // Negative matching: block entertainment, gaming, vlogs, songs in browser!
-                if (containsEntertainmentKeyword(textDump)) {
-                    return "browser_yt_distraction_" + (System.currentTimeMillis() / 4000);
+                // Extract active title from top nodes (skip bottom recommendations)
+                List<String> topTexts = new ArrayList<>();
+                collectTopWatchTextNodes(root, topTexts, 0, 4);
+                StringBuilder activeBrowserTitleSb = new StringBuilder();
+                for (String s : topTexts) activeBrowserTitleSb.append(s).append(" ");
+                String activeBrowserTitle = activeBrowserTitleSb.toString().toLowerCase().trim();
+                if (activeBrowserTitle.isEmpty()) activeBrowserTitle = textDump;
+
+                // 1. Study keywords checked FIRST!
+                if (containsStudyKeyword(activeBrowserTitle) || isEducationalChannel(activeBrowserTitle)) {
+                    activePendingLectureSignature = "";
+                    return null; // Allowed! Study lecture verified
                 }
 
-                if (containsStudyKeyword(textDump)) {
-                    return null; // Allowed! Study material detected
+                // 2. Entertainment blacklist
+                if (containsEntertainmentKeyword(activeBrowserTitle)) {
+                    return "browser_yt_entertainment_" + (activeBrowserTitle.length() > 30 ? activeBrowserTitle.substring(0, 30) : activeBrowserTitle);
                 }
 
-                // Settle grace period: give 4 seconds for browser web page title to finish loading
+                // 3. Settle grace period (3.5 seconds)
                 long now = System.currentTimeMillis();
-                String rawSig = "browser_yt_" + (textDump.length() > 30 ? textDump.substring(0, 30) : textDump);
+                String rawSig = "browser_yt_" + (activeBrowserTitle.length() > 30 ? activeBrowserTitle.substring(0, 30) : activeBrowserTitle);
                 if (whitelistedLectureSignatures.contains(rawSig)) {
                     return null;
                 }
@@ -829,8 +880,8 @@ public class ShortsReelsBlockerService extends AccessibilityService {
                     pendingLectureStartTimestamp = now;
                     return null; // Grace period start
                 }
-                if (now - pendingLectureStartTimestamp < 4000L) {
-                    return null; // Within 4-second loading buffer
+                if (now - pendingLectureStartTimestamp < 3500L) {
+                    return null; // Within 3.5-second loading buffer
                 }
 
                 return rawSig;

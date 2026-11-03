@@ -72,14 +72,28 @@ public class AlarmReceiver extends BroadcastReceiver {
      * Plays the loud wakeup alarm siren continuously and vibrates device until dismissed.
      */
     public static synchronized void playAlarmSiren(Context context) {
-        stopAlarm(); // Stop any existing playback first
+        // If alarm audio is already playing actively, don't interrupt it!
+        if (activeMediaPlayer != null) {
+            try {
+                if (activeMediaPlayer.isPlaying()) return;
+            } catch (Exception ignored) {}
+        }
+        if (activeRingtone != null) {
+            try {
+                if (activeRingtone.isPlaying()) return;
+            } catch (Exception ignored) {}
+        }
 
-        // 1. Boost Alarm Audio Stream Volume to maximum
+        stopAlarm(); // Stop any stale playback
+
+        // 1. Boost Alarm Audio Stream Volume AND Music Stream Volume to maximum
         try {
             AudioManager am = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
             if (am != null) {
-                int maxVol = am.getStreamMaxVolume(AudioManager.STREAM_ALARM);
-                am.setStreamVolume(AudioManager.STREAM_ALARM, maxVol, 0);
+                int maxAlarm = am.getStreamMaxVolume(AudioManager.STREAM_ALARM);
+                am.setStreamVolume(AudioManager.STREAM_ALARM, maxAlarm, 0);
+                int maxMusic = am.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+                am.setStreamVolume(AudioManager.STREAM_MUSIC, maxMusic, 0);
             }
         } catch (Exception ignored) {}
 
@@ -88,6 +102,7 @@ public class AlarmReceiver extends BroadcastReceiver {
         if (alarmUri == null) alarmUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE);
         if (alarmUri == null) alarmUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
 
+        boolean soundStarted = false;
         try {
             activeMediaPlayer = new MediaPlayer();
             activeMediaPlayer.setDataSource(context, alarmUri);
@@ -98,6 +113,7 @@ public class AlarmReceiver extends BroadcastReceiver {
             activeMediaPlayer.setLooping(true);
             activeMediaPlayer.prepare();
             activeMediaPlayer.start();
+            soundStarted = true;
         } catch (Exception e) {
             try {
                 activeRingtone = RingtoneManager.getRingtone(context, alarmUri);
@@ -112,10 +128,19 @@ public class AlarmReceiver extends BroadcastReceiver {
                         activeRingtone.setLooping(true);
                     }
                     activeRingtone.play();
+                    soundStarted = true;
                 }
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
+        }
+
+        // 3. Fallback ToneGenerator if neither MediaPlayer nor Ringtone succeeded
+        if (!soundStarted) {
+            try {
+                android.media.ToneGenerator toneGen = new android.media.ToneGenerator(AudioManager.STREAM_ALARM, 100);
+                toneGen.startTone(android.media.ToneGenerator.TONE_CDMA_EMERGENCY_RINGBACK, 10000);
+            } catch (Throwable ignored) {}
         }
 
         // 3. Continuous hardware vibration in pattern

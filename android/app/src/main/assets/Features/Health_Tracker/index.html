@@ -189,21 +189,6 @@
                         <span class="tile-action-link" id="btnOpenDietCalculator">Open Diet <i class="fa-solid fa-arrow-right"></i></span>
                     </div>
                 </div>
-                <!-- TILE 3: SLEEP & RECOVERY -->
-                <div class="hub-action-tile tile-sleep" id="tileSleepMonitoring" role="button" tabindex="0">
-                    <div class="tile-top-row">
-                        <div class="tile-icon-halo sleep" style="background: rgba(124, 58, 237, 0.15); color: #a78bfa;">
-                            <i class="fa-solid fa-moon"></i>
-                        </div>
-                        <span class="tile-badge sleep" style="background: rgba(124, 58, 237, 0.18); color: #c084fc; border: 1px solid rgba(124, 58, 237, 0.35);"><i class="fa-solid fa-bed"></i> Recovery</span>
-                    </div>
-                    <div class="tile-content-stack">
-                        <h3 class="tile-main-title">Sleep &amp; Bedtime</h3>
-                        <p class="tile-sub-caption">Circadian Schedule &amp; Screen Guardian</p>
-                    </div>
-                    <div class="tile-bottom-action">
-                        <span class="tile-action-link" style="color: #c084fc;">Open Sleep <i class="fa-solid fa-arrow-right"></i></span>
-                    </div>
                 </div>
             </div>
         </section>
@@ -786,20 +771,6 @@
                 </div>
                 <i class="fa-solid fa-chevron-right choice-arrow"></i>
             </button>
-            <!-- Option 4: Sleep & Bedtime Monitoring -->
-            <button type="button" class="discipline-choice-card choice-sleep" data-discipline="sleep">
-                <div class="choice-icon-wrap sleep" style="background: rgba(124, 58, 237, 0.15); color: #a78bfa;">
-                    <i class="fa-solid fa-moon"></i>
-                </div>
-                <div class="choice-text-wrap">
-                    <div class="choice-title-row">
-                        <span class="choice-title">Sleep &amp; Bedtime</span>
-                        <span class="choice-tag" style="color: #c084fc; background: rgba(124, 58, 237, 0.15); border: 1px solid rgba(124, 58, 237, 0.3);">Recovery</span>
-                    </div>
-                    <span class="choice-desc">Circadian rhythm tracking, 15m bedtime distraction cap, smart wakeup alarm, and night rest stats.</span>
-                </div>
-                <i class="fa-solid fa-chevron-right choice-arrow"></i>
-            </button>
         </div>
     </dialog>
 
@@ -1080,157 +1051,7 @@
     </dialog>
 
     <!-- ======================================================== -->
-    <!-- 🪟 MODAL: SLEEP & BEDTIME MONITORING DEDICATED FULLSCREEN SECTION -->
-    <!-- ======================================================== -->
-    <dialog id="sleepSectionModal" class="health-dialog-modal diet-fullscreen-modal activity-fullscreen-modal">
-        <div class="dialog-top-header">
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <span class="diet-header-icon-badge" style="background: rgba(124, 58, 237, 0.15); border-color: rgba(124, 58, 237, 0.4);">
-                    <i class="fa-solid fa-moon" style="color: #c084fc;"></i>
-                </span>
-                <div>
-                    <h3 class="dialog-modal-title">Sleep &amp; Bedtime Monitoring</h3>
-                    <span class="hud-sub-caption">Circadian rhythm tracking &amp; nighttime screen guardian</span>
-                </div>
-            </div>
-            <button type="button" class="dialog-close-btn" onclick="document.getElementById('sleepSectionModal').close()">&times;</button>
-        </div>
-
-        <div class="activity-modal-body">
-            <div class="discipline-header-box" style="border-left: 3px solid #7c3aed;">
-                <div>
-                    <h3 class="discipline-title" style="color: #c084fc;">Circadian Sleep Guardian</h3>
-                    <p class="discipline-desc">Protects your sleep health by enforcing a 15-minute distraction cap on doomscroll apps while keeping productive tools unlocked.</p>
-                </div>
-            </div>
-
-            <!-- Sleep Schedule Card -->
-            <div class="glow-card" style="margin-top: 14px; border-color: rgba(124, 58, 237, 0.3);">
-                <div class="card-header-row">
-                    <h4 class="routine-section-label" style="color: #e0e7ff;"><i class="fa-solid fa-clock text-purple" style="color: #c084fc;"></i> Bedtime &amp; Wake-up Schedule</h4>
-                    <span id="sleepScheduleStatusBadge" style="font-size: 0.72rem; font-weight: 800; padding: 3px 8px; border-radius: 8px; background: rgba(0, 230, 118, 0.15); color: #00e676; border: 1px solid rgba(0, 230, 118, 0.3);">Schedule Active</span>
-                </div>
-
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-top: 12px;">
-                    <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 10px 14px;">
-                        <span style="font-size: 0.72rem; color: #94a3b8; display: block; margin-bottom: 4px;"><i class="fa-solid fa-bed"></i> Bedtime Start</span>
-                        <input type="time" id="sleepInputBedtimeStart" value="22:30" style="background: transparent; border: none; color: #fff; font-size: 1.1rem; font-weight: 800; font-family: inherit; width: 100%; outline: none;">
-                    </div>
-                    <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 10px 14px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                            <span style="font-size: 0.72rem; color: #94a3b8;"><i class="fa-solid fa-sun" style="color: #ffd600;"></i> Wake Up Time</span>
-                            <span style="font-size: 0.65rem; color: #00e5ff; font-weight: 800; background: rgba(0, 229, 255, 0.12); border: 1px solid rgba(0, 229, 255, 0.3); padding: 1px 6px; border-radius: 6px;"><i class="fa-solid fa-bell"></i> Smart Alarm</span>
-                        </div>
-                        <input type="time" id="sleepInputBedtimeEnd" value="06:30" style="background: transparent; border: none; color: #fff; font-size: 1.1rem; font-weight: 800; font-family: inherit; width: 100%; outline: none;">
-                    </div>
-                    <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 10px 14px;">
-                        <span style="font-size: 0.72rem; color: #94a3b8; display: block; margin-bottom: 4px;"><i class="fa-solid fa-hourglass-half"></i> Target Sleep</span>
-                        <span id="sleepTargetHoursDisplay" style="color: #c084fc; font-size: 1.1rem; font-weight: 800;">8h 00m</span>
-                    </div>
-                </div>
-
-                <div id="sleepTimeRemainingBanner" style="display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: rgba(124, 58, 237, 0.08); border: 1px solid rgba(124, 58, 237, 0.25); border-radius: 12px; margin-top: 12px;">
-                    <i class="fa-solid fa-moon" style="color: #c084fc;"></i>
-                    <span id="sleepRemainingText" style="font-size: 0.8rem; color: #cbd5e1; font-weight: 600;">Calculating bedtime window...</span>
-                </div>
-            </div>
-
-            <!-- ⏰ BRAIN ACTIVATION SMART ALARM CARD -->
-            <div class="glow-card" style="margin-top: 14px; border-color: rgba(0, 229, 255, 0.35); background: linear-gradient(135deg, rgba(16, 24, 40, 0.95) 0%, rgba(5, 7, 13, 0.98) 100%);">
-                <div class="card-header-row">
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <i class="fa-solid fa-bell text-cyan" style="font-size: 1.1rem; color: #00e5ff;"></i>
-                        <div>
-                            <h4 class="routine-section-label" style="color: #fff; margin: 0;">Brain Activation Smart Alarm</h4>
-                            <span style="font-size: 0.72rem; color: #94a3b8;">10 Hard Shakes &rarr; 50 Steps in Running Module</span>
-                        </div>
-                    </div>
-                    <label class="switch-toggle" style="position: relative; display: inline-block; width: 44px; height: 24px; margin: 0;">
-                        <input type="checkbox" id="toggleSmartWakeupAlarm" checked style="opacity: 0; width: 0; height: 0;">
-                        <span class="slider round" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #00e676; transition: .3s; border-radius: 24px;"></span>
-                    </label>
-                </div>
-
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; margin-top: 12px; flex-wrap: wrap; gap: 10px;">
-                    <div>
-                        <div style="font-size: 0.76rem; color: #94a3b8;">Wake-up Alarm rings at:</div>
-                        <div id="smartAlarmDisplayTime" style="font-size: 1.25rem; font-weight: 800; color: #00e5ff; letter-spacing: 0.5px;">06:30 AM</div>
-                        <div id="smartAlarmCountdownText" style="font-size: 0.72rem; color: #cbd5e1; margin-top: 2px;">Syncs with wake-up time</div>
-                    </div>
-
-                    <!-- Pre-Alarm Disable Button: Skip Today -->
-                    <div style="display: flex; gap: 8px;">
-                        <button type="button" id="btnSkipTodayAlarm" style="background: rgba(255, 214, 0, 0.12); border: 1px solid rgba(255, 214, 0, 0.35); color: #ffd600; font-weight: 700; font-size: 0.78rem; padding: 8px 12px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 6px;">
-                            <i class="fa-solid fa-forward-step"></i> Skip Today's Alarm
-                        </button>
-                    </div>
-                </div>
-
-                <div id="alarmSkippedNoticeBanner" style="display: none; align-items: center; gap: 8px; padding: 10px 14px; background: rgba(255, 214, 0, 0.08); border: 1px solid rgba(255, 214, 0, 0.25); border-radius: 12px; margin-top: 10px;">
-                    <i class="fa-solid fa-circle-exclamation" style="color: #ffd600;"></i>
-                    <span id="alarmSkippedNoticeText" style="font-size: 0.76rem; color: #cbd5e1;">Today's alarm is <strong>skipped</strong>. Resumes tomorrow automatically.</span>
-                    <button type="button" id="btnResumeTodayAlarm" style="margin-left: auto; background: transparent; border: none; color: #00e5ff; font-weight: 800; font-size: 0.76rem; cursor: pointer;">Resume</button>
-                </div>
-            </div>
-
-            <!-- Tonight's Distraction Cap Meter -->
-            <div class="glow-card" style="margin-top: 14px; border-color: rgba(255, 61, 113, 0.3);">
-                <div class="card-header-row">
-                    <h4 class="routine-section-label" style="color: #e0e7ff;"><i class="fa-solid fa-shield-halved text-rose" style="color: #ff3d71;"></i> 15-Minute Night Distraction Cap</h4>
-                    <span id="sleepDistractionStatusBadge" style="font-size: 0.72rem; font-weight: 800; padding: 3px 8px; border-radius: 8px; background: rgba(0, 230, 118, 0.15); color: #00e676; border: 1px solid rgba(0, 230, 118, 0.3);">0m Used</span>
-                </div>
-                <p style="font-size: 0.8rem; color: #94a3b8; margin: 4px 0 12px 0;">
-                    During bedtime hours, using distractive apps (social media, shorts/reels, games) without the Distraction Blocker is limited to 15 minutes.
-                </p>
-
-                <div class="limit-progress-bar" style="height: 10px; border-radius: 8px; background: rgba(255,255,255,0.06); overflow: hidden;">
-                    <div id="sleepDistractionProgressFill" style="height: 100%; border-radius: 8px; width: 0%; background: #00e676; transition: all 0.3s ease;"></div>
-                </div>
-                <div style="display: flex; justify-content: space-between; font-size: 0.74rem; color: #94a3b8; margin-top: 6px;">
-                    <span id="sleepDistractionUsedLabel">0m used tonight</span>
-                    <span>15m limit</span>
-                </div>
-            </div>
-
-            <!-- Bedtime Protection Rules & Distraction Blocker Exemption -->
-            <div class="glow-card" style="margin-top: 14px;">
-                <div class="card-header-row">
-                    <h4 class="routine-section-label"><i class="fa-solid fa-circle-info text-cyan"></i> Guardian Rules &amp; Productive Phone Use</h4>
-                </div>
-                <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 8px;">
-                    <div style="display: flex; gap: 10px; align-items: flex-start; padding: 10px; background: rgba(255, 255, 255, 0.02); border-radius: 10px;">
-                        <span style="font-size: 1.2rem;">📱</span>
-                        <div style="font-size: 0.8rem; color: #cbd5e1; line-height: 1.4;">
-                            <strong style="color: #00e5ff;">Productive Phone Use Allowed:</strong> You are freely permitted to read e-books, check notes, study, or use utilities as long as the <strong>Distraction Blocker is turned ON</strong>.
-                        </div>
-                    </div>
-                    <div style="display: flex; gap: 10px; align-items: flex-start; padding: 10px; background: rgba(255, 255, 255, 0.02); border-radius: 10px;">
-                        <span style="font-size: 1.2rem;">⏱️</span>
-                        <div style="font-size: 0.8rem; color: #cbd5e1; line-height: 1.4;">
-                            <strong style="color: #ffd600;">2-Minute Emergency Pass:</strong> If the 15-minute distractive cap triggers the full-screen wind-down notification, you can tap the 2-minute pass button for urgent tasks.
-                        </div>
-                    </div>
-                    <div style="display: flex; gap: 10px; align-items: flex-start; padding: 10px; background: rgba(255, 255, 255, 0.02); border-radius: 10px;">
-                        <span style="font-size: 1.2rem;">🏃‍♂️</span>
-                        <div style="font-size: 0.8rem; color: #00e676;">
-                            <strong>Morning Wakeup Mission:</strong> When your alarm fires at wake-up time, deliver 10 hard shakes to mute the siren, which then auto-opens this Health Tracker's <strong>Running Section</strong> to complete 50 steps!
-                        </div>
-                    </div>
-                </div>
-
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; background: rgba(0, 229, 255, 0.06); border: 1px solid rgba(0, 229, 255, 0.2); border-radius: 12px; margin-top: 14px;">
-                    <div>
-                        <div style="font-size: 0.84rem; font-weight: 700; color: #fff;">Distraction Blocker Master Switch</div>
-                        <div style="font-size: 0.72rem; color: #94a3b8;">Keep ON at night to freely use productive apps</div>
-                    </div>
-                    <label class="switch-toggle" style="position: relative; display: inline-block; width: 44px; height: 24px; margin: 0;">
-                        <input type="checkbox" id="toggleNightDistractionBlocker" checked style="opacity: 0; width: 0; height: 0;">
-                        <span class="slider round" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #00e676; transition: .3s; border-radius: 24px;"></span>
-                    </label>
-                </div>
-            </div>
-        </div>
-    </dialog>
+    
 
 <!-- ======================================================== -->
     <dialog id="dietCalculatorModal" class="health-dialog-modal diet-fullscreen-modal">

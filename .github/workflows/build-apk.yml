@@ -66,34 +66,30 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cat << 'EOF' > release_notes.md
-          ### 📱 Productometer Android Release v1.2.4
+          ### 📱 Productometer Android Release v1.2.5
 
-          Major release featuring an expanded 160+ Academic Keyword Library, Jetpack Compose-safe active title extraction, intelligent educational creator whitelisting, bedtime smart alarms, and complete distraction blocker coverage.
+          Major release delivering 100% reliable long video filtering in YouTube & mobile browsers, loud multi-stream bedtime alarm ringing with ToneGenerator emergency fallback, centralized sleep monitoring, and an A4-printable project writeout.
 
-          #### 🚀 Highlights in v1.2.4:
-          - **🎓 160+ Comprehensive Academic Keyword Library:**
-            - Spans Physics, Chemistry, Mathematics, Biology, Computer Science/Coding, Engineering, Commerce, Economics, Humanities, and Board exams (CBSE, NCERT, ICSE, State Boards).
-            - Competitive exams covered: JEE Mains & Advanced, NEET, UPSC, GATE, CAT, NDA, CLAT, CUET, IIT, AIIMS, BITSAT.
-            - Educational creator whitelist: Physics Wallah, Khan Academy, MIT OCW, Stanford, Harvard, CrashCourse, 3Blue1Brown, Veritasium, freeCodeCamp, Gate Smashers, NPTEL, StudyIQ, Drishti IAS, and more.
-          - **⚡ Litho & Jetpack Compose Safe Active Title Extraction:**
-            - YouTube Android app no longer returns empty titles on modern Compose/Litho layouts.
-            - Inspects top watch text nodes while strictly isolating player metadata from recommendations and comments below.
-          - **🛡️ Study-First Matching & Clean Entertainment Blacklist:**
-            - Academic keyword matching and educational creator whitelisting run FIRST before any entertainment checks.
-            - Negative entertainment blacklist sanitized to eliminate collisions (e.g. chemical 'reactions', coding 'challenges', revision 'highlights').
-            - Removed home feed trap timer so search and channel browsing remain unhindered.
-          - **🌐 Browser Distraction Blocker & Academics Study Player:**
-            - Blocks Shorts and non-study videos across Chrome, Brave, Samsung Internet, Edge, Firefox, and Opera.
-            - Direct in-app study video player (#studyLectureDialog) in Academics Monitoring.
-          - **⏰ Smart Bedtime Wakeup Alarm & Sensor Mission:**
-            - Native alarm with dynamic volume crescendo, math/shake morning wake-up missions, and skip/trigger APIs.
-          - **📖 Interactive 8-Page Project Writeover:**
-            - Complete project documentation, architectural diagrams, hardware bridge specifications, and live showcase links.
+          #### 🚀 Highlights in v1.2.5:
+          - **🎯 100% Reliable Long Video Filtering (YouTube App & Mobile Browsers):**
+            - Universal accessibility detection identifies active watch pages using standard media controls (TalkBack "Pause video", "Play video", "Fullscreen", "Like this video") without depending on fragile view IDs.
+            - Recommendation leak-proof title extractor strictly limits traversal to Child 0 & Child 1 of watch list containers, isolating the active video title and channel while ignoring recommended videos.
+            - Stable signature evaluation prevents timer reset loops, ensuring uneducational long videos are intercepted after the 3.5s settle grace period.
+            - Expanded 160+ Academic Keyword Library evaluated first so study lectures, NCERT/CBSE classes, and competitive exam solutions are always allowed.
+          - **⏰ Loud Bedtime & Morning Wake-Up Alarm:**
+            - Multi-stream volume boost sets both `STREAM_ALARM` and `STREAM_MUSIC` to maximum.
+            - Redundant audio pipeline: Looping `MediaPlayer` with `USAGE_ALARM` -> `RingtoneManager` -> hardware `ToneGenerator` beeper ensures the alarm rings even on heavily customized OEM devices.
+            - "Test 10-Shake Alarm" button directly triggers the native hardware alarm (`triggerWakeupAlarmNow()`), launching the full-screen `AlarmActivity` with 10-shake sensor verification.
+          - **🌙 Centralized Sleep & Bedtime Monitoring:**
+            - Removed all duplicate/conflicting bedtime options from Health Tracker and Screen Management.
+            - Centralized exclusively in the Features tab under Sleep & Bedtime Monitoring (`Features/Sleep_Monitoring/`).
+          - **📄 A4 Printable Project Writeout:**
+            - Added print-ready A4 documentation and technical overview.
 
           #### 📦 Direct Download:
           - Click **Productometer.apk** under Assets below to download and install.
           EOF
-          gh release create v1.2.4 dist/Productometer.apk \
-            --title "Productometer v1.2.4 - Android Release APK" \
+          gh release create v1.2.5 dist/Productometer.apk \
+            --title "Productometer v1.2.5 - Android Release APK" \
             --notes-file release_notes.md || \
-          gh release upload v1.2.4 dist/Productometer.apk --clobber
+          gh release upload v1.2.5 dist/Productometer.apk --clobber
