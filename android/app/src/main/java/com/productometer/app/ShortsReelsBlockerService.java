@@ -98,6 +98,61 @@ public class ShortsReelsBlockerService extends AccessibilityService {
     private static final String PKG_YOUTUBE = "com.google.android.youtube";
     private static final String PKG_INSTAGRAM = "com.instagram.android";
 
+    // Supported Android Browser packages
+    public static final Set<String> BROWSER_PACKAGES = new HashSet<>(Arrays.asList(
+            "com.android.chrome",
+            "com.brave.browser",
+            "com.sec.android.app.sbrowser",
+            "com.microsoft.emmx",
+            "org.mozilla.firefox",
+            "com.opera.browser",
+            "com.opera.mini.native",
+            "com.duckduckgo.mobile.android",
+            "com.android.browser",
+            "com.mi.globalbrowser",
+            "com.vivo.browser",
+            "com.heytap.browser"
+    ));
+
+    public static boolean isBrowserPackage(String pkg) {
+        if (pkg == null) return false;
+        if (BROWSER_PACKAGES.contains(pkg)) return true;
+        String p = pkg.toLowerCase();
+        return p.contains("browser") || p.contains("chrome") || p.contains("firefox");
+    }
+
+    // Set of whitelisted lecture video signatures (allowed by user or verified)
+    private static final Set<String> whitelistedLectureSignatures = Collections.synchronizedSet(new HashSet<>());
+    // Click / search pre-watch memory
+    private static long lastStudyClickedTimestamp = 0L;
+    private static String lastStudyClickedText = "";
+    // 4-second settle grace period for video titles & metadata loading
+    private static String activePendingLectureSignature = "";
+    private static long pendingLectureStartTimestamp = 0L;
+
+    public static boolean containsStudyKeyword(String text) {
+        if (text == null || text.isEmpty()) return false;
+        String t = text.toLowerCase();
+        return t.contains("class") || t.contains("classes") || t.contains("classroom") ||
+               t.contains("lecture") || t.contains("lectures") ||
+               t.contains("tutorial") || t.contains("tutorials") ||
+               t.contains("course") || t.contains("courses") ||
+               t.contains("chapter") || t.contains("lesson") || t.contains("lessons") ||
+               t.contains("batch") || t.contains("revision") ||
+               t.contains("oneshot") || t.contains("one shot") || t.contains("one-shot") ||
+               t.contains("cbse") || t.contains("ncert") || t.contains("neet") || t.contains("jee") ||
+               t.contains("physics") || t.contains("chemistry") || t.contains("math") ||
+               t.contains("maths") || t.contains("mathematics") || t.contains("biology") ||
+               t.contains("science") || t.contains("history") || t.contains("geography") ||
+               t.contains("upsc") || t.contains("gate") || t.contains("exam") || t.contains("exams") ||
+               t.contains("pw") || t.contains("physics wallah") || t.contains("unacademy") ||
+               t.contains("vedantu") || t.contains("khan academy") || t.contains("syllabus") ||
+               t.contains("semester") || t.contains("practice") || t.contains("solution") ||
+               t.contains("solutions") || t.contains("notes") || t.contains("dsa") ||
+               t.contains("coding") || t.contains("programming") || t.contains("study") ||
+               t.contains("education") || t.contains("iit") || t.contains("aiims") || t.contains("board");
+    }
+
     private static final Set<String> PERMANENTLY_BLOCKED_APPS = new HashSet<>(Arrays.asList(
             "com.whatsapp",
             "com.facebook.katana",
@@ -349,8 +404,32 @@ public class ShortsReelsBlockerService extends AccessibilityService {
             e.printStackTrace();
         }
 
+        // Track study click memory from search/feed
+        if (event.getEventType() == AccessibilityEvent.TYPE_VIEW_CLICKED) {
+            List<CharSequence> textList = event.getText();
+            StringBuilder clickSb = new StringBuilder();
+            if (textList != null) {
+                for (CharSequence cs : textList) {
+                    if (cs != null) clickSb.append(cs).append(" ");
+                }
+            }
+            if (event.getContentDescription() != null) {
+                clickSb.append(event.getContentDescription()).append(" ");
+            }
+            String clickedText = clickSb.toString();
+            if (containsStudyKeyword(clickedText)) {
+                lastStudyClickedTimestamp = System.currentTimeMillis();
+                lastStudyClickedText = clickedText;
+            }
+        }
+
+        boolean isYouTube = PKG_YOUTUBE.equals(packageName);
+        boolean isInstagram = PKG_INSTAGRAM.equals(packageName);
+        boolean isBrowser = isBrowserPackage(packageName);
+        boolean isDistracting = DISTRACTING_APPS.contains(packageName) || isYouTube;
+
         // Track user's productive / previous app
-        if (!DISTRACTING_APPS.contains(packageName) && !PKG_YOUTUBE.equals(packageName)) {
+        if (!isDistracting && !isBrowser) {
             previousNonDistractingPackage = packageName;
             resetDistractionSession();
             return;
@@ -421,6 +500,19 @@ public class ShortsReelsBlockerService extends AccessibilityService {
                         distractionLabel = "Instagram Reels";
                     }
                 }
+            } else if (isBrowser) {
+                String ytMode = prefs.getString(KEY_YOUTUBE_MODE, MODE_BLOCK_SHORTS);
+                boolean isLectureMode = MODE_LECTURE_ONLY.equals(ytMode);
+
+                signature = detectBrowserYouTubeDistraction(rootNode, event, isShortsBlocked, isLectureMode);
+                if (signature != null && !signature.isEmpty()) {
+                    isDistractionActive = true;
+                    if (signature.contains("short")) {
+                        distractionLabel = isLectureMode ? "Browser YouTube Shorts (Blocked in Lecture Mode)" : "Browser YouTube Shorts";
+                    } else {
+                        distractionLabel = "Browser YouTube (Lecture Only Mode)";
+                    }
+                }
             }
 
             if (isDistractionActive) {
@@ -463,6 +555,8 @@ public class ShortsReelsBlockerService extends AccessibilityService {
     }
 
     private String detectYouTubeNonStudyVideo(AccessibilityNodeInfo root, AccessibilityEvent event) {
+        if (root == null) return null;
+
         // Exclude inline_player so home feed autoplay previews are ignored
         List<AccessibilityNodeInfo> playerNodes = root.findAccessibilityNodeInfosByViewId("com.google.android.youtube:id/player_view");
         if (playerNodes == null || playerNodes.isEmpty()) {
@@ -476,15 +570,139 @@ public class ShortsReelsBlockerService extends AccessibilityService {
 
         if (!hasPlayer) return null; // In search bar, channel list, or feed
 
-        // Track study material strictly by the word 'Class' (case-insensitive)
-        String textDump = extractVisibleTextSignature(root).toLowerCase();
-        boolean hasClassKeyword = textDump.contains("class");
-
-        if (hasClassKeyword) {
-            return null; // Allowed! Study material tracked by the word 'Class'
+        long now = System.currentTimeMillis();
+        // 1. If clicked a study video within the last 10 seconds from search/feed:
+        if (now - lastStudyClickedTimestamp < 10000L) {
+            return null; // Allowed! Legitimate lecture opened from search/recommendation
         }
 
-        return "yt_non_class_" + (textDump.isEmpty() ? String.valueOf(System.currentTimeMillis() / 4000) : textDump);
+        // 2. Deep extract visible text and check title view IDs specifically
+        String textDump = extractVisibleTextSignature(root).toLowerCase();
+
+        // Also inspect YouTube specific title and metadata nodes
+        String[] titleNodeIds = {
+            "com.google.android.youtube:id/title",
+            "com.google.android.youtube:id/video_title",
+            "com.google.android.youtube:id/collapsed_title",
+            "com.google.android.youtube:id/expandable_title",
+            "com.google.android.youtube:id/watch_metadata",
+            "com.google.android.youtube:id/description",
+            "com.google.android.youtube:id/channel_name",
+            "com.google.android.youtube:id/owner_name"
+        };
+        StringBuilder titleSb = new StringBuilder();
+        for (String id : titleNodeIds) {
+            List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByViewId(id);
+            if (nodes != null && !nodes.isEmpty()) {
+                for (AccessibilityNodeInfo n : nodes) {
+                    if (n.getContentDescription() != null) titleSb.append(n.getContentDescription()).append(" ");
+                    if (n.getText() != null) titleSb.append(n.getText()).append(" ");
+                    n.recycle();
+                }
+            }
+        }
+        String combinedMetadata = (textDump + " " + titleSb.toString()).toLowerCase();
+
+        // 3. Check for any study keywords (Class, Lecture, Chapter, Physics, Math, etc.)
+        if (containsStudyKeyword(combinedMetadata)) {
+            activePendingLectureSignature = "";
+            return null; // Allowed! Study material detected
+        }
+
+        String sig = "yt_non_class_" + (textDump.isEmpty() ? String.valueOf(now / 5000) : (textDump.length() > 40 ? textDump.substring(0, 40) : textDump));
+
+        // 4. Check if already whitelisted for this session
+        if (whitelistedLectureSignatures.contains(sig)) {
+            return null;
+        }
+
+        // 5. Initial settle grace period (4 seconds) to let title and description finish loading
+        if (!sig.equals(activePendingLectureSignature)) {
+            activePendingLectureSignature = sig;
+            pendingLectureStartTimestamp = now;
+            return null; // Start 4-second loading buffer
+        }
+        if (now - pendingLectureStartTimestamp < 4000L) {
+            return null; // Still in 4-second loading buffer
+        }
+
+        return sig;
+    }
+
+    private String detectBrowserYouTubeDistraction(AccessibilityNodeInfo root, AccessibilityEvent event, boolean isShortsBlocked, boolean isLectureMode) {
+        if (root == null) return null;
+
+        String textDump = extractVisibleTextSignature(root).toLowerCase();
+        boolean hasYouTube = textDump.contains("youtube.com") || textDump.contains("youtu.be") ||
+                             textDump.contains("m.youtube.com");
+
+        // Also check URL bar node specifically across major browsers
+        if (!hasYouTube) {
+            String[] urlBarIds = {
+                "com.android.chrome:id/url_bar",
+                "com.brave.browser:id/url_bar",
+                "com.sec.android.app.sbrowser:id/location_bar_edit_text",
+                "com.microsoft.emmx:id/url_bar",
+                "org.mozilla.firefox:id/mozac_browser_toolbar_url_view",
+                "com.opera.browser:id/url_field"
+            };
+            for (String barId : urlBarIds) {
+                List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByViewId(barId);
+                if (nodes != null && !nodes.isEmpty()) {
+                    for (AccessibilityNodeInfo n : nodes) {
+                        CharSequence txt = n.getText();
+                        if (txt != null) {
+                            String url = txt.toString().toLowerCase();
+                            if (url.contains("youtube.com") || url.contains("youtu.be")) {
+                                hasYouTube = true;
+                            }
+                        }
+                        n.recycle();
+                    }
+                    if (hasYouTube) break;
+                }
+            }
+        }
+
+        if (!hasYouTube) return null; // Browser is not visiting YouTube! Allowed.
+
+        // 1. YouTube Shorts in Browser
+        boolean isShort = textDump.contains("/shorts/") || textDump.contains("youtube.com/shorts") ||
+                          textDump.contains("#shorts");
+        if (isShort && (isShortsBlocked || isLectureMode)) {
+            return "browser_yt_short_" + (System.currentTimeMillis() / 4000);
+        }
+
+        // 2. In Lecture Only mode, check if watching non-study YouTube video
+        if (isLectureMode) {
+            boolean isWatchPage = textDump.contains("/watch") || textDump.contains("watch?v=") ||
+                                  textDump.contains("up next") || textDump.contains("comments") ||
+                                  textDump.contains("views");
+            if (isWatchPage) {
+                if (containsStudyKeyword(textDump)) {
+                    return null; // Allowed! Study material detected
+                }
+
+                // Settle grace period: give 4 seconds for browser web page title to finish loading
+                long now = System.currentTimeMillis();
+                String rawSig = "browser_yt_" + (textDump.length() > 30 ? textDump.substring(0, 30) : textDump);
+                if (whitelistedLectureSignatures.contains(rawSig)) {
+                    return null;
+                }
+                if (!rawSig.equals(activePendingLectureSignature)) {
+                    activePendingLectureSignature = rawSig;
+                    pendingLectureStartTimestamp = now;
+                    return null; // Grace period start
+                }
+                if (now - pendingLectureStartTimestamp < 4000L) {
+                    return null; // Within 4-second loading buffer
+                }
+
+                return rawSig;
+            }
+        }
+
+        return null;
     }
 
     private String detectInstagramReel(AccessibilityNodeInfo root, AccessibilityEvent event) {
@@ -521,7 +739,7 @@ public class ShortsReelsBlockerService extends AccessibilityService {
     }
 
     private void collectText(AccessibilityNodeInfo node, StringBuilder sb, int depth) {
-        if (node == null || depth > 8) return;
+        if (node == null || depth > 16) return;
         CharSequence desc = node.getContentDescription();
         if (desc != null && desc.length() > 1) {
             sb.append(desc.toString().trim()).append(" ");
@@ -530,7 +748,7 @@ public class ShortsReelsBlockerService extends AccessibilityService {
         if (txt != null && txt.length() > 1) {
             sb.append(txt.toString().trim()).append(" ");
         }
-        int childCount = Math.min(node.getChildCount(), 12);
+        int childCount = Math.min(node.getChildCount(), 24);
         for (int i = 0; i < childCount; i++) {
             AccessibilityNodeInfo child = node.getChild(i);
             if (child != null) {
@@ -1158,6 +1376,37 @@ public class ShortsReelsBlockerService extends AccessibilityService {
         cardLayout.addView(returnBtn, btnParams);
 
         returnBtn.setOnClickListener(v -> performBackActionOnce());
+
+        Button allowLectureBtn = new Button(this);
+        allowLectureBtn.setText("🎓 Allow This Lecture (Whitelist)");
+        allowLectureBtn.setTextSize(13);
+        allowLectureBtn.setTypeface(Typeface.DEFAULT_BOLD);
+        allowLectureBtn.setTextColor(Color.WHITE);
+
+        GradientDrawable allowBg = new GradientDrawable();
+        allowBg.setColor(Color.parseColor("#1E293B"));
+        allowBg.setStroke(dpToPx(1), Color.parseColor("#00E5FF"));
+        allowBg.setCornerRadius(dpToPx(12));
+        allowLectureBtn.setBackground(allowBg);
+
+        LinearLayout.LayoutParams allowParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                dpToPx(42)
+        );
+        allowParams.setMargins(0, dpToPx(8), 0, 0);
+        cardLayout.addView(allowLectureBtn, allowParams);
+
+        allowLectureBtn.setOnClickListener(v -> {
+            if (lastDistractionSignature != null && !lastDistractionSignature.isEmpty()) {
+                whitelistedLectureSignatures.add(lastDistractionSignature);
+            }
+            if (activePendingLectureSignature != null && !activePendingLectureSignature.isEmpty()) {
+                whitelistedLectureSignatures.add(activePendingLectureSignature);
+            }
+            dismissOverlay();
+            resetDistractionSession();
+            Toast.makeText(getApplicationContext(), "✅ Lecture whitelisted & permitted for session", Toast.LENGTH_SHORT).show();
+        });
 
         overlayView = rootLayout;
 

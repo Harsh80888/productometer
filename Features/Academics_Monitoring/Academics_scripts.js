@@ -1078,3 +1078,52 @@ document.addEventListener('visibilitychange', () => {
         updateStudyTimeDisplay();
     }
 });
+
+
+// --- DISTRACTION-FREE STUDY LECTURE PLAYER ---
+window.closeStudyLectureDialog = function() {
+    const dialog = document.getElementById('studyLectureDialog');
+    const iframe = document.getElementById('lectureIframe');
+    if (iframe) iframe.src = '';
+    const container = document.getElementById('lecturePlayerContainer');
+    if (container) container.style.display = 'none';
+    if (dialog && typeof dialog.close === 'function') dialog.close();
+};
+
+function extractYouTubeVideoId(url) {
+    if (!url) return null;
+    url = url.trim();
+    if (url.length === 11 && !url.includes('/') && !url.includes('.')) return url;
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const btnOpen = document.getElementById('btnOpenLecturePlayer');
+    const dialog = document.getElementById('studyLectureDialog');
+    const btnLoad = document.getElementById('btnLoadLecture');
+    const input = document.getElementById('lectureUrlInput');
+    const container = document.getElementById('lecturePlayerContainer');
+    const iframe = document.getElementById('lectureIframe');
+
+    if (btnOpen && dialog) {
+        btnOpen.addEventListener('click', () => {
+            if (typeof dialog.showModal === 'function') dialog.showModal();
+            else dialog.style.display = 'block';
+        });
+    }
+
+    if (btnLoad && input && iframe && container) {
+        btnLoad.addEventListener('click', () => {
+            const raw = input.value.trim();
+            const vidId = extractYouTubeVideoId(raw);
+            if (!vidId) {
+                alert('Please enter a valid YouTube video link or ID (e.g. https://www.youtube.com/watch?v=...)');
+                return;
+            }
+            iframe.src = `https://www.youtube-nocookie.com/embed/${vidId}?autoplay=1&rel=0&modestbranding=1`;
+            container.style.display = 'block';
+        });
+    }
+});

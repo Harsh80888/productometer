@@ -66,27 +66,27 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cat << 'EOF' > release_notes.md
-          ### 📱 Productometer Android Release v1.2.1
+          ### 📱 Productometer Android Release v1.2.2
 
           Major release featuring the new Sleep & Bedtime Monitoring system, interactive Showcase portal, Voice-first AI Coach with 5-turn memory & offline scheduling, and bedtime guardian protection.
 
-          #### 🚀 Highlights in v1.2.1:
-          - **🎯 YouTube Guard Modes (Lecture Only & Block Shorts):**
-            - **Lecture Only Mode:** Exclusively permits study material tracked by the keyword `'Class'`. Blocks all YouTube Shorts and non-study videos.
-            - **Block Shorts Mode:** Standard distraction blocker that intercepts YouTube Shorts while preserving full access to standard videos.
-            - Quick guard mode toggles available directly on the YouTube app card in Screen Management and in Me Profile.
-          - **📱 App Categories (YouTube, Meta, Others, Productivity):**
-            - Added first-class classification for **YouTube**, **Meta** (WhatsApp, Instagram, Facebook, Messenger, Threads), **Others**, and **Productivity**.
-            - Dedicated filter pills and quick badge reclassification.
-          - **📊 Accurate Foreground Screen Time Tracking:**
-            - Kernel-level UsageEvents timeline simulation for real-time second-by-second foreground tracking.
-          - **🎙️ Voice AI Coach & Lifestyle Guardian:**
-            - Sleep & Bedtime monitoring, hybrid cloud diet estimator, and offline schedule management.
+          #### 🚀 Highlights in v1.2.2:
+          - **🎓 Truncated Video Title & Study Keyword Fix:**
+            - Expanded study detection beyond single word `'Class'` to all major academic keywords (Lecture, Chapter, Lesson, Course, Tutorial, Physics, Chemistry, Math, Biology, CBSE, NCERT, JEE, NEET, OneShot, Revision, etc.).
+            - Deep metadata and `contentDescription` inspection captures full unabbreviated titles even when YouTube truncates them with `...`.
+            - Added search click memory: tapping a study video in search results automatically verifies and allows playback.
+            - 4-second settle grace period allows titles to load without triggering instant false alerts.
+            - Added **'Allow This Lecture' (Whitelist)** button on the guardian alert overlay to whitelist lectures with 1 tap.
+          - **🌐 Full Android Browser Distraction Blocker:**
+            - Added active monitoring across Chrome, Brave, Samsung Internet, Edge, Firefox, and Opera.
+            - Automatically blocks YouTube Shorts and non-study videos when browsing on the web.
+          - **🎥 Distraction-Free Study Player (Study Tube):**
+            - Direct in-app study video player in Academics Monitoring to watch any lecture link distraction-free with zero Shorts and zero recommendations.
 
           #### 📦 Direct Download:
           - Click **`Productometer.apk`** under Assets below to download and install.
           EOF
-          gh release create v1.2.1 dist/Productometer.apk \
-            --title "Productometer v1.2.1 - Android Release APK" \
+          gh release create v1.2.2 dist/Productometer.apk \
+            --title "Productometer v1.2.2 - Android Release APK" \
             --notes-file release_notes.md || \
-          gh release upload v1.2.1 dist/Productometer.apk --clobber
+          gh release upload v1.2.2 dist/Productometer.apk --clobber

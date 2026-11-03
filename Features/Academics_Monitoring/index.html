@@ -89,7 +89,12 @@
 
         <!-- SECTION 2: ONLINE RESOURCES PORTAL -->
         <section class="glow-card">
-            <h2 class="soft-heading">Approved Online Resources</h2>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                <h2 class="soft-heading" style="margin: 0;">Approved Online Resources</h2>
+                <button type="button" class="btn-cyan-outline" id="btnOpenLecturePlayer" style="background: rgba(255, 0, 51, 0.12); border-color: rgba(255, 0, 51, 0.4); color: #ff334b; font-size: 0.76rem; padding: 6px 12px; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                    <i class="fa-brands fa-youtube"></i> Distraction-Free Study Player
+                </button>
+            </div>
             
             <div class="resources-vertical-list">
                 <div class="resource-card-item" onclick="openApprovedResource('https://www.youtube.com')">
@@ -113,7 +118,33 @@
                 <button type="button" class="btn-cyan-outline" onclick="document.getElementById('customSiteDialog').showModal()">+ Add Custom Site</button>
             </div>
 
-            <dialog id="customSiteDialog" class="custom-site-dialog">
+                <!-- DISTRACTION-FREE STUDY LECTURE PLAYER DIALOG -->
+    <dialog id="studyLectureDialog" class="custom-site-dialog" style="max-width: 620px; width: 92%;">
+        <div class="dialog-form">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <h3 style="margin: 0; color: #00e5ff; font-size: 1.05rem; display: flex; align-items: center; gap: 8px;">
+                    <i class="fa-brands fa-youtube" style="color: #ff334b;"></i> Focus Lecture Player
+                </h3>
+                <button type="button" class="remove-resource-btn" onclick="closeStudyLectureDialog()">&times;</button>
+            </div>
+            <p style="font-size: 0.74rem; color: #94a3b8; margin: 0 0 12px 0; line-height: 1.4;">
+                Watch any YouTube lecture with zero Shorts, zero recommended sidebar rabbit holes, and direct study timer synchronization.
+            </p>
+            <div class="dialog-input-group">
+                <label for="lectureUrlInput">YouTube Lecture Link or Video ID</label>
+                <input type="text" id="lectureUrlInput" placeholder="e.g. https://www.youtube.com/watch?v=... or Video ID">
+            </div>
+            <div class="dialog-actions-row" style="display: flex; gap: 8px; justify-content: flex-end; margin-bottom: 12px;">
+                <button type="button" class="btn-cancel" onclick="closeStudyLectureDialog()" style="background: rgba(255,255,255,0.06); color: #94a3b8; border: 1px solid rgba(255,255,255,0.12); padding: 8px 14px; border-radius: 8px; cursor: pointer;">Close</button>
+                <button type="button" class="btn-save" id="btnLoadLecture" style="background: #00e5ff; color: #000; font-weight: 700; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer;">Load Lecture</button>
+            </div>
+            <div id="lecturePlayerContainer" style="display: none; border-radius: 12px; overflow: hidden; background: #000; aspect-ratio: 16/9; width: 100%; border: 1px solid rgba(0, 229, 255, 0.3); margin-top: 8px;">
+                <iframe id="lectureIframe" src="" style="width: 100%; height: 100%; border: none;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            </div>
+        </div>
+    </dialog>
+
+<dialog id="customSiteDialog" class="custom-site-dialog">
                 <div class="dialog-form">
                     <h3>Add Custom Resource</h3>
                     

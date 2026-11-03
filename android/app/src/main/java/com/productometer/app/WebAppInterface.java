@@ -318,6 +318,10 @@ public class WebAppInterface {
                (pkgName != null && pkgName.toLowerCase().contains("youtube"));
     }
 
+    public static boolean isBrowserApp(String pkgName) {
+        return ShortsReelsBlockerService.isBrowserPackage(pkgName);
+    }
+
     /**
      * Authoritative daily foreground screen time helper using Android OS kernel UsageStats.
      */
