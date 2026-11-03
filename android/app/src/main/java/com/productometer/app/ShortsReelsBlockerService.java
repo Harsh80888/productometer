@@ -606,8 +606,6 @@ public class ShortsReelsBlockerService extends AccessibilityService {
             String distractionLabel = "Distraction";
 
             if (PKG_YOUTUBE.equals(packageName)) {
-                String ytMode = prefs.getString(KEY_YOUTUBE_MODE, MODE_BLOCK_SHORTS);
-                boolean isLectureMode = MODE_LECTURE_ONLY.equals(ytMode);
 
                 // Shorts blocked in both modes (in block_shorts if enabled, always in lecture_only)
                 if (isShortsBlocked || isLectureMode) {
@@ -635,8 +633,6 @@ public class ShortsReelsBlockerService extends AccessibilityService {
                     }
                 }
             } else if (isBrowser) {
-                String ytMode = prefs.getString(KEY_YOUTUBE_MODE, MODE_BLOCK_SHORTS);
-                boolean isLectureMode = MODE_LECTURE_ONLY.equals(ytMode);
 
                 signature = detectBrowserYouTubeDistraction(rootNode, event, isShortsBlocked, isLectureMode);
                 if (signature != null && !signature.isEmpty()) {
