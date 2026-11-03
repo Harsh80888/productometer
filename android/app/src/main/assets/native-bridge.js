@@ -262,6 +262,55 @@ const NativeBridge = {
         } catch (e) {}
     },
 
+    // --- ⏰ SMART WAKEUP ALARM HARDWARE BRIDGE ---
+    scheduleSmartWakeupAlarm: (wakeTimeStr) => {
+        try {
+            localStorage.setItem('productometer_smart_alarm_enabled', 'true');
+            if (wakeTimeStr) localStorage.setItem('productometer_bedtime_end', wakeTimeStr);
+            if (typeof window.AndroidBridge !== 'undefined' && window.AndroidBridge.scheduleSmartWakeupAlarm) {
+                window.AndroidBridge.scheduleSmartWakeupAlarm(wakeTimeStr);
+            }
+        } catch (e) {}
+    },
+
+    cancelSmartWakeupAlarm: () => {
+        try {
+            localStorage.setItem('productometer_smart_alarm_enabled', 'false');
+            if (typeof window.AndroidBridge !== 'undefined' && window.AndroidBridge.cancelSmartWakeupAlarm) {
+                window.AndroidBridge.cancelSmartWakeupAlarm();
+            }
+        } catch (e) {}
+    },
+
+    getWakeupMissionStatus: () => {
+        try {
+            if (typeof window.AndroidBridge !== 'undefined' && window.AndroidBridge.getWakeupMissionStatus) {
+                const res = window.AndroidBridge.getWakeupMissionStatus();
+                if (res) return JSON.parse(res);
+            }
+        } catch (e) {}
+        const isMissionActive = localStorage.getItem('wakeup_step_mission_active') === 'true';
+        const deadline = parseInt(localStorage.getItem('wakeup_step_mission_deadline') || '0', 10);
+        const remainingSeconds = Math.max(0, Math.floor((deadline - Date.now()) / 1000));
+        return {
+            active: isMissionActive && remainingSeconds > 0,
+            targetSteps: 50,
+            currentSteps: parseInt(localStorage.getItem('wakeup_mission_current_steps') || '0', 10),
+            remainingSeconds: remainingSeconds,
+            isCompleted: localStorage.getItem('wakeup_mission_completed') === 'true'
+        };
+    },
+
+    completeWakeupStepMission: () => {
+        try {
+            localStorage.setItem('wakeup_step_mission_active', 'false');
+            localStorage.setItem('wakeup_mission_completed', 'true');
+            if (typeof window.AndroidBridge !== 'undefined' && window.AndroidBridge.completeWakeupStepMission) {
+                window.AndroidBridge.completeWakeupStepMission();
+            }
+        } catch (e) {}
+    },
+
     isFocusSessionOngoing: () => {
         try {
             if (typeof window.AndroidBridge !== 'undefined' && window.AndroidBridge.isFocusSessionOngoing) {

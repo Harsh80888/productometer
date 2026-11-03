@@ -136,6 +136,42 @@ public class ShortsReelsBlockerService extends AccessibilityService {
     private CountDownTimer countdownTimer;
     private Handler mainHandler;
 
+    public static long getBedtimeWindowStartMillis(Context context) {
+        try {
+            SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+            String startStr = prefs.getString("productometer_bedtime_start", "22:30");
+            String[] sParts = startStr.split(":");
+            int sHour = Integer.parseInt(sParts[0].trim());
+            int sMinute = Integer.parseInt(sParts[1].trim());
+
+            Calendar now = Calendar.getInstance();
+            Calendar startCal = Calendar.getInstance();
+            startCal.set(Calendar.HOUR_OF_DAY, sHour);
+            startCal.set(Calendar.MINUTE, sMinute);
+            startCal.set(Calendar.SECOND, 0);
+            startCal.set(Calendar.MILLISECOND, 0);
+
+            if (now.before(startCal)) {
+                startCal.add(Calendar.DAY_OF_YEAR, -1);
+            }
+            return startCal.getTimeInMillis();
+        } catch (Exception e) {
+            return System.currentTimeMillis() - (15 * 60 * 1000L);
+        }
+    }
+
+    public static boolean isDistractingPackage(Context context, String pkg) {
+        if (pkg == null) return false;
+        if (DISTRACTING_APPS.contains(pkg) || PKG_YOUTUBE.equals(pkg)) return true;
+        try {
+            PackageManager pm = context.getPackageManager();
+            CharSequence label = pm.getApplicationLabel(pm.getApplicationInfo(pkg, 0));
+            return WebAppInterface.isGameApp(pm, pkg, label != null ? label.toString() : pkg);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
     public static boolean isBedtimeActiveNow(Context context) {
         try {
             SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
@@ -249,33 +285,50 @@ public class ShortsReelsBlockerService extends AccessibilityService {
                 SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
                 boolean masterEnabled = isMasterBlockerEnabled || prefs.getBoolean(KEY_MASTER_ENABLED, false);
 
-                // User requirement: "Also if the user uses the phone while keeping the distraction blocker on, then allow him"
-                // If distraction blocker is ON, user is ALLOWED to use phone! Blocker guards shorts/reels as normal.
-                if (!masterEnabled) {
-                    boolean isDistracting = DISTRACTING_APPS.contains(packageName) || PKG_YOUTUBE.equals(packageName);
-                    if (!isDistracting) {
-                        PackageManager pm = getPackageManager();
-                        String label = getFriendlyName(packageName);
-                        isDistracting = WebAppInterface.isGameApp(pm, packageName, label);
-                    }
+                boolean isDistracting = isDistractingPackage(this, packageName);
 
-                    if (isDistracting) {
-                        long now = System.currentTimeMillis();
-                        Calendar c = Calendar.getInstance();
-                        String todayKey = c.get(Calendar.YEAR) + "-" + c.get(Calendar.DAY_OF_YEAR);
-                        long currentNightDistractionMs = prefs.getLong("night_distraction_ms_" + todayKey, 0L);
+                if (isDistracting) {
+                    long now = System.currentTimeMillis();
+                    long currentNightDistractionMs = prefs.getLong("night_distraction_total_ms", 0L);
 
-                        if (lastBedtimeTrackTimestamp > 0 && (now - lastBedtimeTrackTimestamp) < 15000L) {
-                            currentNightDistractionMs += (now - lastBedtimeTrackTimestamp);
-                            prefs.edit().putLong("night_distraction_ms_" + todayKey, currentNightDistractionMs).apply();
+                    if (lastBedtimeTrackTimestamp > 0) {
+                        long delta = now - lastBedtimeTrackTimestamp;
+                        if (delta > 0 && delta <= 60000L) { // Accumulate up to 60s per gap
+                            currentNightDistractionMs += delta;
+                            prefs.edit().putLong("night_distraction_total_ms", currentNightDistractionMs).apply();
                         }
-                        lastBedtimeTrackTimestamp = now;
+                    }
+                    lastBedtimeTrackTimestamp = now;
 
-                        // 15 Minutes = 15 * 60 * 1000 = 900,000 ms
-                        if (currentNightDistractionMs >= 900000L) {
+                    // Query UsageStatsManager for accurate foreground usage since bedtime window began
+                    long usmDistractionMs = 0L;
+                    try {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                            android.app.usage.UsageStatsManager usm = (android.app.usage.UsageStatsManager) getSystemService(Context.USAGE_STATS_SERVICE);
+                            if (usm != null) {
+                                long bStart = getBedtimeWindowStartMillis(this);
+                                java.util.List<android.app.usage.UsageStats> stats = usm.queryUsageStats(android.app.usage.UsageStatsManager.INTERVAL_BEST, bStart, now);
+                                if (stats != null) {
+                                    for (android.app.usage.UsageStats u : stats) {
+                                        if (isDistractingPackage(this, u.getPackageName())) {
+                                            usmDistractionMs += u.getTotalTimeInForeground();
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    } catch (Exception ignored) {}
+
+                    long effectiveDistractionMs = Math.max(currentNightDistractionMs, usmDistractionMs);
+
+                    // User requirement: "Also if the user uses the phone while keeping the distraction blocker on, then allow him"
+                    // If Master Blocker is ON: Allowed to use phone, blocker will handle shorts/reels below!
+                    // If Master Blocker is OFF: User has no protection, so strictly cap at 15 minutes!
+                    if (!masterEnabled) {
+                        if (effectiveDistractionMs >= 900000L) { // 15 minutes = 900,000 ms
                             if (now > bedtimeEmergencyPassUntilTimestamp) {
                                 if (!isOverlayActive) {
-                                    final int usedMins = (int) (currentNightDistractionMs / 60000L);
+                                    final int usedMins = (int) (effectiveDistractionMs / 60000L);
                                     final String fLabel = getFriendlyName(packageName);
                                     mainHandler.post(() -> showBedtimeDialog(packageName, fLabel, usedMins));
                                 }
@@ -283,6 +336,8 @@ public class ShortsReelsBlockerService extends AccessibilityService {
                             }
                         }
                     }
+                } else {
+                    lastBedtimeTrackTimestamp = 0L;
                 }
             } else {
                 lastBedtimeTrackTimestamp = 0L;

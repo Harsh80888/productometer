@@ -5593,6 +5593,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             updateRunTelemetry();
+            checkAndSyncWakeupMission(runSteps);
         }, 200);
 
         // 3. Start High-Precision Anti-Drift GPS Geolocation Tracking
@@ -9245,3 +9246,54 @@ document.addEventListener('DOMContentLoaded', () => {
 
 });
 
+
+    // --- 🏃‍♂️ WAKEUP STEP MISSION SYNCHRONIZER (50 STEPS TO SILENCE ALARM) ---
+    function checkAndSyncWakeupMission(currentSteps) {
+        const banner = document.getElementById('wakeupMissionRunningBanner');
+        const badge = document.getElementById('wakeupMissionStepBadge');
+        const countdown = document.getElementById('wakeupMissionCountdown');
+        const progressText = document.getElementById('wakeupMissionProgressText');
+        if (!banner) return;
+
+        let mission = { active: false, targetSteps: 50, currentSteps: 0, remainingSeconds: 0, isCompleted: false };
+        if (window.NativeBridge && window.NativeBridge.getWakeupMissionStatus) {
+            mission = window.NativeBridge.getWakeupMissionStatus();
+        } else {
+            const isAct = localStorage.getItem('wakeup_step_mission_active') === 'true';
+            const dl = parseInt(localStorage.getItem('wakeup_step_mission_deadline') || '0', 10);
+            const rem = Math.max(0, Math.floor((dl - Date.now()) / 1000));
+            mission = {
+                active: isAct && rem > 0,
+                targetSteps: 50,
+                currentSteps: currentSteps || 0,
+                remainingSeconds: rem,
+                isCompleted: (currentSteps || 0) >= 50
+            };
+        }
+
+        if (mission.active || (localStorage.getItem('wakeup_step_mission_active') === 'true')) {
+            banner.style.display = 'flex';
+            const effSteps = Math.max(currentSteps || 0, mission.currentSteps || 0);
+            if (badge) badge.textContent = `${effSteps} / ${mission.targetSteps || 50}`;
+
+            const mRem = Math.floor(mission.remainingSeconds / 60);
+            const sRem = mission.remainingSeconds % 60;
+            if (countdown) countdown.textContent = `${mRem}m ${sRem.toString().padStart(2, '0')}s left`;
+
+            if (effSteps >= (mission.targetSteps || 50) || mission.isCompleted) {
+                banner.style.background = 'linear-gradient(135deg, rgba(0, 230, 118, 0.2) 0%, rgba(0, 229, 255, 0.2) 100%)';
+                banner.style.borderColor = '#00e676';
+                if (progressText) progressText.textContent = '🎉 Mission Cleared! 50 steps reached. Alarm is OFF for the day!';
+                if (badge) badge.textContent = '50 / 50 ✅';
+                if (countdown) countdown.textContent = 'OFF FOR TODAY';
+
+                if (window.NativeBridge && window.NativeBridge.completeWakeupStepMission) {
+                    window.NativeBridge.completeWakeupStepMission();
+                }
+                localStorage.setItem('wakeup_step_mission_active', 'false');
+                localStorage.setItem('wakeup_mission_completed', 'true');
+            }
+        } else {
+            banner.style.display = 'none';
+        }
+    }

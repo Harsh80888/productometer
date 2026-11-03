@@ -158,11 +158,14 @@
                         <div id="smartAlarmCountdownText" class="alarm-countdown-subtext">Syncs in real-time with wake-up time</div>
                     </div>
 
-                    <!-- Dynamic Today vs Tomorrow Skip Button -->
-                    <div>
+                    <!-- Action Buttons -->
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                         <button type="button" id="btnSkipUpcomingAlarm" class="btn-skip-alarm">
                             <i class="fa-solid fa-forward-step"></i>
                             <span id="skipAlarmBtnLabel">Skip Tomorrow's Alarm (06:30 AM)</span>
+                        </button>
+                        <button type="button" id="btnTestSmartAlarm" style="background: rgba(0, 229, 255, 0.12); border: 1px solid rgba(0, 229, 255, 0.35); color: #00e5ff; font-weight: 700; font-size: 0.78rem; padding: 10px 14px; border-radius: 10px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                            <i class="fa-solid fa-play"></i> Test 10-Shake Alarm
                         </button>
                     </div>
                 </div>
@@ -199,6 +202,11 @@
                 <div style="display: flex; justify-content: space-between; font-size: 0.74rem; color: #94a3b8; margin-top: 6px; font-weight: 600;">
                     <span id="sleepDistractionUsedLabel">0m used tonight</span>
                     <span>15m limit</span>
+                </div>
+                <div style="margin-top: 10px; display: flex; gap: 8px;">
+                    <button type="button" id="btnTestBedtimeBlocker" style="background: rgba(255, 61, 113, 0.12); border: 1px solid rgba(255, 61, 113, 0.35); color: #ff3d71; font-weight: 700; font-size: 0.76rem; padding: 6px 12px; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                        <i class="fa-solid fa-triangle-exclamation"></i> Test Bedtime Blocker Overlay
+                    </button>
                 </div>
             </section>
 
@@ -292,5 +300,56 @@
     <script src="./sleep-scripts.js"></script>
     <script src="../AI_Coach/coach-brain.js"></script>
     <script src="../AI_Coach/coach-ui.js"></script>
+
+    <!-- 🚨 MODAL: 10-HARD-SHAKE SMART ALARM SIMULATOR & TESTER -->
+    <dialog id="alarmSimulatorModal" style="border: 1.5px solid #00e5ff; border-radius: 20px; background: #05070D; color: #fff; width: 92%; max-width: 400px; padding: 24px; box-shadow: 0 0 35px rgba(0, 229, 255, 0.35);">
+        <div style="text-align: center;">
+            <div style="font-size: 3rem; margin-bottom: 8px;">⏰</div>
+            <h2 style="font-size: 1.6rem; color: #00e5ff; margin: 0; font-weight: 900;">WAKE UP!</h2>
+            <div style="font-size: 0.8rem; color: #a855f7; font-weight: 700; margin-bottom: 16px;">Brain Activation Mission</div>
+
+            <div style="background: #0E1322; border: 1px solid #00e5ff; border-radius: 16px; padding: 18px; margin-bottom: 16px;">
+                <div style="font-size: 0.72rem; color: #94a3b8; font-weight: 800;">PHASE 1: HARD SHAKES</div>
+                <div id="simShakeCountDisplay" style="font-size: 3rem; font-weight: 900; color: #00e676; margin: 6px 0;">0 / 10</div>
+                <div style="height: 10px; background: rgba(255,255,255,0.08); border-radius: 6px; overflow: hidden; margin-bottom: 12px;">
+                    <div id="simShakeProgressBar" style="height: 100%; width: 0%; background: #00e676; transition: width 0.2s ease;"></div>
+                </div>
+                <div style="font-size: 0.78rem; color: #cbd5e1; line-height: 1.4;">
+                    Shake your phone or tap the button below 10 times to silence the alarm!
+                </div>
+                <button type="button" id="btnSimulateShakeClick" style="margin-top: 14px; background: linear-gradient(135deg, #00e5ff, #7c3aed); border: none; color: #fff; font-weight: 800; font-size: 0.85rem; padding: 10px 18px; border-radius: 12px; cursor: pointer; width: 100%;">
+                    ⚡ Deliver Hard Shake
+                </button>
+            </div>
+
+            <button type="button" onclick="document.getElementById('alarmSimulatorModal').close()" style="background: transparent; border: 1px solid #334155; color: #94a3b8; font-size: 0.76rem; padding: 6px 14px; border-radius: 8px; cursor: pointer;">
+                Cancel Test
+            </button>
+        </div>
+    </dialog>
+
+    <!-- 🌙 MODAL: BEDTIME WIND-DOWN NOTIFICATION OVERLAY -->
+    <dialog id="bedtimeOverlayModal" style="border: 2px solid #7c3aed; border-radius: 24px; background: #0B1226; color: #fff; width: 92%; max-width: 400px; padding: 24px; box-shadow: 0 0 40px rgba(124, 58, 237, 0.4);">
+        <div style="text-align: center;">
+            <div style="font-size: 3rem; margin-bottom: 6px;">🌙</div>
+            <h3 style="font-size: 1.3rem; font-weight: 800; color: #E0E7FF; margin: 0 0 8px 0;">Bedtime Wind-Down Alert</h3>
+            <p style="font-size: 0.8rem; color: #94A3B8; line-height: 1.5; margin-bottom: 18px;">
+                You have reached your 15-minute cap on distractive apps tonight.<br><br>
+                ✨ You can freely use your phone for reading or productive apps as long as the <strong>Distraction Blocker is ON</strong>.
+            </p>
+
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <button type="button" id="btnOverlayTurnOnBlocker" style="background: #00E676; border: none; color: #000; font-weight: 800; font-size: 0.82rem; padding: 12px; border-radius: 12px; cursor: pointer;">
+                    🛡️ Turn ON Distraction Blocker & Continue
+                </button>
+                <button type="button" id="btnOverlayEmergencyPass" style="background: rgba(255, 214, 0, 0.15); border: 1px solid rgba(255, 214, 0, 0.4); color: #FFD600; font-weight: 800; font-size: 0.8rem; padding: 10px; border-radius: 12px; cursor: pointer;">
+                    ⏱️ 2-Minute Emergency Pass
+                </button>
+                <button type="button" onclick="document.getElementById('bedtimeOverlayModal').close()" style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #94A3B8; font-weight: 700; font-size: 0.76rem; padding: 8px; border-radius: 10px; cursor: pointer;">
+                    🌙 Go to Sleep (Close)
+                </button>
+            </div>
+        </div>
+    </dialog>
 </body>
 </html>

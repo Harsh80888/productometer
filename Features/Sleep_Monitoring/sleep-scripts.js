@@ -331,6 +331,11 @@ document.addEventListener('DOMContentLoaded', () => {
             window.NativeBridge.setBedtimeSchedule(true, startVal, endVal);
         }
 
+        const isAlarmOn = localStorage.getItem('productometer_smart_alarm_enabled') !== 'false';
+        if (isAlarmOn && window.NativeBridge && window.NativeBridge.scheduleSmartWakeupAlarm) {
+            window.NativeBridge.scheduleSmartWakeupAlarm(endVal);
+        }
+
         updateTargetSleepUI();
         updateBedtimeRemainingHUD();
         updateSmartAlarmUI();
@@ -425,8 +430,23 @@ document.addEventListener('DOMContentLoaded', () => {
         toggleSmartAlarm.addEventListener('change', () => {
             const isEnabled = toggleSmartAlarm.checked;
             localStorage.setItem('productometer_smart_alarm_enabled', isEnabled ? 'true' : 'false');
-            if (window.NativeBridge && window.NativeBridge.showToast) {
-                window.NativeBridge.showToast(isEnabled ? '⏰ Wakeup Smart Alarm Enabled' : '⏸️ Wakeup Smart Alarm Disabled');
+
+            const wakeTime = (inputBedtimeEnd ? inputBedtimeEnd.value : null) || localStorage.getItem('productometer_bedtime_end') || '06:30';
+
+            if (isEnabled) {
+                if (window.NativeBridge && window.NativeBridge.scheduleSmartWakeupAlarm) {
+                    window.NativeBridge.scheduleSmartWakeupAlarm(wakeTime);
+                }
+                if (window.NativeBridge && window.NativeBridge.showToast) {
+                    window.NativeBridge.showToast('⏰ Wakeup Smart Alarm Scheduled for ' + formatTime12h(wakeTime));
+                }
+            } else {
+                if (window.NativeBridge && window.NativeBridge.cancelSmartWakeupAlarm) {
+                    window.NativeBridge.cancelSmartWakeupAlarm();
+                }
+                if (window.NativeBridge && window.NativeBridge.showToast) {
+                    window.NativeBridge.showToast('⏸️ Wakeup Smart Alarm Disabled');
+                }
             }
             updateSmartAlarmUI();
         });
@@ -438,11 +458,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const upcoming = getUpcomingAlarmDetails();
             localStorage.setItem('wakeup_alarm_skipped_date', upcoming.targetDateStr);
 
-            if (window.NativeBridge && window.NativeBridge.cancelAlarm) {
-                window.NativeBridge.cancelAlarm('wakeup_smart_alarm');
+            if (window.NativeBridge && window.NativeBridge.cancelSmartWakeupAlarm) {
+                window.NativeBridge.cancelSmartWakeupAlarm();
             }
             if (window.NativeBridge && window.NativeBridge.showToast) {
-                window.NativeBridge.showToast(`⏸️ ${upcoming.dayLabel}'s wakeup alarm skipped (${upcoming.dateFormatted})`);
+                window.NativeBridge.showToast(`⏸️ ${upcoming.dayLabel}'s alarm skipped (${upcoming.dateFormatted})`);
             }
             updateSmartAlarmUI();
         });
@@ -454,8 +474,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const upcoming = getUpcomingAlarmDetails();
             localStorage.removeItem('wakeup_alarm_skipped_date');
 
+            if (window.NativeBridge && window.NativeBridge.scheduleSmartWakeupAlarm) {
+                window.NativeBridge.scheduleSmartWakeupAlarm(upcoming.wakeTime);
+            }
             if (window.NativeBridge && window.NativeBridge.showToast) {
-                window.NativeBridge.showToast(`⏰ ${upcoming.dayLabel}'s alarm resumed`);
+                window.NativeBridge.showToast(`⏰ ${upcoming.dayLabel}'s alarm resumed (${formatTime12h(upcoming.wakeTime)})`);
             }
             updateSmartAlarmUI();
         });
@@ -507,4 +530,94 @@ document.addEventListener('DOMContentLoaded', () => {
         updateSmartAlarmUI();
         updateDistractionCapUI();
     }, 30000);
+
+    // --- 8. SIMULATOR & TESTER CONTROLLERS ---
+    const btnTestSmartAlarm = document.getElementById('btnTestSmartAlarm');
+    const alarmSimulatorModal = document.getElementById('alarmSimulatorModal');
+    const simShakeCountDisplay = document.getElementById('simShakeCountDisplay');
+    const simShakeProgressBar = document.getElementById('simShakeProgressBar');
+    const btnSimulateShakeClick = document.getElementById('btnSimulateShakeClick');
+    let simShakeCount = 0;
+
+    function resetAlarmSimulator() {
+        simShakeCount = 0;
+        if (simShakeCountDisplay) simShakeCountDisplay.textContent = '0 / 10';
+        if (simShakeProgressBar) simShakeProgressBar.style.width = '0%';
+    }
+
+    if (btnTestSmartAlarm && alarmSimulatorModal) {
+        btnTestSmartAlarm.addEventListener('click', () => {
+            resetAlarmSimulator();
+            alarmSimulatorModal.showModal();
+            if (window.NativeBridge && window.NativeBridge.showToast) {
+                window.NativeBridge.showToast('🚨 Smart Alarm Triggered! Deliver 10 Hard Shakes.');
+            }
+        });
+    }
+
+    if (btnSimulateShakeClick) {
+        btnSimulateShakeClick.addEventListener('click', () => {
+            simShakeCount++;
+            if (simShakeCountDisplay) simShakeCountDisplay.textContent = `${simShakeCount} / 10`;
+            if (simShakeProgressBar) simShakeProgressBar.style.width = `${Math.min(100, simShakeCount * 10)}%`;
+
+            if (simShakeCount >= 10) {
+                // Mission Phase 1 Cleared!
+                const deadline = Date.now() + (15 * 60 * 1000);
+                localStorage.setItem('wakeup_step_mission_active', 'true');
+                localStorage.setItem('wakeup_step_mission_deadline', deadline.toString());
+                localStorage.setItem('wakeup_mission_current_steps', '0');
+                localStorage.setItem('wakeup_mission_completed', 'false');
+
+                if (window.NativeBridge && window.NativeBridge.showToast) {
+                    window.NativeBridge.showToast('✅ 10 Shakes Verified! Starting 50-Step Mission in Running Module.');
+                }
+
+                setTimeout(() => {
+                    if (alarmSimulatorModal) alarmSimulatorModal.close();
+                    window.location.href = '../Health_Tracker/index.html?section=run';
+                }, 800);
+            }
+        });
+    }
+
+    // Bedtime Overlay Tester
+    const btnTestBedtimeBlocker = document.getElementById('btnTestBedtimeBlocker');
+    const bedtimeOverlayModal = document.getElementById('bedtimeOverlayModal');
+    const btnOverlayTurnOnBlocker = document.getElementById('btnOverlayTurnOnBlocker');
+    const btnOverlayEmergencyPass = document.getElementById('btnOverlayEmergencyPass');
+
+    if (btnTestBedtimeBlocker && bedtimeOverlayModal) {
+        btnTestBedtimeBlocker.addEventListener('click', () => {
+            bedtimeOverlayModal.showModal();
+        });
+    }
+
+    if (btnOverlayTurnOnBlocker) {
+        btnOverlayTurnOnBlocker.addEventListener('click', () => {
+            if (toggleNightBlocker) {
+                toggleNightBlocker.checked = true;
+                toggleNightBlocker.dispatchEvent(new Event('change'));
+            }
+            if (bedtimeOverlayModal) bedtimeOverlayModal.close();
+            if (window.NativeBridge && window.NativeBridge.showToast) {
+                window.NativeBridge.showToast('🛡️ Distraction Blocker ON: Productive phone use is now unlocked!');
+            }
+        });
+    }
+
+    if (btnOverlayEmergencyPass) {
+        btnOverlayEmergencyPass.addEventListener('click', () => {
+            if (btnTestEmergencyPass) btnTestEmergencyPass.click();
+            if (bedtimeOverlayModal) bedtimeOverlayModal.close();
+        });
+    }
+
+    // Ensure Alarm Clock is registered in Android AlarmManager on load
+    const isAlarmEnabledInit = localStorage.getItem('productometer_smart_alarm_enabled') !== 'false';
+    const initWakeTime = (inputBedtimeEnd ? inputBedtimeEnd.value : null) || localStorage.getItem('productometer_bedtime_end') || '06:30';
+    if (isAlarmEnabledInit && window.NativeBridge && window.NativeBridge.scheduleSmartWakeupAlarm) {
+        window.NativeBridge.scheduleSmartWakeupAlarm(initWakeTime);
+    }
 });
+

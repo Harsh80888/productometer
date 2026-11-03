@@ -3788,7 +3788,7 @@ Could not reach Cloudflare AI agent (${err.message}). Please check your internet
 
     // --- 7. UNIFIED MATCHER & INTELLIGENT ROUTER ---
     // =========================================================================
-    // 🥗 1. OFFLINE FOOD & NUTRITION ACTION ENGINE
+    // 🥗 1. HYBRID FOOD & NUTRITION ACTION ENGINE (OFFLINE 0 MS + CLOUD AI)
     // =========================================================================
     const WORD_TO_NUMBER_MAP = {
         "half a": 0.5,
@@ -3857,6 +3857,18 @@ Could not reach Cloudflare AI agent (${err.message}). Please check your internet
         "dosa": { cal: 135, p: 3.5, c: 22, f: 3.7, unit: "dosa", isVeg: true },
         "poha": { cal: 180, p: 3.5, c: 32, f: 4.5, unit: "bowl", isVeg: true },
         "upma": { cal: 190, p: 4.0, c: 30, f: 5.5, unit: "bowl", isVeg: true },
+        "biscuit": { cal: 65, p: 1.0, c: 9.0, f: 2.8, unit: "biscuit", isVeg: true },
+        "biscuits": { cal: 65, p: 1.0, c: 9.0, f: 2.8, unit: "biscuit", isVeg: true },
+        "cookie": { cal: 75, p: 1.0, c: 10.0, f: 3.5, unit: "cookie", isVeg: true },
+        "cookies": { cal: 75, p: 1.0, c: 10.0, f: 3.5, unit: "cookie", isVeg: true },
+        "samosa": { cal: 150, p: 2.5, c: 16.0, f: 8.5, unit: "samosa", isVeg: true },
+        "samosas": { cal: 150, p: 2.5, c: 16.0, f: 8.5, unit: "samosa", isVeg: true },
+        "sandwich": { cal: 240, p: 7.0, c: 28.0, f: 11.0, unit: "sandwich", isVeg: true },
+        "maggi": { cal: 310, p: 7.0, c: 46.0, f: 11.0, unit: "bowl", isVeg: true },
+        "noodles": { cal: 220, p: 5.0, c: 40.0, f: 4.0, unit: "bowl", isVeg: true },
+        "kheer": { cal: 180, p: 4.0, c: 30.0, f: 5.0, unit: "bowl", isVeg: true },
+        "gulab jamun": { cal: 150, p: 2.0, c: 24.0, f: 6.0, unit: "piece", isVeg: true },
+        "gulab jamuns": { cal: 150, p: 2.0, c: 24.0, f: 6.0, unit: "piece", isVeg: true },
         "milk": { cal: 125, p: 8, c: 12, f: 5, unit: "glass", isVeg: true },
         "oats": { cal: 150, p: 5, c: 27, f: 2.5, unit: "bowl", isVeg: true },
         "oatmeal": { cal: 150, p: 5, c: 27, f: 2.5, unit: "bowl", isVeg: true },
@@ -3882,19 +3894,120 @@ Could not reach Cloudflare AI agent (${err.message}). Please check your internet
         "burger": { cal: 350, p: 16, c: 33, f: 15, unit: "burger", isVeg: false }
     };
 
+    async function estimateAndLogCustomFoodWithCloudAI(rawQuery) {
+        const isOnline = (typeof navigator !== 'undefined' && typeof navigator.onLine === 'boolean') ? navigator.onLine : true;
+        if (!isOnline) {
+            return `### 🌐 Internet Required for AI Food Estimation\n\n` +
+                   `This custom food is not in our offline database. Please connect to the internet to let our **Cloud AI Agent (Meta Llama 3.3)** estimate its macros automatically, or log directly offline:\n\n` +
+                   `*💡 Example: "log 140 calories and 4g protein"*`;
+        }
+
+        const cfUrl = getCloudflareUrl().trim() || 'https://producto-ai.harshitgupta8088.workers.dev';
+        const systemPrompt = `You are a strict nutritional database parser. The user wants to log food: '${rawQuery}'. ` +
+                             `Extract the food name and quantity, and estimate the nutritional macros. ` +
+                             `Respond with ONLY a single valid JSON object, no explanation, no markdown ticks: ` +
+                             `{"food": "<Clean Food Name>", "qty": <number>, "unit": "<unit>", "calories": <number>, "protein": <number>, "carbs": <number>, "fat": <number>, "isVeg": <boolean>}`;
+
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 12000);
+
+            const response = await fetch(cfUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    prompt: systemPrompt,
+                    history: []
+                }),
+                signal: controller.signal
+            });
+            clearTimeout(timeoutId);
+
+            if (!response.ok) {
+                throw new Error(`Cloud server returned HTTP ${response.status}`);
+            }
+
+            const data = await response.json();
+            let nutrition = null;
+
+            if (data && data.response) {
+                if (typeof data.response === 'object' && data.response !== null) {
+                    nutrition = data.response;
+                } else if (typeof data.response === 'string') {
+                    const m = data.response.match(/\{[^{}]*\}/);
+                    if (m) {
+                        try { nutrition = JSON.parse(m[0]); } catch (e) {}
+                    }
+                }
+            }
+
+            if (!nutrition || typeof nutrition.calories !== 'number') {
+                throw new Error("Could not parse nutrition data from AI response");
+            }
+
+            const foodName = nutrition.food || "Custom Food";
+            const qty = (typeof nutrition.qty === 'number' && nutrition.qty > 0) ? nutrition.qty : 1;
+            const calories = Math.round(nutrition.calories);
+            const protein = Math.round((nutrition.protein || 0) * 10) / 10;
+            const carbs = Math.round(nutrition.carbs || 0);
+            const fat = Math.round((nutrition.fat || 0) * 10) / 10;
+            const isVeg = nutrition.isVeg !== false;
+
+            // Commit to localStorage
+            let existingLog = [];
+            try {
+                const raw = localStorage.getItem('productometer_daily_diet_log');
+                if (raw) existingLog = JSON.parse(raw);
+            } catch (e) {}
+
+            const nowTimeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            existingLog.push({
+                id: 'diet_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+                name: foodName,
+                qty: qty,
+                unit: nutrition.unit || 'servings',
+                calories: calories,
+                protein: protein,
+                carbs: carbs,
+                fat: fat,
+                isVeg: isVeg,
+                timestamp: nowTimeStr,
+                source: 'cloud_ai'
+            });
+
+            try {
+                localStorage.setItem('productometer_daily_diet_log', JSON.stringify(existingLog));
+                if (typeof window !== 'undefined') {
+                    window.dispatchEvent(new Event('storage'));
+                }
+            } catch (e) {}
+
+            return `### 🥗 Custom Food Logged via Cloud AI!\n\n` +
+                   `• **${qty > 1 ? qty + 'x ' : ''}${foodName}**: +${calories} kcal · ${protein}g protein · ${carbs}g carbs · ${fat}g fat *(AI Nutritional Estimate)*\n\n` +
+                   `---\n` +
+                   `🔥 **Total Added**: **+${calories} kcal** · 🥩 **+${protein}g Protein** · 🍚 **+${carbs}g Carbs** · 🧈 **+${fat}g Fat**\n` +
+                   `*📊 Synced to your Health Tracker daily calories & macros in real-time!*`;
+        } catch (err) {
+            console.warn("[Producto] Cloud AI food estimation failed:", err);
+            return `### ⚠️ Cloud Nutrition Notice\n\n` +
+                   `Could not estimate nutrition for this item right now (${err.message}).\n\n` +
+                   `💡 *You can log directly offline anytime: "log 140 calories and 4g protein"!*`;
+        }
+    }
+
     function parseAndExecuteDietAction(rawQuery) {
         const q = rawQuery.toLowerCase();
 
-        // Check if user has diet logging intent (handles phrases like "adding two rotis two my diet", "add 2 rotis", etc.)
+        // Check if user has diet logging intent (handles phrases like "adding two rotis two my diet", "add 2 biscuits to diet", etc.)
         const hasFoodAction = /\b(?:ate|eat|eating|had|have|having|drank|drink|drinking|log|logging|logged|add|adding|added|consume|consumed|consuming|track|record)\b/i.test(q);
         const hasDietTarget = /\b(?:to|two|too|in|into)\s+(?:my\s+)?diet\b|\b(?:in|into|to|two)\s+(?:health\s+tracker|food\s+log|diet\s+tracker|tracker)\b/i.test(q);
-        const hasMealTime = /\bfor\s+(?:breakfast|lunch|dinner|snack|supper|brunch)\b/i.test(q);
+        const hasMealTime = /\bfor\s+(?:breakfast|lunch|dinner|snack|supper|brunch|dessert)\b/i.test(q);
         const hasMacroWords = /\b(?:calories?|cals?|kcal|protein|carbs?|fats?)\b/i.test(q);
         const foodKeys = Object.keys(OFFLINE_FOOD_DATABASE).sort((a, b) => b.length - a.length);
         const mentionsAnyFood = foodKeys.some(f => new RegExp('\\b' + f + '\\b', 'i').test(q));
         const hasQtyWord = /\b(?:one|two|three|four|five|six|seven|eight|nine|ten|couple|few|half|\d+)\b/i.test(q);
 
-        const isDietIntent = hasDietTarget || hasMealTime || hasMacroWords || (hasFoodAction && mentionsAnyFood) || (mentionsAnyFood && hasQtyWord);
+        const isDietIntent = hasDietTarget || hasMealTime || hasMacroWords || (hasFoodAction && mentionsAnyFood) || (mentionsAnyFood && hasQtyWord) || (hasFoodAction && hasDietTarget);
         if (!isDietIntent) return null;
 
         // Skip pure informational questions unless an explicit food action was given
@@ -3969,7 +4082,14 @@ Could not reach Cloudflare AI agent (${err.message}). Please check your internet
             }
         }
 
-        if (itemsToAdd.length === 0) return null;
+        // If no offline food matched, but user explicitly asked to log food, consult Cloud AI!
+        if (itemsToAdd.length === 0) {
+            const isExplicitDietCommand = hasDietTarget || hasFoodAction || hasMealTime;
+            if (isExplicitDietCommand) {
+                return estimateAndLogCustomFoodWithCloudAI(rawQuery);
+            }
+            return null;
+        }
 
         // Execute save to localStorage
         let existingLog = [];
@@ -4649,9 +4769,13 @@ Could not reach Cloudflare AI agent (${err.message}). Please check your internet
             return catChangeReply;
         }
 
-        // 1. Check Diet Logging Action (0 ms, 100% Offline)
+        // 1. Check Diet Logging Action (0 ms Offline Local or Cloud AI Custom Food)
         const dietActionReply = parseAndExecuteDietAction(userQuery);
         if (dietActionReply) {
+            if (dietActionReply && typeof dietActionReply.then === 'function') {
+                dietActionReply.then(r => recordBotReplyInMemory(r)).catch(() => {});
+                return dietActionReply;
+            }
             recordBotReplyInMemory(dietActionReply);
             return dietActionReply;
         }

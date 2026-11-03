@@ -10,7 +10,8 @@ public class BootReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         if (Intent.ACTION_BOOT_COMPLETED.equals(intent.getAction()) ||
                 "android.intent.action.QUICKBOOT_POWERON".equals(intent.getAction())) {
-            // When device boots up, scheduled alarms can be re-registered from saved preferences or database.
+            // Restore smart wakeup alarm on reboot
+            AlarmReceiver.scheduleNextMorningWakeupAlarm(context);
         }
     }
 }

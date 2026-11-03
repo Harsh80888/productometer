@@ -79,8 +79,22 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         webAppInterface = new WebAppInterface(this);
         webView.addJavascriptInterface(webAppInterface, "AndroidBridge");
 
-        // Load local offline assets directly from app package
-        webView.loadUrl("file:///android_asset/index.html");
+        handleIntentTarget(getIntent());
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        handleIntentTarget(intent);
+    }
+
+    private void handleIntentTarget(Intent intent) {
+        if (intent != null && "run".equals(intent.getStringExtra("openSection"))) {
+            webView.loadUrl("file:///android_asset/Features/Health_Tracker/index.html?section=run");
+        } else if (webView.getUrl() == null) {
+            webView.loadUrl("file:///android_asset/index.html");
+        }
     }
 
     private void setupHardwareStepSensor() {

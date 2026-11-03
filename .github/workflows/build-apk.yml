@@ -65,27 +65,25 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create v1.1.8 dist/Productometer.apk \
-            --title "Productometer v1.1.8 - Android Release APK" \
-            --notes "### 📱 Productometer Android Release v1.1.8
+          gh release create v1.1.9 dist/Productometer.apk \
+            --title "Productometer v1.1.9 - Android Release APK" \
+            --notes "### 📱 Productometer Android Release v1.1.9
 
           Major release featuring the new Sleep & Bedtime Monitoring system, interactive Showcase portal, Voice-first AI Coach with 5-turn memory & offline scheduling, and bedtime guardian protection.
 
-          #### 🚀 Highlights in v1.1.8:
-          - **📊 Real Device Screen Management & Digital Wellbeing Rollup:**
-            - Resilient Android UsageStatsManager aggregation with multi-interval queries and rolling 24-hour fallback so device screen time never falsely reports zero.
-            - Automatic live UI refresh on onResume, focus, and visibilitychange when returning from Android System Settings.
-            - Protects cached non-zero screen time and sorts apps by foreground duration.
-          - **🥗 Offline AI Coach Diet & Nutrition Engine:**
-            - Natural language diet logger supporting number words (two rotis, three eggs, half a cup).
-            - Robust intent parser matching colloquial phrases like 'adding two rotis two my diet', 'add 2 rotis to my diet', 'two chapatis', etc.
-            - Comprehensive Indian staple nutrition database (roti, chapati, dal, paneer, curd, sabzi) updating Health Tracker macros in 0 ms offline.
-          - **🤖 Voice-First AI Coach with 5-Turn Memory & Offline Scheduling:**
-            - Animated voice-first listening mode on open with one-tap 'Chat instead' transition.
-            - 5-prompt rolling conversational memory for context-aware multi-turn task scheduling.
-          - **🌙 Sleep & Bedtime Monitoring Module:**
-            - Calibrated circadian sleep target with real-time countdown and 50-step walking alarm.
+          #### 🚀 Highlights in v1.1.9:
+          - **📊 Real Device Screen Management Restored (v1.1.4 Parity):**
+            - Restored the proven `UsageEvents` timeline accumulator simulation in `WebAppInterface.java` with pre-midnight seeding and unlock recovery (`lastKnownPkg`).
+            - Intraday app sessions are accurately tracked in real time down to the second.
+            - Fallbacks to `queryAndAggregateUsageStats` and rolling 24-hour window protect against zero-time reports.
+          - **🥗 Hybrid Cloud AI Custom Food Nutrition Estimator:**
+            - AI Coach now automatically queries Cloud AI (Meta Llama 3.3) for any unknown or custom food (e.g. "two biscuits", "a plate of pasta", "a samosa").
+            - Automatically extracts calories, protein, carbs, and fat and commits the custom food entry directly into Health Tracker local storage.
+            - Expanded offline database for everyday snacks (biscuits, samosas, maggi, cookies, etc.) with 0 ms offline logging.
+          - **🌙 Smart Alarm & Circadian Bedtime Guardian:**
+            - Dedicated `AlarmActivity` walking routine with step counter sensor integration.
+            - Auto-refresh on `onResume`, `focus`, and `visibilitychange` across all modules.
 
           #### 📦 Direct Download:
           - Click **\`Productometer.apk\`** under Assets below to download and install." || \
-          gh release upload v1.1.8 dist/Productometer.apk --clobber
+          gh release upload v1.1.9 dist/Productometer.apk --clobber
