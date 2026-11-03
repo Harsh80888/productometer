@@ -300,6 +300,24 @@ public class WebAppInterface {
                combined.contains("instagram");
     }
 
+    public static boolean isMetaApp(String pkgName, String appLabel) {
+        if (pkgName == null) return false;
+        String p = pkgName.toLowerCase();
+        String l = (appLabel != null ? appLabel : "").toLowerCase();
+        return p.contains("whatsapp") || p.contains("instagram") ||
+               p.contains("facebook") || p.contains("orca") ||
+               p.contains("messenger") || p.contains("threads") ||
+               p.contains("barcelona") ||
+               l.contains("whatsapp") || l.contains("instagram") ||
+               l.contains("facebook") || l.contains("messenger") ||
+               l.contains("threads");
+    }
+
+    public static boolean isYouTubeApp(String pkgName) {
+        return "com.google.android.youtube".equals(pkgName) ||
+               (pkgName != null && pkgName.toLowerCase().contains("youtube"));
+    }
+
     /**
      * Authoritative daily foreground screen time helper using Android OS kernel UsageStats.
      */
@@ -629,7 +647,23 @@ public class WebAppInterface {
                 if (iconBase64 != null) {
                     obj.put("iconBase64", iconBase64);
                 }
-                obj.put("category", isGame ? "games" : (isCompulsory ? "social" : "others"));
+
+                boolean isYT = isYouTubeApp(pkgName);
+                boolean isMeta = isMetaApp(pkgName, appLabel);
+
+                String cat;
+                if (isYT) {
+                    cat = "youtube";
+                    String ytMode = prefs.getString(ShortsReelsBlockerService.KEY_YOUTUBE_MODE, ShortsReelsBlockerService.MODE_BLOCK_SHORTS);
+                    obj.put("youtubeMode", ytMode);
+                } else if (isMeta) {
+                    cat = "meta";
+                } else {
+                    cat = "others";
+                }
+                obj.put("category", cat);
+                obj.put("isYouTube", isYT);
+                obj.put("isMeta", isMeta);
 
                 jsonArray.put(obj);
             }
@@ -1108,6 +1142,29 @@ public class WebAppInterface {
     /**
      * Sets Shorts blocking rule preference.
      */
+    @JavascriptInterface
+    public void setYouTubeMode(String mode) {
+        try {
+            SharedPreferences prefs = context.getSharedPreferences(ShortsReelsBlockerService.PREFS_NAME, Context.MODE_PRIVATE);
+            String cleanMode = ShortsReelsBlockerService.MODE_LECTURE_ONLY.equals(mode) ?
+                    ShortsReelsBlockerService.MODE_LECTURE_ONLY : ShortsReelsBlockerService.MODE_BLOCK_SHORTS;
+            prefs.edit().putString(ShortsReelsBlockerService.KEY_YOUTUBE_MODE, cleanMode).apply();
+            showToast("YouTube mode: " + (ShortsReelsBlockerService.MODE_LECTURE_ONLY.equals(cleanMode) ? "Lecture Only ('Class')" : "Block Shorts"));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @JavascriptInterface
+    public String getYouTubeMode() {
+        try {
+            SharedPreferences prefs = context.getSharedPreferences(ShortsReelsBlockerService.PREFS_NAME, Context.MODE_PRIVATE);
+            return prefs.getString(ShortsReelsBlockerService.KEY_YOUTUBE_MODE, ShortsReelsBlockerService.MODE_BLOCK_SHORTS);
+        } catch (Exception e) {
+            return ShortsReelsBlockerService.MODE_BLOCK_SHORTS;
+        }
+    }
+
     @JavascriptInterface
     public void setShortsBlockerEnabled(boolean enabled) {
         SharedPreferences prefs = context.getSharedPreferences(ShortsReelsBlockerService.PREFS_NAME, Context.MODE_PRIVATE);

@@ -390,6 +390,33 @@ document.addEventListener('DOMContentLoaded', () => {
         if (toggleReels) toggleReels.checked = !!modeRules.reels;
         if (toggleGames) toggleGames.checked = !!modeRules.games;
         if (toggleWeb) toggleWeb.checked = !!modeRules.web;
+        syncYouTubeModeUI();
+    }
+
+    function syncYouTubeModeUI() {
+        const mode = (window.NativeBridge && window.NativeBridge.getYouTubeMode) ?
+            window.NativeBridge.getYouTubeMode() :
+            (localStorage.getItem('productometer_youtube_mode') || 'block_shorts');
+
+        const btnLecture = document.getElementById('meYtLectureBtn');
+        const btnShorts = document.getElementById('meYtShortsBtn');
+        const desc = document.getElementById('meYtModeDesc');
+
+        if (btnLecture && btnShorts) {
+            if (mode === 'lecture_only') {
+                btnLecture.classList.add('active');
+                btnShorts.classList.remove('active');
+                if (desc) {
+                    desc.innerHTML = '🔒 <strong>Lecture Only:</strong> Only study material containing "Class" is permitted. All other videos & Shorts are blocked.';
+                }
+            } else {
+                btnShorts.classList.add('active');
+                btnLecture.classList.remove('active');
+                if (desc) {
+                    desc.innerHTML = '🛡️ <strong>Block Shorts:</strong> YouTube Shorts are blocked immediately. Regular videos are accessible.';
+                }
+            }
+        }
     }
 
     function updateContentRule(key, value) {
@@ -461,6 +488,29 @@ document.addEventListener('DOMContentLoaded', () => {
     if (tReels) tReels.addEventListener('change', (e) => updateContentRule('reels', e.target.checked));
     if (tGames) tGames.addEventListener('change', (e) => updateContentRule('games', e.target.checked));
     if (tWeb) tWeb.addEventListener('change', (e) => updateContentRule('web', e.target.checked));
+
+    const meYtLectureBtn = document.getElementById('meYtLectureBtn');
+    const meYtShortsBtn = document.getElementById('meYtShortsBtn');
+
+    if (meYtLectureBtn) {
+        meYtLectureBtn.addEventListener('click', () => {
+            if (window.NativeBridge && window.NativeBridge.setYouTubeMode) {
+                window.NativeBridge.setYouTubeMode('lecture_only');
+            }
+            localStorage.setItem('productometer_youtube_mode', 'lecture_only');
+            syncYouTubeModeUI();
+        });
+    }
+
+    if (meYtShortsBtn) {
+        meYtShortsBtn.addEventListener('click', () => {
+            if (window.NativeBridge && window.NativeBridge.setYouTubeMode) {
+                window.NativeBridge.setYouTubeMode('block_shorts');
+            }
+            localStorage.setItem('productometer_youtube_mode', 'block_shorts');
+            syncYouTubeModeUI();
+        });
+    }
 
     // --- 7. TEST SHIELD & LIVE INTERCEPTION MODAL ---
     const btnTestShield = document.getElementById('btnTestShield');

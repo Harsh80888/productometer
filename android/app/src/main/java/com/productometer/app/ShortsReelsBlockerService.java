@@ -87,6 +87,9 @@ public class ShortsReelsBlockerService extends AccessibilityService {
     public static final String KEY_REELS_ENABLED = "blocker_reels_enabled";
     public static final String KEY_MASTER_ENABLED = "master_blocker_enabled";
     public static final String KEY_FOCUS_ACTIVE = "focus_session_active";
+    public static final String KEY_YOUTUBE_MODE = "productometer_youtube_mode";
+    public static final String MODE_LECTURE_ONLY = "lecture_only";
+    public static final String MODE_BLOCK_SHORTS = "block_shorts";
 
     public static boolean isServiceRunning = false;
     public static boolean isFocusSessionOngoing = false;
@@ -390,22 +393,24 @@ public class ShortsReelsBlockerService extends AccessibilityService {
             String distractionLabel = "Distraction";
 
             if (PKG_YOUTUBE.equals(packageName)) {
-                if (isShortsBlocked) {
+                String ytMode = prefs.getString(KEY_YOUTUBE_MODE, MODE_BLOCK_SHORTS);
+                boolean isLectureMode = MODE_LECTURE_ONLY.equals(ytMode);
+
+                // Shorts blocked in both modes (in block_shorts if enabled, always in lecture_only)
+                if (isShortsBlocked || isLectureMode) {
                     signature = detectYouTubeShort(rootNode, event);
                     if (signature != null && !signature.isEmpty()) {
                         isDistractionActive = true;
-                        distractionLabel = "YouTube Shorts";
+                        distractionLabel = isLectureMode ? "YouTube Shorts (Blocked in Lecture Mode)" : "YouTube Shorts";
                     }
                 }
-                if (!isDistractionActive) {
-                    // Casual YouTube video: 15-second delay warning with 2.mp3 (no abrupt navigation back)
-                    signature = detectYouTubeCasualVideo(rootNode, event);
+
+                // In lecture only mode: ONLY study material tracked by the word 'Class' is allowed
+                if (!isDistractionActive && isLectureMode) {
+                    signature = detectYouTubeNonStudyVideo(rootNode, event);
                     if (signature != null && !signature.isEmpty()) {
-                        handleCasualYouTubeVideoDelayed(signature);
-                        return;
-                    } else {
-                        // Cleared casual video
-                        activeCasualVideoSignature = "";
+                        isDistractionActive = true;
+                        distractionLabel = "YouTube (Lecture Only: Only 'Class' Videos Allowed)";
                     }
                 }
             } else if (PKG_INSTAGRAM.equals(packageName)) {
@@ -457,8 +462,8 @@ public class ShortsReelsBlockerService extends AccessibilityService {
         return null;
     }
 
-    private String detectYouTubeCasualVideo(AccessibilityNodeInfo root, AccessibilityEvent event) {
-        // Exclude inline_player so home feed autoplay previews are completely ignored!
+    private String detectYouTubeNonStudyVideo(AccessibilityNodeInfo root, AccessibilityEvent event) {
+        // Exclude inline_player so home feed autoplay previews are ignored
         List<AccessibilityNodeInfo> playerNodes = root.findAccessibilityNodeInfosByViewId("com.google.android.youtube:id/player_view");
         if (playerNodes == null || playerNodes.isEmpty()) {
             playerNodes = root.findAccessibilityNodeInfosByViewId("com.google.android.youtube:id/watch_while_layout");
@@ -469,22 +474,17 @@ public class ShortsReelsBlockerService extends AccessibilityService {
             for (AccessibilityNodeInfo n : playerNodes) n.recycle();
         }
 
-        if (!hasPlayer) return null;
+        if (!hasPlayer) return null; // In search bar, channel list, or feed
 
+        // Track study material strictly by the word 'Class' (case-insensitive)
         String textDump = extractVisibleTextSignature(root).toLowerCase();
-        boolean isEducational = textDump.contains("lecture") || textDump.contains("tutorial") ||
-                textDump.contains("class") || textDump.contains("course") ||
-                textDump.contains("physics") || textDump.contains("math") ||
-                textDump.contains("chemistry") || textDump.contains("study") ||
-                textDump.contains("programming") || textDump.contains("coding") ||
-                textDump.contains("exam") || textDump.contains("dsa") ||
-                textDump.contains("chapter");
+        boolean hasClassKeyword = textDump.contains("class");
 
-        if (isEducational) {
-            return null; // Allowed! Educational content
+        if (hasClassKeyword) {
+            return null; // Allowed! Study material tracked by the word 'Class'
         }
 
-        return "yt_casual_" + (textDump.isEmpty() ? String.valueOf(System.currentTimeMillis() / 5000) : textDump);
+        return "yt_non_class_" + (textDump.isEmpty() ? String.valueOf(System.currentTimeMillis() / 4000) : textDump);
     }
 
     private String detectInstagramReel(AccessibilityNodeInfo root, AccessibilityEvent event) {
@@ -521,18 +521,16 @@ public class ShortsReelsBlockerService extends AccessibilityService {
     }
 
     private void collectText(AccessibilityNodeInfo node, StringBuilder sb, int depth) {
-        if (node == null || depth > 5) return;
+        if (node == null || depth > 8) return;
         CharSequence desc = node.getContentDescription();
-        if (desc != null && desc.length() > 2) {
-            sb.append(desc.toString().trim()).append("|");
-            return;
+        if (desc != null && desc.length() > 1) {
+            sb.append(desc.toString().trim()).append(" ");
         }
         CharSequence txt = node.getText();
-        if (txt != null && txt.length() > 2) {
-            sb.append(txt.toString().trim()).append("|");
-            return;
+        if (txt != null && txt.length() > 1) {
+            sb.append(txt.toString().trim()).append(" ");
         }
-        int childCount = Math.min(node.getChildCount(), 6);
+        int childCount = Math.min(node.getChildCount(), 12);
         for (int i = 0; i < childCount; i++) {
             AccessibilityNodeInfo child = node.getChild(i);
             if (child != null) {

@@ -1010,3 +1010,72 @@ body.theme-light .perm-title {
 .btn-enable-acc:hover {
     transform: scale(1.03);
 }
+
+
+/* YOUTUBE GUARD MODE CONTROLS IN ME */
+.yt-me-mode-box {
+    margin: 6px 0 12px 0;
+    padding: 10px 14px;
+    background: rgba(255, 0, 51, 0.05);
+    border: 1px solid rgba(255, 0, 51, 0.22);
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.yt-me-mode-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.yt-me-mode-label {
+    font-size: 0.78rem;
+    font-weight: 800;
+    color: #ff334b;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.yt-mode-toggle-group {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.yt-mode-btn {
+    padding: 5px 10px;
+    border-radius: 7px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.05);
+    color: #94a3b8;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.yt-mode-btn:hover {
+    background: rgba(255, 255, 255, 0.09);
+    color: #fff;
+}
+
+.yt-mode-btn.active {
+    background: rgba(0, 229, 255, 0.18);
+    color: #00e5ff;
+    border-color: rgba(0, 229, 255, 0.5);
+    box-shadow: 0 0 8px rgba(0, 229, 255, 0.2);
+}
+
+.yt-me-mode-desc {
+    font-size: 0.68rem;
+    color: #94a3b8;
+    line-height: 1.35;
+}

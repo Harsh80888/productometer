@@ -346,6 +346,24 @@ const NativeBridge = {
         } catch (e) {}
     },
 
+        setYouTubeMode: (mode) => {
+        try {
+            if (typeof window.AndroidBridge !== 'undefined' && window.AndroidBridge.setYouTubeMode) {
+                window.AndroidBridge.setYouTubeMode(mode);
+            }
+            localStorage.setItem('productometer_youtube_mode', mode);
+        } catch (e) {}
+    },
+
+    getYouTubeMode: () => {
+        try {
+            if (typeof window.AndroidBridge !== 'undefined' && window.AndroidBridge.getYouTubeMode) {
+                return window.AndroidBridge.getYouTubeMode();
+            }
+        } catch (e) {}
+        return localStorage.getItem('productometer_youtube_mode') || 'block_shorts';
+    },
+
     setReelsBlockerEnabled: (enabled) => {
         try {
             if (typeof window.AndroidBridge !== 'undefined' && window.AndroidBridge.setReelsBlockerEnabled) {

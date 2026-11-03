@@ -178,6 +178,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
     }
 
+    function isYouTubePackage(pkgName, appLabel) {
+        if (!pkgName && !appLabel) return false;
+        const p = (pkgName || '').toLowerCase();
+        const l = (appLabel || '').toLowerCase();
+        return p === 'com.google.android.youtube' || p.includes('youtube') || l.includes('youtube');
+    }
+
+    function isMetaPackage(pkgName, appLabel) {
+        if (!pkgName && !appLabel) return false;
+        const p = (pkgName || '').toLowerCase();
+        const l = (appLabel || '').toLowerCase();
+        return p.includes('whatsapp') || p.includes('instagram') ||
+               p.includes('facebook') || p.includes('orca') ||
+               p.includes('messenger') || p.includes('threads') ||
+               p.includes('barcelona') ||
+               l.includes('whatsapp') || l.includes('instagram') ||
+               l.includes('facebook') || l.includes('messenger') ||
+               l.includes('threads');
+    }
+
     // --- 3. GET & SYNCHRONIZE REAL APP USAGE ---
 
     function getRealScreenApps() {
@@ -224,7 +244,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const mappedApps = androidStats.map(item => {
                     const cleanTitle = formatCleanAppName(item.appName, item.packageName);
-                    const assignedCategory = savedOverrides[item.packageName] || (item.category === 'productivity' ? 'productivity' : 'others');
+                    const isYT = !!item.isYouTube || isYouTubePackage(item.packageName, cleanTitle);
+                    const isMeta = !!item.isMeta || isMetaPackage(item.packageName, cleanTitle);
+
+                    let defaultCat = 'others';
+                    if (isYT) defaultCat = 'youtube';
+                    else if (isMeta) defaultCat = 'meta';
+                    else if (item.category === 'productivity') defaultCat = 'productivity';
+
+                    const assignedCategory = savedOverrides[item.packageName] || defaultCat;
+                    const ytMode = item.youtubeMode || (window.NativeBridge && window.NativeBridge.getYouTubeMode ? window.NativeBridge.getYouTubeMode() : (localStorage.getItem('productometer_youtube_mode') || 'block_shorts'));
+
                     return {
                         id: item.packageName,
                         name: cleanTitle,
@@ -232,9 +262,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         seconds: item.totalSeconds || (item.minutes * 60) || 0,
                         iconBase64: item.iconBase64 || null,
                         icon: getAppFallbackIcon(cleanTitle, item.packageName),
-                        bg: assignedCategory === 'productivity' ? '#00e5ff' : '#334155',
+                        bg: assignedCategory === 'productivity' ? '#00e5ff' : (isYT ? '#ff0033' : (isMeta ? '#0081fb' : '#334155')),
                         color: '#fff',
                         isNativeAndroid: true,
+                        isYouTube: isYT,
+                        isMeta: isMeta,
+                        youtubeMode: ytMode,
                         isGame: !!item.isGame,
                         isCompulsory: !!item.isCompulsory,
                         limitMinutes: typeof item.limitMinutes === 'number' ? item.limitMinutes : (item.isCompulsory ? 30 : 0),
@@ -355,6 +388,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             }
         }
+
+        // Tag YouTube & Meta on non-Android or fallback apps
+        apps.forEach(app => {
+            const isYT = isYouTubePackage(app.id, app.name);
+            const isMeta = isMetaPackage(app.id, app.name);
+            app.isYouTube = isYT;
+            app.isMeta = isMeta;
+            if (isYT && !savedOverrides[app.id] && app.category !== 'productivity') {
+                app.category = 'youtube';
+            } else if (isMeta && !savedOverrides[app.id] && app.category !== 'productivity') {
+                app.category = 'meta';
+            }
+            if (isYT && !app.youtubeMode) {
+                app.youtubeMode = (window.NativeBridge && window.NativeBridge.getYouTubeMode ? window.NativeBridge.getYouTubeMode() : (localStorage.getItem('productometer_youtube_mode') || 'block_shorts'));
+            }
+        });
 
         // Web Fallback: calculate limit & compulsory rules
         let localLimits = {};
@@ -652,7 +701,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (currentFilter === 'productivity') return app.category === 'productivity';
 
-                if (currentFilter === 'others') return app.category !== 'productivity';
+                if (currentFilter === 'youtube') return app.isYouTube || app.category === 'youtube';
+
+                if (currentFilter === 'meta') return app.isMeta || app.category === 'meta';
+
+                if (currentFilter === 'others') return app.category === 'others' || (!app.isYouTube && !app.isMeta && app.category !== 'productivity');
 
                 return true;
 
@@ -691,6 +744,42 @@ document.addEventListener('DOMContentLoaded', () => {
             const appPct = totalSecs > 0 ? Math.round((s / totalSecs) * 100) : 0;
             const isProd = app.category === 'productivity';
             const isExcessiveApp = !isProd && (s > 3600);
+
+            let catBtnClass = 'cat-others';
+            let catBtnLabel = '🌐 Others';
+            if (app.category === 'productivity') {
+                catBtnClass = 'cat-prod';
+                catBtnLabel = '🎓 Productivity';
+            } else if (app.category === 'youtube' || app.isYouTube) {
+                catBtnClass = 'cat-youtube';
+                catBtnLabel = '▶️ YouTube';
+            } else if (app.category === 'meta' || app.isMeta) {
+                catBtnClass = 'cat-meta';
+                catBtnLabel = '♾️ Meta';
+            }
+
+            const isYtItem = !!(app.isYouTube || app.category === 'youtube');
+            const ytMode = app.youtubeMode || (window.NativeBridge && window.NativeBridge.getYouTubeMode ? window.NativeBridge.getYouTubeMode() : (localStorage.getItem('productometer_youtube_mode') || 'block_shorts'));
+            const ytControllerHtml = isYtItem ? `
+                <div class="yt-card-mode-control">
+                    <div class="yt-mode-indicator">
+                        <span class="yt-pill-label"><i class="fa-brands fa-youtube"></i> YouTube Guard Mode</span>
+                        <div class="yt-mode-toggle-group">
+                            <button class="yt-mode-btn ${ytMode === 'lecture_only' ? 'active' : ''}" data-mode="lecture_only" data-app-id="${app.id}" title="Only videos with 'Class' in title are permitted">
+                                <i class="fa-solid fa-graduation-cap"></i> Lecture Only ('Class')
+                            </button>
+                            <button class="yt-mode-btn ${ytMode !== 'lecture_only' ? 'active' : ''}" data-mode="block_shorts" data-app-id="${app.id}" title="Normal distraction blocker (blocks YouTube Shorts)">
+                                <i class="fa-solid fa-shield-halved"></i> Block Shorts
+                            </button>
+                        </div>
+                    </div>
+                    <div class="yt-mode-hint">
+                        ${ytMode === 'lecture_only' ?
+                            '🔒 <strong>Lecture Only:</strong> Only study material containing "Class" is permitted. All other videos & Shorts are blocked.' :
+                            '🛡️ <strong>Block Shorts:</strong> YouTube Shorts are blocked immediately. Regular videos are accessible.'
+                        }
+                    </div>
+                </div>` : '';
 
             // Build Limit Badge
             let limitBadgeHtml = '';
@@ -749,8 +838,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             <span class="app-label-title">${escapeHTML(app.name)}</span>
 
                             <div class="app-tags-row">
-                                <button class="app-category-toggle ${isProd ? 'cat-prod' : 'cat-others'}" data-app-id="${app.id}" title="Click to reclassify">
-                                    ${isProd ? '🎓 Productivity' : '🌐 Others'}
+                                <button class="app-category-toggle ${catBtnClass}" data-app-id="${app.id}" title="Tap to reclassify">
+                                    ${catBtnLabel}
                                 </button>
                                 ${limitBadgeHtml}
                             </div>
@@ -775,9 +864,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 </div>
 
+                ${ytControllerHtml}
+
             </div>`;
 
         }).join('');
+
+        // YouTube mode toggle buttons
+        container.querySelectorAll('.yt-mode-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const newMode = btn.dataset.mode;
+                if (window.NativeBridge && window.NativeBridge.setYouTubeMode) {
+                    window.NativeBridge.setYouTubeMode(newMode);
+                }
+                localStorage.setItem('productometer_youtube_mode', newMode);
+                refreshDigitalWellbeingDashboard();
+            });
+        });
 
         // Reclassify button click listeners
 
@@ -957,7 +1061,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (target) {
 
-            target.category = target.category === 'productivity' ? 'others' : 'productivity';
+            if (target.isYouTube) {
+                if (target.category === 'youtube') target.category = 'productivity';
+                else if (target.category === 'productivity') target.category = 'others';
+                else target.category = 'youtube';
+            } else if (target.isMeta) {
+                if (target.category === 'meta') target.category = 'productivity';
+                else if (target.category === 'productivity') target.category = 'others';
+                else target.category = 'meta';
+            } else {
+                target.category = target.category === 'productivity' ? 'others' : 'productivity';
+            }
 
             saveApps(apps);
 

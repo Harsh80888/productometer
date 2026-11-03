@@ -66,27 +66,27 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cat << 'EOF' > release_notes.md
-          ### 📱 Productometer Android Release v1.2.0
+          ### 📱 Productometer Android Release v1.2.1
 
           Major release featuring the new Sleep & Bedtime Monitoring system, interactive Showcase portal, Voice-first AI Coach with 5-turn memory & offline scheduling, and bedtime guardian protection.
 
-          #### 🚀 Highlights in v1.2.0:
-          - **📊 Real Device Screen Management Restored (v1.1.4 Parity):**
-            - Restored the proven `UsageEvents` timeline accumulator simulation in `WebAppInterface.java` with pre-midnight seeding and unlock recovery (`lastKnownPkg`).
-            - Intraday app sessions are accurately tracked in real time down to the second.
-            - Fallbacks to `queryAndAggregateUsageStats` and rolling 24-hour window protect against zero-time reports.
-          - **🥗 Hybrid Cloud AI Custom Food Nutrition Estimator:**
-            - AI Coach now automatically queries Cloud AI (Meta Llama 3.3) for any unknown or custom food (e.g. "two biscuits", "a plate of pasta", "a samosa").
-            - Automatically extracts calories, protein, carbs, and fat and commits the custom food entry directly into Health Tracker local storage.
-            - Expanded offline database for everyday snacks (biscuits, samosas, maggi, cookies, etc.) with 0 ms offline logging.
-          - **🌙 Smart Alarm & Circadian Bedtime Guardian:**
-            - Dedicated `AlarmActivity` walking routine with step counter sensor integration.
-            - Auto-refresh on `onResume`, `focus`, and `visibilitychange` across all modules.
+          #### 🚀 Highlights in v1.2.1:
+          - **🎯 YouTube Guard Modes (Lecture Only & Block Shorts):**
+            - **Lecture Only Mode:** Exclusively permits study material tracked by the keyword `'Class'`. Blocks all YouTube Shorts and non-study videos.
+            - **Block Shorts Mode:** Standard distraction blocker that intercepts YouTube Shorts while preserving full access to standard videos.
+            - Quick guard mode toggles available directly on the YouTube app card in Screen Management and in Me Profile.
+          - **📱 App Categories (YouTube, Meta, Others, Productivity):**
+            - Added first-class classification for **YouTube**, **Meta** (WhatsApp, Instagram, Facebook, Messenger, Threads), **Others**, and **Productivity**.
+            - Dedicated filter pills and quick badge reclassification.
+          - **📊 Accurate Foreground Screen Time Tracking:**
+            - Kernel-level UsageEvents timeline simulation for real-time second-by-second foreground tracking.
+          - **🎙️ Voice AI Coach & Lifestyle Guardian:**
+            - Sleep & Bedtime monitoring, hybrid cloud diet estimator, and offline schedule management.
 
           #### 📦 Direct Download:
           - Click **`Productometer.apk`** under Assets below to download and install.
           EOF
-          gh release create v1.2.0 dist/Productometer.apk \
-            --title "Productometer v1.2.0 - Android Release APK" \
+          gh release create v1.2.1 dist/Productometer.apk \
+            --title "Productometer v1.2.1 - Android Release APK" \
             --notes-file release_notes.md || \
-          gh release upload v1.2.0 dist/Productometer.apk --clobber
+          gh release upload v1.2.1 dist/Productometer.apk --clobber
