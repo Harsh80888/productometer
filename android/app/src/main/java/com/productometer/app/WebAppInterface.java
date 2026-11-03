@@ -255,7 +255,7 @@ public class WebAppInterface {
             String base64Result = "data:image/png;base64," + Base64.encodeToString(bytes, Base64.NO_WRAP);
             ICON_CACHE.put(pkgName, base64Result);
             return base64Result;
-        } catch (Exception ignored) {
+        } catch (Throwable ignored) {
             return null;
         }
     }
@@ -572,7 +572,7 @@ public class WebAppInterface {
 
                 // Skip system internal daemons, default launcher, and keyboards
                 // Include all apps with at least 1 second of usage
-                if (totalForegroundMs < 1000L) continue;
+                if (totalForegroundMs < 500L) continue;
                 if (pkgName.equals("com.android.systemui") || pkgName.equals("android")) continue;
                 if (launcherPackages.contains(pkgName)) continue;
                 if (pkgName.contains("inputmethod")) continue;

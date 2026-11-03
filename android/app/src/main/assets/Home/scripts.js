@@ -142,8 +142,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // 1. Direct Ground Truth Query from NativeBridge if available
         if (window.NativeBridge && window.NativeBridge.isAvailable && window.NativeBridge.isAvailable()) {
             try {
-                if (window.NativeBridge.hasUsageStatsPermission && window.NativeBridge.hasUsageStatsPermission()) {
-                    const realStats = window.NativeBridge.getRealAppUsageStats();
+                const realStats = (window.NativeBridge.getRealAppUsageStats ? window.NativeBridge.getRealAppUsageStats() : null);
                     if (realStats && Array.isArray(realStats) && realStats.length > 0) {
                         let savedOverrides = {};
                         try {
@@ -168,7 +167,6 @@ document.addEventListener('DOMContentLoaded', () => {
                             }));
                         } catch (e) {}
                     }
-                }
             } catch (e) {
                 console.warn('[Home] Live screen stats notice:', e);
             }

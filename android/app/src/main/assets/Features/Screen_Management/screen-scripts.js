@@ -222,9 +222,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (permBanner) permBanner.style.display = 'none';
                 if (specialPermCard) specialPermCard.style.display = 'none';
 
-                return androidStats.map(item => {
+                const mappedApps = androidStats.map(item => {
                     const cleanTitle = formatCleanAppName(item.appName, item.packageName);
-                    const assignedCategory = savedOverrides[item.packageName] || item.category || 'others';
+                    const assignedCategory = savedOverrides[item.packageName] || (item.category === 'productivity' ? 'productivity' : 'others');
                     return {
                         id: item.packageName,
                         name: cleanTitle,
@@ -244,6 +244,21 @@ document.addEventListener('DOMContentLoaded', () => {
                         isUnchangeable: !!item.isUnchangeable
                     };
                 });
+
+                try {
+                    const lightApps = mappedApps.map(a => ({
+                        id: a.id,
+                        name: a.name,
+                        category: a.category,
+                        seconds: a.seconds,
+                        limitMinutes: a.limitMinutes,
+                        isGame: a.isGame,
+                        isCompulsory: a.isCompulsory
+                    }));
+                    localStorage.setItem(KEY_APPS, JSON.stringify(lightApps));
+                } catch (e) {}
+
+                return mappedApps;
             } else if (!hasPerm) {
                 if (permBanner) permBanner.style.display = 'flex';
                 if (specialPermCard) specialPermCard.style.display = 'flex';
@@ -637,7 +652,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (currentFilter === 'productivity') return app.category === 'productivity';
 
-                if (currentFilter === 'others') return app.category === 'others';
+                if (currentFilter === 'others') return app.category !== 'productivity';
 
                 return true;
 
@@ -1326,9 +1341,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const activeCount = apps.filter(a => a.limitMinutes > 0).length;
             const frozenCount = apps.filter(a => a.isFrozen).length;
             if (frozenCount > 0) {
-                summarySubtext.textContent = ${activeCount} limits active • ❄️  frozen app;
+                summarySubtext.textContent = `${activeCount} limits active • ❄️ ${frozenCount} frozen app`;
             } else if (activeCount > 0) {
-                summarySubtext.textContent = ${activeCount} app limit active • Tap to manage;
+                summarySubtext.textContent = `${activeCount} app limit active • Tap to manage`;
             } else {
                 summarySubtext.textContent = 'Tap to configure & manage app limits';
             }
