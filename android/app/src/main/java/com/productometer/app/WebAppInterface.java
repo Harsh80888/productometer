@@ -976,7 +976,7 @@ public class WebAppInterface {
             obj.put("isCompleted", stepsCovered >= targetSteps);
             return obj.toString();
         } catch (Exception e) {
-            return "{"active":false,"targetSteps":50,"currentSteps":0,"remainingSeconds":0,"isCompleted":false}";
+            return "{\"active\":false,\"targetSteps\":50,\"currentSteps\":0,\"remainingSeconds\":0,\"isCompleted\":false}";
         }
     }
 
