@@ -1166,6 +1166,226 @@ body.editable-active [contenteditable="true"]:focus {
 .bg-crimson-light { background-color: var(--crimson-light) !important; }
 
 /* ========================================================
+   COVER PAGE SPECIALIZED ARCHITECTURE
+   ======================================================== */
+.a4-sheet.cover-page::before {
+    height: 6px;
+    background: linear-gradient(90deg, #0284C7 0%, #10B981 33%, #F59E0B 66%, #8B5CF6 100%);
+}
+
+.cover-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+}
+
+.cover-hero-section {
+    text-align: center;
+    margin: 6px 0 14px 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.cover-category-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #F0F9FF;
+    border: 1px solid #BAE6FD;
+    color: #0284C7;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 800;
+    padding: 4px 14px;
+    border-radius: 9999px;
+    margin-bottom: 10px;
+    letter-spacing: 0.5px;
+}
+
+.cover-main-title {
+    font-size: 3.2rem;
+    font-weight: 900;
+    color: #0F172A;
+    letter-spacing: -0.04em;
+    line-height: 1.05;
+    margin-bottom: 6px;
+}
+
+.cover-main-subtitle {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #0284C7;
+    letter-spacing: -0.01em;
+    line-height: 1.3;
+    margin-bottom: 10px;
+}
+
+.cover-jewel-stripe {
+    width: 140px;
+    height: 4px;
+    background: linear-gradient(90deg, #0284C7, #10B981, #F59E0B, #8B5CF6);
+    border-radius: 4px;
+    margin: 0 auto 10px auto;
+}
+
+.cover-lead-summary {
+    font-size: 0.88rem;
+    color: #475569;
+    max-width: 620px;
+    margin: 0 auto;
+    line-height: 1.5;
+}
+
+/* Cover Center Feature Card */
+.cover-center-card {
+    background: linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%);
+    border: 1px solid #E2E8F0;
+    border-left: 4px solid #0284C7;
+    border-radius: 12px;
+    padding: 12px 18px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
+}
+
+.cover-emblem-box {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #0284C7 0%, #0369A1 100%);
+    color: #FFFFFF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(2, 132, 199, 0.35);
+}
+
+.cover-center-content h3 {
+    font-size: 0.98rem;
+    font-weight: 800;
+    color: #0F172A;
+    margin-bottom: 2px;
+}
+
+.cover-center-content p {
+    font-size: 0.8rem;
+    color: #475569;
+    line-height: 1.45;
+}
+
+/* 4 Core Pillars 2x2 Grid */
+.cover-pillars-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin: 2px 0;
+}
+
+.cover-pillar-card {
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 10px;
+    padding: 10px 14px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.cpc-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+}
+
+.cpc-icon.cpc-blue { background: #E0F2FE; color: #0284C7; }
+.cpc-icon.cpc-green { background: #DCFCE7; color: #16A34A; }
+.cpc-icon.cpc-amber { background: #FEF3C7; color: #D97706; }
+.cpc-icon.cpc-purple { background: #F3E8FF; color: #9333EA; }
+
+.cpc-body h4 {
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: #0F172A;
+    margin-bottom: 2px;
+}
+
+.cpc-body p {
+    font-size: 0.76rem;
+    color: #64748B;
+    line-height: 1.4;
+}
+
+/* Technical Highlights Badges Strip */
+.cover-highlights-strip {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+.cover-highlight-chip {
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 8px;
+    padding: 7px 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.74rem;
+    color: #334155;
+}
+
+.cover-highlight-chip i {
+    font-size: 0.9rem;
+}
+
+.cover-highlight-chip strong {
+    color: #0F172A;
+}
+
+/* Formal Document Metadata Table */
+.cover-meta-table {
+    background: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    border-radius: 10px;
+    padding: 10px 16px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px 20px;
+}
+
+.cmt-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.cmt-label {
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    font-weight: 700;
+    color: #64748B;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.cmt-value {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #0F172A;
+}
+
+/* ========================================================
    PRINT SPECIFICATION (EXACT A4 OUTPUT)
    ======================================================== */
 @media print {

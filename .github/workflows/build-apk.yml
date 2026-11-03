@@ -66,30 +66,32 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cat << 'EOF' > release_notes.md
-          ### 📱 Productometer Android Release v1.2.7
+          ### 📱 Productometer Android Release v1.2.8
 
-          Major release delivering 100% reliable long video filtering in YouTube & mobile browsers, loud multi-stream bedtime alarm ringing with ToneGenerator emergency fallback, centralized sleep monitoring, and an A4-printable project writeout.
+          Reliability & UX update delivering rock-solid Wake-up Smart Alarm scheduling powered by the Day Planner exact epoch millis engine, preserving the complete Two-Stage Wake-up Mission (10 hard accelerometer shakes + 50 walking steps), and redesigning the Bedtime Dialog into an App-Frozen style popup with strictly no background activity.
 
-          #### 🚀 Highlights in v1.2.7:
-          - **🎯 100% Reliable Long Video Filtering (YouTube App & Mobile Browsers):**
-            - Universal accessibility detection identifies active watch pages using standard media controls (TalkBack "Pause video", "Play video", "Fullscreen", "Like this video") without depending on fragile view IDs.
-            - Recommendation leak-proof title extractor strictly limits traversal to Child 0 & Child 1 of watch list containers, isolating the active video title and channel while ignoring recommended videos.
-            - Stable signature evaluation prevents timer reset loops, ensuring uneducational long videos are intercepted after the 3.5s settle grace period.
-            - Expanded 160+ Academic Keyword Library evaluated first so study lectures, NCERT/CBSE classes, and competitive exam solutions are always allowed.
-          - **⏰ Loud Bedtime & Morning Wake-Up Alarm:**
-            - Multi-stream volume boost sets both `STREAM_ALARM` and `STREAM_MUSIC` to maximum.
-            - Redundant audio pipeline: Looping `MediaPlayer` with `USAGE_ALARM` -> `RingtoneManager` -> hardware `ToneGenerator` beeper ensures the alarm rings even on heavily customized OEM devices.
-            - "Test 10-Shake Alarm" button directly triggers the native hardware alarm (`triggerWakeupAlarmNow()`), launching the full-screen `AlarmActivity` with 10-shake sensor verification.
-          - **🌙 Centralized Sleep & Bedtime Monitoring:**
-            - Removed all duplicate/conflicting bedtime options from Health Tracker and Screen Management.
-            - Centralized exclusively in the Features tab under Sleep & Bedtime Monitoring (`Features/Sleep_Monitoring/`).
-          - **📄 A4 Printable Project Writeout:**
-            - Added print-ready A4 documentation and technical overview.
+          #### 🚀 Highlights in v1.2.8:
+          - **⏰ Rock-Solid Wake-up Smart Alarm (Exact Epoch Millis Engine):**
+            - Aligned with the proven Day Planner session alarm architecture: JavaScript calculates exact target epoch milliseconds (`targetEpochMillis`) and passes it directly across the NativeBridge.
+            - Direct `alarmManager.setExactAndAllowWhileIdle(RTC_WAKEUP, epochMillis, pi)` scheduling wakes CPU from Doze mode across all Android versions (6.0 to 14+) without relying on fragile lock-screen clock widgets.
+            - Instant testing support: Setting the alarm to current minute fires reliably within 3 seconds for immediate verification.
+            - Removed silent skip guards that caused missed alarms.
+          - **🏃‍♂️ Two-Stage Wake-up Mission 100% Intact:**
+            - **Phase 1**: Full-screen wake activity with European emergency siren (`880Hz` / `1175Hz` PCM AudioTrack + MediaPlayer). Requires 10 hard physical accelerometer shakes to silence the siren.
+            - **Phase 2**: Automatically launches Running module in Health Tracker with a 15-minute countdown requiring 50 physical walking steps. If not completed, re-rings with persistent 5-minute loops.
+            - Emergency fail-safe dismiss button available on `AlarmActivity` for unexpected situations.
+          - **🌙 Bedtime Popup Overhauled to App-Frozen Style (No Background Activity):**
+            - The bedtime popup is now structured and styled identically to the App Frozen dialog (`showAppFrozenDialog`).
+            - Impenetrable Cyberpunk backdrop consuming all touch events.
+            - Decisive two-button layout: **⬅️ Return to Home** (immediately closes the distracting app and sends user to Android home screen) and **📱 Open Productometer**.
+            - Zero loopholes and strictly NO background activity permitted.
+          - **🛡️ Distraction Blocker Untouched:**
+            - All academic keyword whitelist rules (160+ educational terms) and media control detection remain intact.
 
           #### 📦 Direct Download:
           - Click **Productometer.apk** under Assets below to download and install.
           EOF
-          gh release create v1.2.7 dist/Productometer.apk \
-            --title "Productometer v1.2.7 - Android Release APK" \
+          gh release create v1.2.8 dist/Productometer.apk \
+            --title "Productometer v1.2.8 - Android Release APK" \
             --notes-file release_notes.md || \
-          gh release upload v1.2.7 dist/Productometer.apk --clobber
+          gh release upload v1.2.8 dist/Productometer.apk --clobber

@@ -263,14 +263,32 @@ const NativeBridge = {
     },
 
     // --- ⏰ SMART WAKEUP ALARM HARDWARE BRIDGE ---
-    scheduleSmartWakeupAlarm: (wakeTimeStr) => {
+    scheduleSmartWakeupAlarm: (wakeTimeStr, epochMillis) => {
         try {
             localStorage.setItem('productometer_smart_alarm_enabled', 'true');
             localStorage.removeItem('wakeup_alarm_skipped_date');
             localStorage.removeItem('wakeup_mission_completed_date');
             if (wakeTimeStr) localStorage.setItem('productometer_bedtime_end', wakeTimeStr);
+
+            if (!epochMillis && wakeTimeStr) {
+                const parts = wakeTimeStr.split(':').map(Number);
+                const target = new Date();
+                target.setHours(parts[0] || 0, parts[1] || 0, 0, 0);
+                const now = Date.now();
+                if (now - target.getTime() > 120000) {
+                    target.setDate(target.getDate() + 1);
+                } else if (now >= target.getTime()) {
+                    target.setTime(now + 3000);
+                }
+                epochMillis = target.getTime();
+            }
+
             if (typeof window.AndroidBridge !== 'undefined' && window.AndroidBridge.scheduleSmartWakeupAlarm) {
-                window.AndroidBridge.scheduleSmartWakeupAlarm(wakeTimeStr);
+                if (epochMillis) {
+                    window.AndroidBridge.scheduleSmartWakeupAlarm(wakeTimeStr, epochMillis);
+                } else {
+                    window.AndroidBridge.scheduleSmartWakeupAlarm(wakeTimeStr);
+                }
             }
         } catch (e) {}
     },

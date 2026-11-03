@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Productometer — Built for Real Student Life</title>
 
-    <!-- Google Fonts: Plus Jakarta Sans (Modern, friendly, warm) & Caveat (Human handwritten notes) -->
+    <!-- Google Fonts: Plus Jakarta Sans, Caveat & Space Grotesk -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
@@ -34,19 +34,27 @@
                 <span class="app-name">PRODUCTOMETER</span>
                 <span class="edition-tag">STUDENT EDITION</span>
             </div>
-            <span class="slide-nav-title" id="slideNavTitle">Welcome</span>
+            <span class="slide-nav-title" id="slideNavTitle">Vision &amp; Overview</span>
         </div>
 
         <div class="bar-center">
             <div class="progress-capsule">
-                <div class="progress-bar-inner" id="progressBarInner" style="width: 7.69%;"></div>
+                <div class="progress-bar-inner" id="progressBarInner" style="width: 11.11%;"></div>
             </div>
             <div class="slide-badge-num">
-                <span id="currentNum">01</span> / <span id="totalNum">13</span>
+                <span id="currentNum">01</span> / <span id="totalNum">09</span>
             </div>
         </div>
 
         <div class="bar-right">
+            <a href="./Productometer_Presentation.ppsx" download="Productometer_Presentation.ppsx" class="action-pill-btn download-ppt-btn" id="btnDownloadPPSX" title="Download Full-Screen PowerPoint Show (.ppsx) that launches directly in full screen!">
+                <i class="fa-solid fa-play text-emerald"></i>
+                <span>Full-Screen Show (.ppsx)</span>
+            </a>
+            <a href="./Productometer_Presentation.pptx" download="Productometer_Presentation.pptx" class="action-pill-btn download-ppt-btn" id="btnDownloadPPT" title="Download Presentation as PowerPoint (.pptx)">
+                <i class="fa-solid fa-file-powerpoint text-amber"></i>
+                <span>Download PPT</span>
+            </a>
             <button class="action-pill-btn edit-deck-pill active" id="btnToggleEdit" title="Toggle slide and text editing">
                 <i class="fa-solid fa-pen-to-square text-cyan"></i>
                 <span id="editBtnLabel">Editing: ON</span>
@@ -78,7 +86,7 @@
     <div class="deck-edit-banner" id="deckEditBanner">
         <div class="deb-content">
             <span class="deb-icon">✏️</span>
-            <span class="deb-text"><strong>Deck Editing Active:</strong> Click any text to edit directly &bull; Hover over any picture to <strong>Change 📷</strong> or <strong>Remove 🗑️</strong> &bull; Edits auto-save!</span>
+            <span class="deb-text"><strong>Deck Editing Active:</strong> Click any text to edit directly &bull; Hover over any picture to <strong>Change 📷</strong> or <strong>Remove 🗑️</strong> &bull; Click <strong>Download PPT</strong> anytime!</span>
         </div>
         <div class="deb-actions">
             <button type="button" class="deb-close" id="btnCloseEditBanner" title="Dismiss tip">&times;</button>
@@ -92,398 +100,186 @@
     <main class="deck-stage" id="deckStage">
 
         <!-- ========================================================
-             SLIDE 1: TITLE & VISION
+             SLIDE 1: TITLE & SYSTEM VISION (SHEET 1)
              ======================================================== -->
-        <section class="slide active" data-slide="1" data-title="Welcome">
+        <section class="slide active" data-slide="1" data-title="Vision &amp; Overview">
             <div class="slide-inner title-layout">
                 <div class="friendly-badge">
-                    <span>👋 Hey there, fellow student!</span>
+                    <span class="pulse-sparkle">👋</span>
+                    <span>STUDENT DISCIPLINE &amp; PRODUCTIVITY SYSTEM &bull; VERSION 2.0</span>
                 </div>
 
-                <h1 class="hero-headline">
-                    Finally, one honest place to track your entire day.
-                </h1>
+                <h1 class="hero-headline">Productometer</h1>
 
                 <p class="hero-subline">
+                    An ultimate destination built for students to track and master their entire 24-hour day&mdash;
                     <span class="word-study">Studies</span> &middot; 
                     <span class="word-health">Health</span> &middot; 
-                    <span class="word-screen">Screen</span> &middot; 
-                    <span class="word-sleep">Sleep</span>
+                    <span class="word-screen">Screen Time</span> &middot; 
+                    <span class="word-sleep">Sleep cycle</span>.
                 </p>
 
-                <div class="personal-note-card">
-                    <div class="note-sticker"><i class="fa-solid fa-heart"></i></div>
+                <div class="personal-note-card border-amber">
+                    <div class="note-sticker"><i class="fa-solid fa-lightbulb text-amber"></i></div>
                     <p class="note-quote">
-                        &ldquo;We all know the drill: exams are around the corner, you promised you'd work out, but &lsquo;just 5 minutes of Reels&rsquo; turned into midnight guilt. We built Productometer because we were tired of fighting our phones. Here is a kinder, smarter way to take back your day.&rdquo;
+                        <strong>Why Productometer is Created:</strong> Most students today juggle 4 to 6 disconnected apps (a Pomodoro timer, a calendar, a habit checklist, a workout app, and a sleep alarm). Worse, conventional app blockers fail because they lock phones completely, creating frustration that leads students to uninstall the blocker within 48 hours. <strong>Productometer replaces willpower with smart, friendly architecture</strong>&mdash;connecting your daily academic goals, physical movement, healthy screen limits, and restful bedtime sleep into one cohesive system that works completely offline.
                     </p>
                 </div>
 
-                <div class="key-values-row">
-                    <div class="value-chip"><i class="fa-solid fa-check text-cyan"></i> No toxic hustle culture</div>
-                    <div class="value-chip"><i class="fa-solid fa-check text-emerald"></i> Allows a quick breather</div>
-                    <div class="value-chip"><i class="fa-solid fa-check text-amber"></i> 100% Free &amp; Private</div>
-                    <div class="value-chip"><i class="fa-solid fa-check text-purple"></i> Works offline</div>
-                </div>
-            </div>
-        </section>
-
-        <!-- ========================================================
-             SLIDE 2: ALL FEATURES AT ONE PLACE
-             ======================================================== -->
-        <section class="slide" data-slide="2" data-title="All In One Place">
-            <div class="slide-inner">
-                <div class="slide-intro">
-                    <span class="friendly-mini-badge">🎒 NO MORE APP JUGGLING</span>
-                    <h2 class="slide-heading">Everything in One Place</h2>
-                    <p class="slide-sub">
-                        Why are you using 5 different apps when your day is just 24 connected hours? When your study schedule talks to your alarms and your screen time, life gets so much simpler.
-                    </p>
-                </div>
-
-                <div class="visual-cards-mosaic">
-                    <!-- Day Planner Card -->
-                    <div class="mosaic-tile tile-planner">
-                        <img src="../Features/assets/1.avif" alt="Day Planner preview" class="mosaic-img" data-deck-img-id="slide2_planner">
-                        <div class="mosaic-caption">
-                            <span class="tile-tag">01 &bull; DAY PLANNER</span>
-                            <h3>Paint Your Day</h3>
-                            <p>Swipe blocks with your thumb. Set your day in 10 seconds.</p>
-                        </div>
+                <div class="domains-grid-4">
+                    <div class="domain-mini-card border-cyan">
+                        <div class="dmc-icon text-cyan"><i class="fa-solid fa-graduation-cap"></i></div>
+                        <h3>1. Academics &amp; Focus</h3>
+                        <p>Lecture-safe study sessions that let you watch educational tutorials freely while preventing rabbit holes.</p>
                     </div>
-
-                    <!-- Academics Card -->
-                    <div class="mosaic-tile tile-academics">
-                        <img src="../Features/assets/2.jpg" alt="Academics preview" class="mosaic-img" data-deck-img-id="slide2_academics">
-                        <div class="mosaic-caption">
-                            <span class="tile-tag">02 &bull; ACADEMICS</span>
-                            <h3>Focus Deeply</h3>
-                            <p>Watch your lectures without falling into random videos.</p>
-                        </div>
+                    <div class="domain-mini-card border-emerald">
+                        <div class="dmc-icon text-emerald"><i class="fa-solid fa-heart-pulse"></i></div>
+                        <h3>2. PulseFit Health</h3>
+                        <p>Built-in step pedometer, active calorie targets, and 40+ workout guides to keep body energy high.</p>
                     </div>
-
-                    <!-- Screen Management Card -->
-                    <div class="mosaic-tile tile-screen">
-                        <img src="../Features/assets/3.avif" alt="Screen management preview" class="mosaic-img" data-deck-img-id="slide2_screen">
-                        <div class="mosaic-caption">
-                            <span class="tile-tag">03 &bull; SCREEN TIME</span>
-                            <h3>Honest Screen Time</h3>
-                            <p>Tracks your phone use automatically from the moment you wake up.</p>
-                        </div>
+                    <div class="domain-mini-card border-amber">
+                        <div class="dmc-icon text-amber"><i class="fa-solid fa-mobile-screen"></i></div>
+                        <h3>3. Screen Management</h3>
+                        <p>Ground-truth automated screen time tracking from midnight with the friendly 1-Reel Grace Rule.</p>
                     </div>
-
-                    <!-- Health Tracker Card -->
-                    <div class="mosaic-tile tile-health">
-                        <img src="../Features/assets/4.avif" alt="Health tracker preview" class="mosaic-img" data-deck-img-id="slide2_health">
-                        <div class="mosaic-caption">
-                            <span class="tile-tag">04 &bull; HEALTH &amp; WORKOUTS</span>
-                            <h3>Move Your Body</h3>
-                            <p>Simple exercise form guides and daily step counts.</p>
-                        </div>
-                    </div>
-
-                    <!-- Sleep Monitoring Card -->
-                    <div class="mosaic-tile tile-sleep">
-                        <img src="../Features/assets/5.jpeg" alt="Sleep monitoring preview" class="mosaic-img" data-deck-img-id="slide2_sleep">
-                        <div class="mosaic-caption">
-                            <span class="tile-tag">05 &bull; SLEEP &amp; REST</span>
-                            <h3>Real Restful Nights</h3>
-                            <p>Bedtime screen reminders so you wake up refreshed.</p>
-                        </div>
-                    </div>
-
-                    <!-- Producto AI Card -->
-                    <div class="mosaic-tile tile-ai">
-                        <div class="ai-sparkle-center"><i class="fa-solid fa-sparkles"></i></div>
-                        <div class="mosaic-caption">
-                            <span class="tile-tag">06 &bull; PRODUCTO AI</span>
-                            <h3>Your Study Buddy</h3>
-                            <p>Personal advice when you're overwhelmed or feeling stuck.</p>
-                        </div>
+                    <div class="domain-mini-card border-purple">
+                        <div class="dmc-icon text-purple"><i class="fa-solid fa-moon"></i></div>
+                        <h3>4. Sleep &amp; Recovery</h3>
+                        <p>Circadian Bedtime Shield that dims blue light 15 minutes before bed, plus smart wake-up alarms.</p>
                     </div>
                 </div>
             </div>
         </section>
 
         <!-- ========================================================
-             SLIDE 3: BUILDS GOOD HABITS & DISCIPLINE
+             SLIDE 2: PHONE PERMISSIONS & SECURITY (SHEET 2)
              ======================================================== -->
-        <section class="slide" data-slide="3" data-title="Habits &amp; Discipline">
+        <section class="slide" data-slide="2" data-title="Phone Permissions">
             <div class="slide-inner">
                 <div class="slide-intro">
-                    <span class="friendly-mini-badge">🌱 GENTLE CONSISTENCY</span>
-                    <h2 class="slide-heading">Building Habits That Actually Stick</h2>
+                    <span class="friendly-mini-badge">🔒 SYSTEM SECURITY &amp; COMPLIANCE &bull; SAFE &amp; OFFLINE</span>
+                    <h2 class="slide-heading">Why Does Productometer Need Phone Permissions?</h2>
                     <p class="slide-lead">
-                        Most people think discipline means forcing yourself to suffer. We think discipline is about fixing your setup so doing the right thing becomes effortless.
+                        A brief and transparent guide to the 4 essential permissions requested from your smartphone.
                     </p>
                 </div>
 
-                <div class="habits-cards-deck">
-                    <div class="habit-story-card">
-                        <div class="h-card-badge red-badge">THE STRUGGLE</div>
-                        <h3>The &ldquo;Willpower Battery&rdquo; Myth</h3>
-                        <p class="h-card-body">
-                            By 6:00 PM, after lectures, assignments, and commuting, your brain is exhausted. Asking your tired mind to &ldquo;just resist scrolling&rdquo; never works.
+                <div class="perms-grid-2x2">
+                    <!-- 1. Accessibility -->
+                    <div class="perm-card-deck border-amber">
+                        <div class="pcd-header">
+                            <span class="pcd-num text-amber"><i class="fa-solid fa-shield-cat"></i> 1. Accessibility Permission</span>
+                            <span class="pcd-badge">Shorts &amp; Reels Guardian</span>
+                        </div>
+                        <p class="pcd-why">
+                            <strong>Why it's needed:</strong> To gently detect when YouTube Shorts or Instagram Reels open on your screen. This powers our <em>1-Reel Grace Rule</em>, giving you 30 seconds to enjoy an isolated video before helping you step out of endless scrolling.
                         </p>
-                        <div class="h-card-solution">
-                            <i class="fa-solid fa-lightbulb text-amber"></i>
-                            <span><strong>Our take:</strong> Stop relying on willpower. Let the app protect your boundaries so you don't have to keep fighting yourself.</span>
+                        <div class="pcd-safe">
+                            <i class="fa-solid fa-lock text-emerald"></i>
+                            <span><strong>100% Safe:</strong> Never reads chats, passwords, or personal messages. Only detects short-form video screens.</span>
                         </div>
                     </div>
 
-                    <div class="habit-story-card">
-                        <div class="h-card-badge cyan-badge">THE SECRET</div>
-                        <h3>Bite-Sized 30-Minute Blocks</h3>
-                        <p class="h-card-body">
-                            Telling yourself &ldquo;I have to study for 5 hours tonight&rdquo; makes you want to avoid it completely. But studying for 30 minutes? Anyone can do that.
+                    <!-- 2. Usage Access -->
+                    <div class="perm-card-deck border-cyan">
+                        <div class="pcd-header">
+                            <span class="pcd-num text-cyan"><i class="fa-solid fa-chart-pie"></i> 2. Usage Access Permission</span>
+                            <span class="pcd-badge">Automatic Screen Time</span>
+                        </div>
+                        <p class="pcd-why">
+                            <strong>Why it's needed:</strong> To automatically calculate the exact minutes and hours you spend on apps from 00:00 midnight to right now. This completely eliminates manual typing or daily guessing.
                         </p>
-                        <div class="h-card-solution">
-                            <i class="fa-solid fa-check text-cyan"></i>
-                            <span><strong>The win:</strong> You start with one block, get into the groove, and momentum carries you through the rest.</span>
+                        <div class="pcd-safe">
+                            <i class="fa-solid fa-lock text-emerald"></i>
+                            <span><strong>100% Safe:</strong> Reads only the phone's internal usage counter. No personal files or browsing histories are touched.</span>
                         </div>
                     </div>
 
-                    <div class="habit-story-card">
-                        <div class="h-card-badge emerald-badge">THE MINDSET</div>
-                        <h3>No Guilt Trips</h3>
-                        <p class="h-card-body">
-                            Traditional blockers treat you like a toddler by locking your phone and making you feel guilty. Productometer treats you like an adult.
+                    <!-- 3. Alarms & Notifications -->
+                    <div class="perm-card-deck border-purple">
+                        <div class="pcd-header">
+                            <span class="pcd-num text-purple"><i class="fa-solid fa-bell"></i> 3. Alarms &amp; Notifications</span>
+                            <span class="pcd-badge">Exact Timers &amp; Waking Alarms</span>
+                        </div>
+                        <p class="pcd-why">
+                            <strong>Why it's needed:</strong> To allow study session countdowns, rest reminders, and morning wake-up alarms to ring reliably at the exact second, even when the phone enters deep power-saving mode.
                         </p>
-                        <div class="h-card-solution">
-                            <i class="fa-solid fa-heart text-emerald"></i>
-                            <span><strong>The win:</strong> Missed a session? No problem. Tweak your planner and keep going. Tomorrow is a brand new day.</span>
+                        <div class="pcd-safe">
+                            <i class="fa-solid fa-lock text-emerald"></i>
+                            <span><strong>100% Safe:</strong> Rings strictly for your scheduled tasks and automatically survives device reboots.</span>
+                        </div>
+                    </div>
+
+                    <!-- 4. Physical Activity Sensor -->
+                    <div class="perm-card-deck border-emerald">
+                        <div class="pcd-header">
+                            <span class="pcd-num text-emerald"><i class="fa-solid fa-person-walking"></i> 4. Physical Activity Sensor</span>
+                            <span class="pcd-badge">Built-in Step Pedometer</span>
+                        </div>
+                        <p class="pcd-why">
+                            <strong>Why it's needed:</strong> To track your daily walking steps and physical movement using your phone's built-in step counter sensor, helping you balance prolonged desk study with healthy physical activity.
+                        </p>
+                        <div class="pcd-safe">
+                            <i class="fa-solid fa-lock text-emerald"></i>
+                            <span><strong>100% Safe:</strong> Uses low-power hardware step counting (&lt; 0.02% battery/hr) with zero GPS tracking.</span>
                         </div>
                     </div>
                 </div>
-            </div>
-        </section>
 
-        <!-- ========================================================
-             SLIDE 4: GAMIFIED SCORE BASED PRODUCTIVITY CALCULATION
-             ======================================================== -->
-        <section class="slide" data-slide="4" data-title="Daily Score">
-            <div class="slide-inner">
-                <div class="slide-intro">
-                    <span class="friendly-mini-badge">🎮 FAIR &amp; BALANCED</span>
-                    <h2 class="slide-heading">A Score That Reflects Real Life</h2>
-                    <p class="slide-lead">
-                        Studying for 14 hours straight isn't healthy, and watching 3 hours of Shorts isn't helpful. Our score rewards balance: good study sessions, moving your body, and keeping screen time under control.
-                    </p>
-                </div>
-
-                <div class="score-human-layout">
-                    <!-- Big Score Showcase -->
-                    <div class="score-highlight-card">
-                        <span class="score-chip-label">YOUR DAILY SCORE AT A GLANCE</span>
-                        <div class="score-display-row">
-                            <span class="big-score-digits">480</span>
-                            <div class="score-status-group">
-                                <span class="score-pill-tag">✨ TITANIUM DAY</span>
-                                <span class="score-subtext">You crushed your studies &amp; got a great workout!</span>
-                            </div>
-                        </div>
-
-                        <div class="score-progress-line">
-                            <div class="score-fill-line" style="width: 78%;"></div>
-                        </div>
-                        <span class="score-caption-helper">Points update live as your day unfolds</span>
-                    </div>
-
-                    <!-- What Adds & What Deducts -->
-                    <div class="score-rules-two-col">
-                        <div class="rule-box positive">
-                            <div class="rule-box-header">
-                                <i class="fa-solid fa-circle-plus text-emerald"></i>
-                                <h4>What Gives You Points</h4>
-                            </div>
-                            <ul>
-                                <li><strong>Studying:</strong> 100 points for every solid hour of lectures and coursework.</li>
-                                <li><strong>Working Out:</strong> Solid points for a 45&ndash;60 minute sweat session.</li>
-                                <li><strong>Planning Ahead:</strong> +50 bonus points every time you finish a scheduled block.</li>
-                            </ul>
-                        </div>
-
-                        <div class="rule-box negative">
-                            <div class="rule-box-header">
-                                <i class="fa-solid fa-circle-minus text-crimson"></i>
-                                <h4>What Gently Nudges You</h4>
-                            </div>
-                            <ul>
-                                <li><strong>Excessive Scrolling:</strong> 30 minutes of chill time is totally fine! But when it stretches past 2&ndash;3 hours, points start dropping.</li>
-                                <li><strong>Overtraining:</strong> Spending 4 hours in the gym isn't rewarded extra&mdash;your body needs rest to study!</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- ========================================================
-             SLIDE 5: PRODUCTO AI
-             ======================================================== -->
-        <section class="slide" data-slide="5" data-title="Producto AI">
-            <div class="slide-inner">
-                <div class="slide-intro">
-                    <span class="friendly-mini-badge">🤖 SMART MENTOR</span>
-                    <h2 class="slide-heading">Producto AI: The Study Buddy Who Listens</h2>
-                    <p class="slide-lead">
-                        Ever stared at a 100-page textbook at 10 PM feeling totally frozen? Producto AI isn't an emotionless corporate bot&mdash;it's designed to help you breathe, break tasks down, and get unstuck.
-                    </p>
-                </div>
-
-                <div class="ai-showcase-split">
-                    <!-- Chat Conversation -->
-                    <div class="friendly-chat-frame">
-                        <div class="chat-header">
-                            <div class="avatar-circle"><i class="fa-solid fa-sparkles"></i></div>
-                            <div>
-                                <strong>Producto AI Buddy</strong>
-                                <span>Always online &bull; Ready to brainstorm</span>
-                            </div>
-                        </div>
-
-                        <div class="chat-thread">
-                            <div class="bubble student-bubble">
-                                &ldquo;I have chemistry and maths exams in 3 days and I feel so behind. Where do I even begin?&rdquo;
-                            </div>
-                            <div class="bubble buddy-bubble">
-                                <i class="fa-solid fa-quote-left bubble-quote-icon"></i>
-                                <span>Take a deep breath! You don't have to learn everything in one night. Let's pick the <strong>top 3 high-weight topics</strong> in math first. I've sketched two 45-minute blocks in your planner for tonight with a 15-minute snack break. Let's just do block one together. Ready?</span>
-                            </div>
-                        </div>
-
-                        <div class="chat-chips-footer">
-                            <span>Break down syllabus</span>
-                            <span>Brain-fuel snacks</span>
-                            <span>Exam calm-down</span>
-                        </div>
-                    </div>
-
-                    <!-- 3 Real Benefits -->
-                    <div class="ai-benefits-stack">
-                        <div class="benefit-card">
-                            <div class="benefit-icon"><i class="fa-solid fa-wand-magic-sparkles text-cyan"></i></div>
-                            <div>
-                                <h4>Turns Big Topics Into Small Steps</h4>
-                                <p>Paste a scary syllabus chapter. It turns it into simple, bite-sized tasks you can check off one by one.</p>
-                            </div>
-                        </div>
-
-                        <div class="benefit-card">
-                            <div class="benefit-icon"><i class="fa-solid fa-battery-half text-amber"></i></div>
-                            <div>
-                                <h4>Spots When You're Burned Out</h4>
-                                <p>If you've been grinding for 3 hours, it reminds you to drink water, stretch, and step away from the screen.</p>
-                            </div>
-                        </div>
-
-                        <div class="benefit-card">
-                            <div class="benefit-icon"><i class="fa-solid fa-bowl-food text-emerald"></i></div>
-                            <div>
-                                <h4>Real Food for Brain Energy</h4>
-                                <p>Tells you what to eat during late-night study sessions so you don't crash from sugar spikes.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- ========================================================
-             SLIDE 6: DISTRACTION BLOCKER
-             ======================================================== -->
-        <section class="slide" data-slide="6" data-title="Distraction Blocker">
-            <div class="slide-inner">
-                <div class="slide-intro">
-                    <span class="friendly-mini-badge">🛡️ THE 1-REEL GRACE RULE</span>
-                    <h2 class="slide-heading">The Distraction Blocker</h2>
-                    <p class="slide-lead">
-                        We know you don't want your phone locked down like a child. You just need a gentle hand on your shoulder before a 2-minute break turns into a 2-hour black hole.
-                    </p>
-                </div>
-
-                <div class="grace-story-grid">
-                    <!-- Step 1 -->
-                    <div class="grace-card step-grace">
-                        <div class="grace-step-badge">1ST SHORT</div>
-                        <div class="grace-icon-box"><i class="fa-solid fa-mug-hot text-emerald"></i></div>
-                        <h3>Enjoy Your Breather</h3>
-                        <p>Opened a funny Reel or Short? Go right ahead. Take 30 seconds to relax your brain. No alarms, no popups, no judgment.</p>
-                        <span class="grace-state-pill pill-ok">Allowed &bull; Grace Period</span>
-                    </div>
-
-                    <!-- Step 2 -->
-                    <div class="grace-card step-swipe">
-                        <div class="grace-step-badge">2ND SHORT</div>
-                        <div class="grace-icon-box"><i class="fa-solid fa-hand-holding-hand text-amber"></i></div>
-                        <h3>The Gentle Interception</h3>
-                        <p>You swipe for the next video out of habit. That&rsquo;s when the magic happens: a 5-second countdown alert pops up.</p>
-                        <span class="grace-state-pill pill-warn">5-Second Gentle Nudge</span>
-                    </div>
-
-                    <!-- Step 3 -->
-                    <div class="grace-card step-return">
-                        <div class="grace-step-badge">BACK TO LIFE</div>
-                        <div class="grace-icon-box"><i class="fa-solid fa-arrow-left text-cyan"></i></div>
-                        <h3>Returns You to Focus</h3>
-                        <p>After 5 seconds, your phone smoothly takes you back to your lecture notes. Your focus is saved, and your evening is still yours.</p>
-                        <span class="grace-state-pill pill-cyan">Focus Restored!</span>
-                    </div>
-                </div>
-
-                <div class="emergency-pass-banner">
-                    <i class="fa-solid fa-key text-cyan"></i>
+                <div class="offline-guarantee-strip">
+                    <i class="fa-solid fa-shield-halved text-emerald"></i>
                     <div>
-                        <strong>Need to reply to a friend right now?</strong>
-                        <span>Tap the <strong>30-Second Emergency Pass</strong> anytime. You stay in control.</span>
+                        <strong>Zero-Cloud Offline Privacy Guarantee:</strong>
+                        <span>Unlike commercial apps that sell your browsing habits to advertisers, Productometer is 100% self-contained. All your study schedules, screen statistics, and health metrics are saved securely inside your phone's encrypted memory. No accounts, no logins, and zero data ever uploaded to the cloud.</span>
                     </div>
                 </div>
             </div>
         </section>
 
         <!-- ========================================================
-             SLIDE 7: INTEGRATED DAY PLANNER
+             SLIDE 3: FEATURE 1 — DAY PLANNER (SHEET 3)
              ======================================================== -->
-        <section class="slide" data-slide="7" data-title="Day Planner">
+        <section class="slide" data-slide="3" data-title="Day Planner">
             <div class="slide-inner">
                 <div class="slide-intro">
-                    <span class="friendly-mini-badge">📅 48-SLOT MATRIX</span>
-                    <h2 class="slide-heading">An Integrated Day Planner</h2>
+                    <span class="friendly-mini-badge">📅 MODULE 1 &bull; TIME ALLOCATION &bull; TIME MASTERY</span>
+                    <h2 class="slide-heading">Feature 1: The 48-Slot Continuous Day Planner</h2>
                     <p class="slide-lead">
-                        Most planners are static lists you write once and forget. Productometer's planner is alive: what you plan here automatically sets up your alarms and arms your distraction shields.
+                        Schedule your entire 24-hour day in effortless touch swipe painting.
                     </p>
                 </div>
 
                 <div class="planner-two-col">
                     <div class="planner-photo-card">
-                        <img src="../Features/assets/1.avif" alt="Day planner in action" class="real-app-photo" data-deck-img-id="slide7_planner_mockup">
+                        <img src="../Features/assets/1.avif" alt="Day planner in action" class="real-app-photo" data-deck-img-id="slide3_planner_mockup">
                         <div class="photo-overlay-tag">
                             <i class="fa-solid fa-wand-magic-sparkles text-cyan"></i>
-                            <span>Continuous Swipe-Paint (30-min slots)</span>
+                            <span>Real App Display: 48-Slot Matrix Planner</span>
                         </div>
                     </div>
 
                     <div class="planner-features-list">
-                        <div class="p-item">
-                            <div class="p-icon"><i class="fa-solid fa-paintbrush text-cyan"></i></div>
+                        <div class="p-item border-amber">
+                            <div class="p-icon"><i class="fa-solid fa-bell text-amber"></i></div>
                             <div>
-                                <h4>Paint With Your Finger</h4>
-                                <p>Drag your thumb across the slots: blue for study, yellow for workout, purple for sleep. Your schedule is ready in under 15 seconds.</p>
+                                <h4>Automatic Hardware Wake Alarms</h4>
+                                <p>Every scheduled block automatically configures an exact Android alarm that rings on time to keep you disciplined, waking the phone screen even in deep battery sleep.</p>
                             </div>
                         </div>
 
-                        <div class="p-item">
-                            <div class="p-icon"><i class="fa-solid fa-bell-ring text-amber"></i></div>
+                        <div class="p-item border-cyan">
+                            <div class="p-icon"><i class="fa-solid fa-arrows-rotate text-cyan"></i></div>
                             <div>
-                                <h4>Alarms That Actually Ring</h4>
-                                <p>When study time arrives, your phone actually rings out loud. Even if your screen is off, even in battery-saver mode.</p>
+                                <h4>Survives Phone Reboots</h4>
+                                <p>If your phone runs out of battery or restarts overnight, Productometer automatically restores all your planned task alarms the moment the phone turns back on.</p>
                             </div>
                         </div>
 
-                        <div class="p-item">
-                            <div class="p-icon"><i class="fa-solid fa-shield text-emerald"></i></div>
+                        <div class="p-item border-emerald">
+                            <div class="p-icon"><i class="fa-solid fa-trophy text-emerald"></i></div>
                             <div>
-                                <h4>Automatic Shield On</h4>
-                                <p>The moment a study block starts, your distraction blocker turns on automatically. When the session finishes, it turns off.</p>
+                                <h4>Direct Activity Point Rewards</h4>
+                                <p>Completing your scheduled day blocks awards +50 execution points toward your daily Net AP score, turning time discipline into a fun daily achievement.</p>
                             </div>
                         </div>
                     </div>
@@ -492,52 +288,120 @@
         </section>
 
         <!-- ========================================================
-             SLIDE 8: ACADEMICS MONITORING
+             SLIDE 4: FEATURE 2 — THE 1-REEL GRACE RULE (SHEET 4)
              ======================================================== -->
-        <section class="slide" data-slide="8" data-title="Academics Monitoring">
+        <section class="slide" data-slide="4" data-title="The 1-Reel Grace Rule">
             <div class="slide-inner">
                 <div class="slide-intro">
-                    <span class="friendly-mini-badge">🎓 SMART STUDY SESSIONS</span>
-                    <h2 class="slide-heading">Academics Monitoring: Lecture-Only Security</h2>
+                    <span class="friendly-mini-badge">🛡️ MODULE 2 &bull; FOCUS SECURITY &bull; SMART INTERCEPTION</span>
+                    <h2 class="slide-heading">Feature 2: The 1-Reel Grace Rule</h2>
                     <p class="slide-lead">
-                        YouTube is our biggest library for physics, math, and coding, but it's also a trap for gaming highlights and gossip. We solved this student dilemma.
+                        Why traditional app blockers fail&mdash;and how our friendly state machine protects your attention.
+                    </p>
+                </div>
+
+                <div class="blocker-comparison-row">
+                    <div class="comp-box flaw border-crimson">
+                        <div class="cb-tag text-crimson"><i class="fa-solid fa-xmark"></i> Traditional Blockers (The Flaw)</div>
+                        <p>Lock apps completely. If a classmate sends an important video link, you can't view it. Users get annoyed and uninstall the blocker within 48 hours.</p>
+                    </div>
+                    <div class="comp-box solution border-emerald">
+                        <div class="cb-tag text-emerald"><i class="fa-solid fa-check"></i> Productometer 1-Reel Grace (The Solution)</div>
+                        <p>Permits the 1st short with a gentle 30-second reminder. Only intervenes when you swipe consecutively into algorithmic doomscrolling.</p>
+                    </div>
+                </div>
+
+                <div class="state-machine-header">
+                    <span><i class="fa-solid fa-diagram-project text-cyan"></i> HOW THE 1-REEL GRACE STATE MACHINE WORKS IN PRACTICE</span>
+                </div>
+
+                <div class="mechanism-steps-row">
+                    <div class="step-card">
+                        <span class="step-badge emerald-tag">STEP 1</span>
+                        <h3>1st Short Allowed (Grace Period)</h3>
+                        <p>You open YouTube Shorts or Instagram Reels. The app detects it and shows a friendly toast: <em>&ldquo;1 Reel Allowed &bull; 30s Grace Active&rdquo;</em>. Watch what you need without interruption.</p>
+                    </div>
+
+                    <div class="mech-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+
+                    <div class="step-card">
+                        <span class="step-badge amber-tag">STEP 2</span>
+                        <h3>2nd Consecutive Swipe (Intervention HUD)</h3>
+                        <p>If you swipe up again to start scrolling uncontrollably, a soft audio reminder sounds and a clean 5-second countdown HUD appears over the video.</p>
+                    </div>
+
+                    <div class="mech-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+
+                    <div class="step-card">
+                        <span class="step-badge cyan-tag">STEP 3</span>
+                        <h3>Automatic Return to Study Notes</h3>
+                        <p>At 0 seconds, the app automatically triggers a smooth back navigation, bringing you right back to your notes or study session with zero lost work.</p>
+                    </div>
+                </div>
+
+                <div class="emergency-override-pass">
+                    <i class="fa-solid fa-key text-amber"></i>
+                    <div>
+                        <strong>30-Second Emergency Override Pass:</strong>
+                        <span>Have an urgent message to check or need to copy something quickly? Simply tap <strong>&ldquo;Emergency Pass&rdquo;</strong> to receive an immediate 30-second window before focus monitoring re-engages.</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================================
+             SLIDE 5: FEATURE 3 — ACADEMICS & LECTURE SECURITY (SHEET 5)
+             ======================================================== -->
+        <section class="slide" data-slide="5" data-title="Academics &amp; Lecture Security">
+            <div class="slide-inner">
+                <div class="slide-intro">
+                    <span class="friendly-mini-badge">🎓 MODULE 3 &bull; ACADEMIC FOCUS &bull; STUDY SHIELD</span>
+                    <h2 class="slide-heading">Feature 3: Academics &amp; Lecture Security</h2>
+                    <p class="slide-lead">
+                        Learn freely on YouTube without falling into algorithmic entertainment traps.
                     </p>
                 </div>
 
                 <div class="academics-two-col">
                     <div class="acad-rules-stack">
-                        <div class="acad-card allowed">
+                        <div class="acad-card allowed border-cyan">
                             <div class="acad-badge-row">
-                                <span class="badge-allowed"><i class="fa-solid fa-circle-check"></i> ALWAYS ALLOWED</span>
-                                <span class="badge-note">Free learning</span>
+                                <span class="badge-allowed"><i class="fa-solid fa-check"></i> LECTURE-SAFE WHITELIST</span>
                             </div>
-                            <h3>Educational Lectures &amp; Courses</h3>
-                            <p>Study physics, coding, calculus, or exam prep on YouTube with zero interruptions. Learn at your own pace without blockers getting in the way.</p>
+                            <h3>Whitelists Educational Videos</h3>
+                            <p>Students rely on online video lectures to learn. Productometer inspects video titles for keywords like <em>lecture, tutorial, class, coding, physics, exam</em> and allows uninterrupted full-screen playback.</p>
                         </div>
 
-                        <div class="acad-card warning">
+                        <div class="acad-card blocked border-amber">
                             <div class="acad-badge-row">
-                                <span class="badge-warn"><i class="fa-solid fa-bell"></i> 15-SECOND GENTLE REMINDER</span>
-                                <span class="badge-note">Friendly check-in</span>
+                                <span class="badge-blocked"><i class="fa-solid fa-hourglass-half"></i> 15-SECOND CASUAL VIDEO REMINDER</span>
                             </div>
-                            <h3>Casual Entertainment Videos</h3>
-                            <p>If you drift away into gaming streams or reaction videos, a soft audio reminder sounds after 15 seconds: &ldquo;Hey, stay on track!&rdquo;</p>
+                            <h3>15-Second Casual Video Reminder</h3>
+                            <p>If you click on non-educational entertainment (gaming streams, reaction vlogs) during an active study session, a gentle 15-second grace timer prompts you to stay on track before issuing an alert.</p>
                         </div>
 
-                        <div class="acad-card notification">
+                        <div class="acad-card notification border-emerald">
                             <div class="acad-badge-row">
                                 <span class="badge-notif"><i class="fa-solid fa-mobile"></i> STATUS BAR TICKER</span>
                             </div>
-                            <h3>Ongoing Countdown Ticker</h3>
-                            <p>Swipe down your notification shade anytime to see: <em>&ldquo;Physics: 18 minutes remaining&rdquo;</em>. Keeps you grounded.</p>
+                            <h3>Ongoing Status Bar Countdown Ticker</h3>
+                            <p>Your study Pomodoro session runs as an ongoing notification ticker in your phone's status bar, showing time remaining and focus points earned without getting killed by the phone's memory.</p>
+                        </div>
+
+                        <div class="acad-card point-reward border-purple">
+                            <div class="acad-badge-row">
+                                <span class="badge-points"><i class="fa-solid fa-coins"></i> +100 SCORE POINTS</span>
+                            </div>
+                            <h3>Direct +100 Points per Study Hour</h3>
+                            <p>Every hour spent in verified deep study adds +100 points directly to your daily score, incentivizing consistent academic focus.</p>
                         </div>
                     </div>
 
                     <div class="acad-photo-wrapper">
-                        <img src="../Features/assets/2.jpg" alt="Academics session in action" class="real-app-photo" data-deck-img-id="slide8_academics_mockup">
+                        <img src="../Features/assets/2.jpg" alt="Academics session in action" class="real-app-photo" data-deck-img-id="slide5_academics_mockup">
                         <div class="photo-overlay-tag">
                             <i class="fa-solid fa-clock text-cyan"></i>
-                            <span>Deep Work &bull; +100 Points Every Hour</span>
+                            <span>Real App Display: Academic Focus Session &bull; +100 Pts/Hr</span>
                         </div>
                     </div>
                 </div>
@@ -545,162 +409,58 @@
         </section>
 
         <!-- ========================================================
-             SLIDE 9: DEDICATED HEALTH SECTION
+             SLIDE 6: FEATURE 4 — AUTOMATED SCREEN MANAGEMENT (SHEET 6)
              ======================================================== -->
-        <section class="slide" data-slide="9" data-title="Health &amp; Workouts">
+        <section class="slide" data-slide="6" data-title="Screen Management">
             <div class="slide-inner">
                 <div class="slide-intro">
-                    <span class="friendly-mini-badge">💪 PULSEFIT HEALTH</span>
-                    <h2 class="slide-heading">A Dedicated Section for Health</h2>
+                    <span class="friendly-mini-badge">📊 MODULE 4 &bull; DIGITAL WELLBEING &bull; ZERO TYPING</span>
+                    <h2 class="slide-heading">Feature 4: Automated Screen Management</h2>
                     <p class="slide-lead">
-                        You can't have a sharp mind if your body is running on 3 hours of sleep, zero movement, and junk food. Health isn't separate from studying&mdash;it's your foundation.
-                    </p>
-                </div>
-
-                <div class="health-human-layout">
-                    <!-- Real Exercise GIF Showcases -->
-                    <div class="exercise-visual-column">
-                        <div class="hero-health-box">
-                            <img src="../Features/assets/4.avif" alt="Health tracker main screen" class="real-app-photo" data-deck-img-id="slide9_health_mockup">
-                        </div>
-                        <div class="gif-pair-row">
-                            <div class="gif-item">
-                                <img src="../Features/Health_Tracker/assets/barbell_bench_press.gif" alt="Bench Press Form" class="exercise-gif" data-deck-img-id="slide9_bench_press">
-                                <span>Bench Press Form</span>
-                            </div>
-                            <div class="gif-item">
-                                <img src="../Features/Health_Tracker/assets/pushups.gif" alt="Pushups Form" class="exercise-gif" data-deck-img-id="slide9_pushups">
-                                <span>Bodyweight Pushups</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Health Features -->
-                    <div class="health-specs-column">
-                        <div class="health-item-card">
-                            <div class="h-icon-box"><i class="fa-solid fa-person-running text-emerald"></i></div>
-                            <div>
-                                <h4>40+ Animated Exercise Guides</h4>
-                                <p>Never feel awkward at the gym or at home. Watch clear animations showing exact form so you lift safely and effectively.</p>
-                            </div>
-                        </div>
-
-                        <div class="health-item-card">
-                            <div class="h-icon-box"><i class="fa-solid fa-fire text-amber"></i></div>
-                            <div>
-                                <h4>Daily Calorie &amp; Energy Goals</h4>
-                                <p>Keep track of whether you're eating enough to fuel your brain (e.g., 2,000 kcal goal) right on your Home screen.</p>
-                            </div>
-                        </div>
-
-                        <div class="health-item-card">
-                            <div class="h-icon-box"><i class="fa-solid fa-shoe-prints text-cyan"></i></div>
-                            <div>
-                                <h4>Automatic Step Counter</h4>
-                                <p>Uses your phone's built-in step sensor. Counts your daily walks across campus without draining your battery with GPS.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- ========================================================
-             SLIDE 10: STRONG SCREEN MANAGEMENT SYSTEM
-             ======================================================== -->
-        <section class="slide" data-slide="10" data-title="Screen Management">
-            <div class="slide-inner">
-                <div class="slide-intro">
-                    <span class="friendly-mini-badge">📱 DIGITAL WELLBEING</span>
-                    <h2 class="slide-heading">A Strong Screen Management System</h2>
-                    <p class="slide-lead">
-                        No manual typing. No guessing. Your phone tracks your usage automatically from midnight to now, giving you honest insights.
+                        True foreground device consumption calculated automatically from midnight with smart color psychology.
                     </p>
                 </div>
 
                 <div class="screen-showcase-layout">
-                    <div class="screen-photo-card">
-                        <img src="../Features/assets/3.avif" alt="Screen management dashboard" class="real-app-photo" data-deck-img-id="slide10_screen_mockup">
-                        <div class="photo-overlay-tag">
-                            <i class="fa-solid fa-chart-pie text-cyan"></i>
-                            <span>Real Phone Usage (Midnight &rarr; Now)</span>
-                        </div>
-                    </div>
-
                     <div class="screen-pillars-stack">
-                        <div class="screen-card">
+                        <div class="screen-card border-cyan">
                             <div class="sc-icon"><i class="fa-solid fa-bolt text-cyan"></i></div>
                             <div>
-                                <h4>Zero Manual Effort</h4>
-                                <p>You never have to type how many minutes you spent on Chrome or WhatsApp. Productometer reads your actual usage automatically.</p>
+                                <h4>Calculated From Midnight to Now</h4>
+                                <p>Never waste time manually starting timers. Productometer automatically streams exact foreground app minutes from 00:00 midnight to the current second.</p>
                             </div>
                         </div>
 
-                        <div class="screen-card">
-                            <div class="sc-icon"><i class="fa-solid fa-film text-amber"></i></div>
+                        <div class="screen-card border-emerald">
+                            <div class="sc-icon"><i class="fa-solid fa-mobile-screen text-emerald"></i></div>
                             <div>
-                                <h4>Shorts &amp; Reels Swipe Counter</h4>
-                                <p>Ever wonder how many quick videos you swiped through? Our swipe sensor counts them so you can see where your time went.</p>
+                                <h4>App Icons &amp; Real App Names</h4>
+                                <p>Displays crisp native app icons and names (e.g. YouTube, WhatsApp, Instagram) with exact minutes spent and total Shorts swipe counts side by side.</p>
                             </div>
                         </div>
 
-                        <div class="screen-card red-warning-spec">
-                            <div class="sc-icon"><i class="fa-solid fa-triangle-exclamation text-crimson"></i></div>
-                            <div>
-                                <h4>Red Only When Things Go Wrong</h4>
-                                <p>We don't spam you with scary red warnings for checking a text. Red color is <strong>strictly saved</strong> for when screen time gets excessive, keeping your mind calm.</p>
+                        <div class="color-rules-box">
+                            <span class="cr-title">STRICT COLOR PSYCHOLOGY RULES:</span>
+                            <div class="cr-row">
+                                <span class="cr-dot text-emerald">●</span>
+                                <p><strong>Calm Blue &amp; Emerald Green (Healthy Usage):</strong> Normal daily usage and study applications display in peaceful, encouraging tones.</p>
                             </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- ========================================================
-             SLIDE 11: SMART ALARMS AND BEDTIME
-             ======================================================== -->
-        <section class="slide" data-slide="11" data-title="Bedtime &amp; Alarms">
-            <div class="slide-inner">
-                <div class="slide-intro">
-                    <span class="friendly-mini-badge">🌙 REAL REST</span>
-                    <h2 class="slide-heading">Smart Alarms and Bedtime</h2>
-                    <p class="slide-lead">
-                        All your daytime goals fall apart if you scroll until 2:30 AM in the dark. Sleep isn't lost time; it's where your brain locks in everything you learned today.
-                    </p>
-                </div>
-
-                <div class="sleep-showcase-layout">
-                    <div class="sleep-features-column">
-                        <div class="sleep-box">
-                            <div class="sl-icon-box"><i class="fa-solid fa-moon text-purple"></i></div>
-                            <div>
-                                <h4>15-Minute Night Screen Reminder</h4>
-                                <p>When bedtime is close, a gentle screen reminder helps you put the phone down, breaking the late-night doomscroll loop.</p>
+                            <div class="cr-row">
+                                <span class="cr-dot text-amber">●</span>
+                                <p><strong>Warm Amber (Attention Needed):</strong> Highlights when non-academic screen scrolling begins to creep upward.</p>
                             </div>
-                        </div>
-
-                        <div class="sleep-box">
-                            <div class="sl-icon-box"><i class="fa-solid fa-sun text-amber"></i></div>
-                            <div>
-                                <h4>Alarms That Never Fail</h4>
-                                <p>Our alarms bypass silent modes and low battery optimizers to wake you up loud and clear when your morning routine begins.</p>
-                            </div>
-                        </div>
-
-                        <div class="sleep-box">
-                            <div class="sl-icon-box"><i class="fa-solid fa-shield-halved text-emerald"></i></div>
-                            <div>
-                                <h4>Restarts Automatically</h4>
-                                <p>If your phone battery died and restarted overnight, your alarms and study schedules re-arm themselves automatically.</p>
+                            <div class="cr-row">
+                                <span class="cr-dot text-crimson">●</span>
+                                <p><strong>Strict Red Alert (Excessive Limits Only):</strong> Reserved strictly for when entertainment screen time crosses high limits (&gt; 3.5 hrs) or triggers doomscroll warnings, keeping your mind calm.</p>
                             </div>
                         </div>
                     </div>
 
-                    <div class="sleep-photo-card">
-                        <img src="../Features/assets/5.jpeg" alt="Sleep monitoring view" class="real-app-photo" data-deck-img-id="slide11_sleep_mockup">
+                    <div class="screen-photo-card">
+                        <img src="../Features/assets/3.avif" alt="Screen management dashboard" class="real-app-photo" data-deck-img-id="slide6_screen_mockup">
                         <div class="photo-overlay-tag">
-                            <i class="fa-solid fa-bed text-purple"></i>
-                            <span>Target: 8.0 Hours of Restorative Sleep</span>
+                            <i class="fa-solid fa-chart-pie text-cyan"></i>
+                            <span>Real App Display: Screen Time Dashboard &bull; Midnight &rarr; Now</span>
                         </div>
                     </div>
                 </div>
@@ -708,123 +468,183 @@
         </section>
 
         <!-- ========================================================
-             SLIDE 12: WORKING MECHANISM (SECOND LAST SLIDE)
+             SLIDE 7: FEATURES 5 & 6 — HEALTH, SLEEP & AI COACH (SHEET 7)
              ======================================================== -->
-        <section class="slide" data-slide="12" data-title="How It Works">
+        <section class="slide" data-slide="7" data-title="Health, Sleep &amp; AI Coach">
             <div class="slide-inner">
                 <div class="slide-intro">
-                    <span class="friendly-mini-badge">⚙️ BEHIND THE SCENES</span>
-                    <h2 class="slide-heading">How It All Works Together</h2>
+                    <span class="friendly-mini-badge">💪 MODULES 5 &amp; 6 &bull; BIOLOGY &amp; RECOVERY &bull; TOTAL RECOVERY</span>
+                    <h2 class="slide-heading">Features 5 &amp; 6: Health, Sleep &amp; AI Coach</h2>
                     <p class="slide-lead">
-                        Here is the simple, seamless loop that keeps your day on track without draining your battery or needing an internet connection.
+                        Physical energy drives academic excellence&mdash;step tracking, nighttime blue-light shields, and AI assistance.
                     </p>
                 </div>
 
-                <div class="mechanism-steps-row">
-                    <!-- Step 1 -->
-                    <div class="mech-card">
-                        <span class="mech-number">01</span>
-                        <div class="mech-icon cyan"><i class="fa-solid fa-pen-nib"></i></div>
-                        <h4>You Paint Your Day</h4>
-                        <p>In 10 seconds, paint your study, gym, and sleep blocks in the 48-slot planner.</p>
-                        <span class="mech-sub">Sets the daily target</span>
+                <div class="health-sleep-ai-grid">
+                    <!-- 1. PulseFit Health -->
+                    <div class="hs-card border-emerald">
+                        <div class="hs-card-head">
+                            <i class="fa-solid fa-heart-pulse text-emerald"></i>
+                            <h3>PulseFit Health</h3>
+                        </div>
+                        <ul class="hs-list">
+                            <li><strong>Step Pedometer:</strong> Automatically counts daily steps using your phone's built-in motion sensor with under 0.02% battery drain per hour.</li>
+                            <li><strong>Active Calorie Targets:</strong> Estimates daily calories burned to ensure your body is fueled for long study blocks.</li>
+                            <li><strong>40+ Exercise Guides:</strong> Built-in video/form guides for safe stretching, bodyweight exercises, and gym routines.</li>
+                        </ul>
                     </div>
 
-                    <div class="mech-arrow"><i class="fa-solid fa-chevron-right"></i></div>
-
-                    <!-- Step 2 -->
-                    <div class="mech-card">
-                        <span class="mech-number">02</span>
-                        <div class="mech-icon amber"><i class="fa-solid fa-bell"></i></div>
-                        <h4>Your Phone Wakes Up</h4>
-                        <p>Hardware alarms ring when blocks start, and your focus shield turns on automatically.</p>
-                        <span class="mech-sub">Zero manual arming</span>
+                    <!-- 2. Circadian Sleep Shield -->
+                    <div class="hs-card border-purple">
+                        <div class="hs-card-head">
+                            <i class="fa-solid fa-moon text-purple"></i>
+                            <h3>Circadian Sleep Shield</h3>
+                        </div>
+                        <ul class="hs-list">
+                            <li><strong>15-Min Bedtime Barrier:</strong> Engages 15 minutes before your planned sleep, dimming blue light to protect your natural melatonin and sleep quality.</li>
+                            <li><strong>Smart Morning Alarms:</strong> Configures loud, reliable wake-up alarms that ensure you get 7–8 hours of memory-consolidating sleep.</li>
+                            <li><strong>Sleep Bonus:</strong> Meeting your sleep targets awards positive bonus points to your daily productivity score.</li>
+                        </ul>
                     </div>
 
-                    <div class="mech-arrow"><i class="fa-solid fa-chevron-right"></i></div>
-
-                    <!-- Step 3 -->
-                    <div class="mech-card">
-                        <span class="mech-number">03</span>
-                        <div class="mech-icon emerald"><i class="fa-solid fa-shield-virus"></i></div>
-                        <h4>Shield Catches Distractions</h4>
-                        <p>Enjoy your 1st Short. If you swipe to the 2nd, the phone gently takes you back to your notes.</p>
-                        <span class="mech-sub">1-Reel grace rule</span>
-                    </div>
-
-                    <div class="mech-arrow"><i class="fa-solid fa-chevron-right"></i></div>
-
-                    <!-- Step 4 -->
-                    <div class="mech-card">
-                        <span class="mech-number">04</span>
-                        <div class="mech-icon purple"><i class="fa-solid fa-award"></i></div>
-                        <h4>Score &amp; Rest</h4>
-                        <p>See your Net AP score climb. At night, the screen guardian helps you get 8 hours of sleep.</p>
-                        <span class="mech-sub">Wake up refreshed</span>
+                    <!-- 3. Producto AI Coach -->
+                    <div class="hs-card border-cyan">
+                        <div class="hs-card-head">
+                            <i class="fa-solid fa-wand-magic-sparkles text-cyan"></i>
+                            <h3>Producto AI Coach</h3>
+                        </div>
+                        <ul class="hs-list">
+                            <li><strong>Syllabus Chunking:</strong> Takes intimidating multi-chapter course syllabi and breaks them down into realistic 30-minute study blocks.</li>
+                            <li><strong>Cognitive Debriefs:</strong> Detects mental fatigue after long study marathons, recommending water, stretches, and break intervals.</li>
+                            <li><strong>Schedule Advice:</strong> Helps you balance heavy exam study with daily gym and sleep.</li>
+                        </ul>
                     </div>
                 </div>
 
-                <div class="mech-footer-pill">
-                    <i class="fa-solid fa-lock text-emerald"></i>
-                    <span><strong>100% Private &amp; Offline:</strong> Everything happens directly on your device. No data is ever sent to the cloud.</span>
+                <div class="two-mini-photos-row">
+                    <div class="mini-photo-slot">
+                        <img src="../Features/assets/4.avif" alt="PulseFit Health" class="mini-app-img" data-deck-img-id="slide7_health_mockup">
+                        <span>PulseFit Health: Workouts &amp; Steps</span>
+                    </div>
+                    <div class="mini-photo-slot">
+                        <img src="../Features/assets/5.jpeg" alt="Sleep Shield" class="mini-app-img" data-deck-img-id="slide7_sleep_mockup">
+                        <span>Circadian Sleep Shield &amp; Alarms</span>
+                    </div>
                 </div>
             </div>
         </section>
 
         <!-- ========================================================
-             SLIDE 13: CONCLUSION
+             SLIDE 8: FEATURE 7 — GAMIFIED PRODUCTIVITY (SHEET 8)
              ======================================================== -->
-        <section class="slide" data-slide="13" data-title="Conclusion">
+        <section class="slide" data-slide="8" data-title="Daily Score &amp; Tiers">
+            <div class="slide-inner">
+                <div class="slide-intro">
+                    <span class="friendly-mini-badge">🎯 MODULE 7 &bull; EVALUATION ENGINE &bull; BALANCED DISCIPLINE</span>
+                    <h2 class="slide-heading">Feature 7: Gamified Productivity Scoring</h2>
+                    <p class="slide-lead">
+                        A balanced scoring formula that rewards healthy consistency instead of toxic burnout.
+                    </p>
+                </div>
+
+                <div class="score-formula-card">
+                    <span class="sfc-label">HOW YOUR DAILY PRODUCTIVITY SCORE (NET AP) IS CALCULATED</span>
+                    <div class="sfc-formula">
+                        Net Score = Study Points + Workout Bonus + Completed Tasks &minus; Screen Time Deductions
+                    </div>
+                    <div class="sfc-breakdown">
+                        <div class="sfc-item text-cyan">
+                            <strong>+100 Points / Hour</strong>
+                            <span>Earned for deep, uninterrupted academic study.</span>
+                        </div>
+                        <div class="sfc-item text-emerald">
+                            <strong>+Bonus for Workout</strong>
+                            <span>Rewards 1–2h exercise (diminishes beyond to deter overtraining).</span>
+                        </div>
+                        <div class="sfc-item text-purple">
+                            <strong>+50 Points / Task</strong>
+                            <span>Bonus for every planned Day Planner block executed.</span>
+                        </div>
+                        <div class="sfc-item text-crimson">
+                            <strong>&minus;Screen Deductions</strong>
+                            <span>Deductions for excessive non-productive entertainment scrolling.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tiers-header">
+                    <span><i class="fa-solid fa-layer-group text-cyan"></i> OPERATIVE DISCIPLINE TIERS</span>
+                </div>
+
+                <div class="tiers-grid-4">
+                    <div class="tier-card border-crimson">
+                        <div class="tier-name text-crimson">NOVICE</div>
+                        <div class="tier-range">&lt; 150 AP</div>
+                        <p>Screen scrolling exceeds study. Focus guardian recommended.</p>
+                    </div>
+                    <div class="tier-card border-amber">
+                        <div class="tier-name text-amber">FOCUSED</div>
+                        <div class="tier-range">150 &ndash; 300 AP</div>
+                        <p>Core study met. Consistency in planning or workout needed.</p>
+                    </div>
+                    <div class="tier-card border-cyan">
+                        <div class="tier-name text-cyan">DISCIPLINED</div>
+                        <div class="tier-range">300 &ndash; 480 AP</div>
+                        <p>3+ hrs study, daily workout, and tight screen time caps.</p>
+                    </div>
+                    <div class="tier-card border-emerald">
+                        <div class="tier-name text-emerald">TITANIUM</div>
+                        <div class="tier-range">&ge; 480 AP</div>
+                        <p>All planned blocks done, zero doomscrolling, full 8h sleep.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================================
+             SLIDE 9: EXAMINER DEFENSE & TAKEAWAYS (SHEET 8 DEFENSE)
+             ======================================================== -->
+        <section class="slide" data-slide="9" data-title="Project Defense &amp; Takeaways">
             <div class="slide-inner conclusion-layout">
-                <div class="friendly-badge">
-                    <span>🚀 THE FINISH LINE</span>
+                <div class="slide-intro">
+                    <span class="friendly-mini-badge">🏆 EXAMINER SUMMARY &bull; PROJECT DEFENSE</span>
+                    <h2 class="slide-heading">Examiner Defense &amp; Project Takeaways</h2>
+                    <p class="slide-lead">
+                        Built from the ground up to solve the real student problem that conventional apps ignore.
+                    </p>
                 </div>
 
-                <h2 class="conclusion-title">
-                    Take Back Your Time. Your Future is Worth It.
-                </h2>
-
-                <p class="conclusion-desc">
-                    Productometer wasn't built in a boardroom. It was created by students who wanted to do well in school, get strong in the gym, sleep peacefully, and never feel trapped by an algorithm again.
-                </p>
-
-                <div class="conclusion-three-pillars">
-                    <div class="c-pillar">
-                        <div class="cp-icon"><i class="fa-solid fa-brain text-cyan"></i></div>
-                        <h4>Better Focus</h4>
-                        <p>Study without guilt and watch lectures without distractions.</p>
+                <div class="defense-stack">
+                    <div class="defense-card border-cyan">
+                        <div class="dc-icon text-cyan"><i class="fa-solid fa-lock"></i></div>
+                        <div>
+                            <h4>Complete Offline Autonomy</h4>
+                            <p>100% private, self-contained local storage with zero cloud tracking servers. Zero user accounts, zero logins, and zero privacy liabilities.</p>
+                        </div>
                     </div>
 
-                    <div class="c-pillar">
-                        <div class="cp-icon"><i class="fa-solid fa-heart-pulse text-emerald"></i></div>
-                        <h4>Better Health</h4>
-                        <p>Move your body every day with clear exercise form guides.</p>
+                    <div class="defense-card border-emerald">
+                        <div class="dc-icon text-emerald"><i class="fa-solid fa-battery-full"></i></div>
+                        <div>
+                            <h4>Negligible Battery Overhead</h4>
+                            <p>Total background battery impact benchmarked at under 1.8% per 24 hours through intelligent event-driven listeners instead of aggressive polling.</p>
+                        </div>
                     </div>
 
-                    <div class="c-pillar">
-                        <div class="cp-icon"><i class="fa-solid fa-moon text-purple"></i></div>
-                        <h4>Better Sleep</h4>
-                        <p>End the 2 AM doomscroll and wake up energized.</p>
+                    <div class="defense-card border-purple">
+                        <div class="dc-icon text-purple"><i class="fa-solid fa-heart"></i></div>
+                        <div>
+                            <h4>Human-Centered Discipline</h4>
+                            <p>The 1-Reel Grace Rule and Lecture Security respect real student needs, preventing the typical 48-hour uninstallation cycle of conventional blockers.</p>
+                        </div>
                     </div>
                 </div>
 
-                <div class="conclusion-cta-row">
-                    <a href="../index.html" class="btn-primary-launch" target="_blank">
-                        <span>Launch Productometer App</span>
-                        <i class="fa-solid fa-arrow-right"></i>
-                    </a>
-                    <a href="../Showcase/index.html" class="btn-secondary-launch" target="_blank">
-                        <i class="fa-solid fa-desktop"></i>
-                        <span>Explore Showcase Site</span>
-                    </a>
-                    <a href="../Writeover/index.html" class="btn-secondary-launch" target="_blank">
-                        <i class="fa-solid fa-book-open text-amber"></i>
-                        <span>Read 8-Page Writeover</span>
-                    </a>
-                </div>
-
-                <div class="handwritten-signoff">
-                    &ldquo;You've got this. Let's make today count.&rdquo;
+                <div class="final-quote-card">
+                    <p class="fq-text">
+                        &ldquo;Discipline isn't about punishment or fighting your phone. It's about designing a setup that protects your focus so doing the right thing becomes effortless.&rdquo;
+                    </p>
+                    <span class="fq-author">&mdash; Productometer Design Philosophy</span>
                 </div>
             </div>
         </section>
@@ -838,7 +658,7 @@
             <button class="drawer-close-btn" id="btnCloseDrawer">&times;</button>
         </div>
         <div class="drawer-tiles-grid" id="drawerTilesGrid">
-            <!-- 13 Slide tiles dynamically populated by JS -->
+            <!-- 9 Slide tiles dynamically populated by JS -->
         </div>
     </div>
 
@@ -853,7 +673,7 @@
                 <i class="fa-solid fa-chevron-left"></i>
             </button>
             <div class="slide-dots-rail" id="slideDotsRail">
-                <!-- 13 Dots -->
+                <!-- 9 Dots -->
             </div>
             <button class="nav-btn-circle" id="btnNext" title="Next Slide (Right Arrow)">
                 <i class="fa-solid fa-chevron-right"></i>

@@ -1415,26 +1415,27 @@ public class ShortsReelsBlockerService extends AccessibilityService {
         );
         params.gravity = Gravity.CENTER;
 
-        // Fullscreen dark celestial indigo backdrop consuming all touches
+        // Fullscreen dark backdrop consuming all touch events (identical to showAppFrozenDialog)
         LinearLayout rootLayout = new LinearLayout(this);
         rootLayout.setOrientation(LinearLayout.VERTICAL);
         rootLayout.setGravity(Gravity.CENTER);
-        rootLayout.setBackgroundColor(Color.parseColor("#F5060A1A"));
+        rootLayout.setBackgroundColor(Color.parseColor("#F5050A14"));
         rootLayout.setClickable(true);
         rootLayout.setFocusable(true);
         rootLayout.setOnTouchListener((v, e) -> true);
 
-        // Centered Night Card
+        // Centered card
         LinearLayout cardLayout = new LinearLayout(this);
         cardLayout.setOrientation(LinearLayout.VERTICAL);
         cardLayout.setGravity(Gravity.CENTER);
         int pad = dpToPx(24);
         cardLayout.setPadding(pad, pad, pad, pad);
 
+        // Cyberpunk Celestial Theme
         GradientDrawable bgShape = new GradientDrawable();
         bgShape.setColor(Color.parseColor("#EE0B1226"));
-        bgShape.setCornerRadius(dpToPx(24));
-        bgShape.setStroke(dpToPx(2), Color.parseColor("#7C3AED")); // Purple accent
+        bgShape.setCornerRadius(dpToPx(22));
+        bgShape.setStroke(dpToPx(2), Color.parseColor("#7C3AED")); // Purple celestial accent
         cardLayout.setBackground(bgShape);
 
         LinearLayout.LayoutParams cardParams = new LinearLayout.LayoutParams(
@@ -1444,16 +1445,16 @@ public class ShortsReelsBlockerService extends AccessibilityService {
         cardParams.setMargins(dpToPx(24), dpToPx(24), dpToPx(24), dpToPx(24));
         rootLayout.addView(cardLayout, cardParams);
 
-        // Glowing Moon Icon
+        // Moon Icon
         TextView iconView = new TextView(this);
         iconView.setText("🌙");
-        iconView.setTextSize(42);
+        iconView.setTextSize(40);
         iconView.setGravity(Gravity.CENTER);
         cardLayout.addView(iconView);
 
-        // Title
+        // Title: Bedtime Guardian: App Restricted
         TextView titleView = new TextView(this);
-        titleView.setText("Bedtime Wind-Down Alert");
+        titleView.setText("Bedtime Guardian: App Restricted");
         titleView.setTextSize(18);
         titleView.setTypeface(Typeface.DEFAULT_BOLD);
         titleView.setTextColor(Color.parseColor("#E0E7FF"));
@@ -1461,75 +1462,68 @@ public class ShortsReelsBlockerService extends AccessibilityService {
         titleView.setPadding(0, dpToPx(8), 0, 0);
         cardLayout.addView(titleView);
 
-        // Description
+        // Details
         TextView reasonView = new TextView(this);
-        reasonView.setText("You have used 15+ minutes on distracting apps during your bedtime window (" + Math.max(15, distractionMinutes) + "m total).\n\n💡 You can freely use your phone for productive tasks or reading if the Distraction Blocker is turned ON.");
+        reasonView.setText(appLabel + " is restricted during your bedtime wind-down window (" + Math.max(15, distractionMinutes) + "m used tonight).\n\n🔒 Put away distractions to get restful sleep. No background activity is allowed.");
         reasonView.setTextSize(13);
         reasonView.setTextColor(Color.parseColor("#94A3B8"));
         reasonView.setGravity(Gravity.CENTER);
-        reasonView.setPadding(dpToPx(10), dpToPx(10), dpToPx(10), dpToPx(16));
+        reasonView.setPadding(dpToPx(12), dpToPx(10), dpToPx(12), dpToPx(20));
         cardLayout.addView(reasonView);
 
-        // Action 1: Turn ON Distraction Blocker & Continue
-        Button enableBlockerBtn = new Button(this);
-        enableBlockerBtn.setText("🛡️ Turn ON Distraction Blocker & Continue");
-        enableBlockerBtn.setTextSize(13);
-        enableBlockerBtn.setTypeface(Typeface.DEFAULT_BOLD);
-        enableBlockerBtn.setTextColor(Color.BLACK);
-        GradientDrawable blockerBg = new GradientDrawable();
-        blockerBg.setColor(Color.parseColor("#00E5FF"));
-        blockerBg.setCornerRadius(dpToPx(12));
-        enableBlockerBtn.setBackground(blockerBg);
-        LinearLayout.LayoutParams bParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dpToPx(48));
-        cardLayout.addView(enableBlockerBtn, bParams);
+        // Action 1: Return to Home (Exactly like showAppFrozenDialog - kicks app out with NO background activity)
+        Button returnBtn = new Button(this);
+        returnBtn.setText("⬅️ Return to Home");
+        returnBtn.setTextSize(14);
+        returnBtn.setTypeface(Typeface.DEFAULT_BOLD);
+        returnBtn.setTextColor(Color.BLACK);
 
-        enableBlockerBtn.setOnClickListener(v -> {
-            dismissOverlay();
-            isMasterBlockerEnabled = true;
-            SharedPreferences p = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-            p.edit().putBoolean(KEY_MASTER_ENABLED, true).apply();
-            performBackActionOnce();
-            Toast.makeText(getApplicationContext(), "🛡️ Distraction Blocker ON: Productive phone use is now allowed!", Toast.LENGTH_LONG).show();
-        });
+        GradientDrawable returnBg = new GradientDrawable();
+        returnBg.setColor(Color.parseColor("#00E5FF"));
+        returnBg.setCornerRadius(dpToPx(12));
+        returnBtn.setBackground(returnBg);
 
-        // Action 2: 2-Minute Emergency Pass
-        Button emergencyBtn = new Button(this);
-        emergencyBtn.setText("⏱️ 2-Minute Emergency Pass");
-        emergencyBtn.setTextSize(12);
-        emergencyBtn.setTypeface(Typeface.DEFAULT_BOLD);
-        emergencyBtn.setTextColor(Color.parseColor("#CBD5E1"));
-        GradientDrawable emBg = new GradientDrawable();
-        emBg.setColor(Color.parseColor("#1E1B4B"));
-        emBg.setStroke(dpToPx(1), Color.parseColor("#4338CA"));
-        emBg.setCornerRadius(dpToPx(12));
-        emergencyBtn.setBackground(emBg);
-        LinearLayout.LayoutParams emParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dpToPx(44));
-        emParams.setMargins(0, dpToPx(10), 0, 0);
-        cardLayout.addView(emergencyBtn, emParams);
+        LinearLayout.LayoutParams btnParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                dpToPx(48)
+        );
+        cardLayout.addView(returnBtn, btnParams);
 
-        emergencyBtn.setOnClickListener(v -> {
-            dismissOverlay();
-            bedtimeEmergencyPassUntilTimestamp = System.currentTimeMillis() + 120000L; // 2 minutes
-            Toast.makeText(getApplicationContext(), "⏱️ Bedtime Emergency Pass: 2 minutes granted", Toast.LENGTH_SHORT).show();
-        });
+        // Action 2: Open Productometer (Exactly like showAppFrozenDialog)
+        Button openAppBtn = new Button(this);
+        openAppBtn.setText("📱 Open Productometer");
+        openAppBtn.setTextSize(14);
+        openAppBtn.setTypeface(Typeface.DEFAULT_BOLD);
+        openAppBtn.setTextColor(Color.WHITE);
 
-        // Action 3: Go to Sleep (Exit to Home)
-        Button sleepBtn = new Button(this);
-        sleepBtn.setText("😴 Go to Sleep (Exit to Home)");
-        sleepBtn.setTextSize(12);
-        sleepBtn.setTextColor(Color.parseColor("#94A3B8"));
-        GradientDrawable sleepBg = new GradientDrawable();
-        sleepBg.setColor(Color.parseColor("#0F172A"));
-        sleepBg.setCornerRadius(dpToPx(12));
-        sleepBtn.setBackground(sleepBg);
-        LinearLayout.LayoutParams sParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dpToPx(42));
-        sParams.setMargins(0, dpToPx(8), 0, 0);
-        cardLayout.addView(sleepBtn, sParams);
+        GradientDrawable openBg = new GradientDrawable();
+        openBg.setColor(Color.parseColor("#151D2A"));
+        openBg.setStroke(dpToPx(1), Color.parseColor("#334155"));
+        openBg.setCornerRadius(dpToPx(12));
+        openAppBtn.setBackground(openBg);
 
-        sleepBtn.setOnClickListener(v -> {
+        LinearLayout.LayoutParams openParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                dpToPx(44)
+        );
+        openParams.setMargins(0, dpToPx(10), 0, 0);
+        cardLayout.addView(openAppBtn, openParams);
+
+        returnBtn.setOnClickListener(v -> {
             dismissOverlay();
             performBackActionOnce();
             performGlobalAction(AccessibilityService.GLOBAL_ACTION_HOME);
+        });
+
+        openAppBtn.setOnClickListener(v -> {
+            dismissOverlay();
+            try {
+                Intent launchIntent = getPackageManager().getLaunchIntentForPackage(getPackageName());
+                if (launchIntent != null) {
+                    launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                    startActivity(launchIntent);
+                }
+            } catch (Exception ignored) {}
         });
 
         overlayView = rootLayout;

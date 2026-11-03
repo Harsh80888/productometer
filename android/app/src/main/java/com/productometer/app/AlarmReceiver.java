@@ -350,21 +350,13 @@ public class AlarmReceiver extends BroadcastReceiver {
             return;
         }
 
-        // 2. Check if skipped for today
-        Calendar c = Calendar.getInstance();
-        String todayDateStr = String.format("%04d-%02d-%02d", c.get(Calendar.YEAR), c.get(Calendar.MONTH) + 1, c.get(Calendar.DAY_OF_MONTH));
-        String skippedDate = prefs.getString("wakeup_alarm_skipped_date", "");
-        if (todayDateStr.equals(skippedDate)) {
-            // Alarm was skipped for today. Consume the skip and reschedule for tomorrow!
-            prefs.edit().remove("wakeup_alarm_skipped_date").apply();
-            scheduleNextMorningWakeupAlarm(context);
-            return;
-        }
+        // 2. Clear any stale skip or mission completed date so this alarm session rings reliably
+        prefs.edit()
+                .remove("wakeup_alarm_skipped_date")
+                .remove("wakeup_mission_completed_date")
+                .apply();
 
-        // 3. Clear any stale completed date so this alarm session rings reliably
-        prefs.edit().remove("wakeup_mission_completed_date").apply();
-
-        // 4. Wake the screen and start audio siren IMMEDIATELY
+        // 3. Wake the screen and start audio siren IMMEDIATELY
         wakeScreen(context, 30000L);
         playAlarmSiren(context);
 
@@ -547,35 +539,42 @@ public class AlarmReceiver extends BroadcastReceiver {
     }
 
     /**
-     * Schedules the next morning's wake-up alarm using high-priority setAlarmClock
-     * with graceful fallbacks across all Android OS versions.
+     * Schedules the Wake-up Smart Alarm using the exact same reliable setExactAndAllowWhileIdle
+     * engine as Day Planner session alarms.
      */
-    public static void scheduleNextMorningWakeupAlarm(Context context) {
+    public static void scheduleSmartWakeupAlarm(Context context, String wakeTimeStr, long triggerEpochMillis) {
         try {
             ensureAlarmChannel(context);
             SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
             boolean isAlarmEnabled = prefs.getBoolean("productometer_smart_alarm_enabled", true);
             if (!isAlarmEnabled) return;
 
-            String wakeTime = prefs.getString("productometer_bedtime_end", "06:30");
-            String[] parts = wakeTime.split(":");
-            int hour = Integer.parseInt(parts[0].trim());
-            int minute = Integer.parseInt(parts[1].trim());
+            long targetMillis = triggerEpochMillis;
+            if (targetMillis <= 0L) {
+                if (wakeTimeStr == null || wakeTimeStr.isEmpty()) {
+                    wakeTimeStr = prefs.getString("productometer_bedtime_end", "06:30");
+                }
+                String[] parts = wakeTimeStr.split(":");
+                int hour = Integer.parseInt(parts[0].trim());
+                int minute = Integer.parseInt(parts[1].trim());
 
-            Calendar now = Calendar.getInstance();
-            Calendar target = Calendar.getInstance();
-            target.set(Calendar.HOUR_OF_DAY, hour);
-            target.set(Calendar.MINUTE, minute);
-            target.set(Calendar.SECOND, 0);
-            target.set(Calendar.MILLISECOND, 0);
+                Calendar now = Calendar.getInstance();
+                Calendar target = Calendar.getInstance();
+                target.set(Calendar.HOUR_OF_DAY, hour);
+                target.set(Calendar.MINUTE, minute);
+                target.set(Calendar.SECOND, 0);
+                target.set(Calendar.MILLISECOND, 0);
 
-            // If time today already passed by more than 5 minutes, target tomorrow
-            long diff = now.getTimeInMillis() - target.getTimeInMillis();
-            if (diff > 0 && diff <= 300000L) {
-                // User just set alarm to current/recent minute for testing, fire in 3 seconds!
-                target.setTimeInMillis(now.getTimeInMillis() + 3000L);
-            } else if (target.getTimeInMillis() <= now.getTimeInMillis()) {
-                target.add(Calendar.DAY_OF_YEAR, 1);
+                long diff = now.getTimeInMillis() - target.getTimeInMillis();
+                if (diff > 0 && diff <= 120000L) {
+                    // User set alarm to current/recent minute for testing, fire in 3 seconds!
+                    targetMillis = now.getTimeInMillis() + 3000L;
+                } else if (target.getTimeInMillis() <= now.getTimeInMillis()) {
+                    target.add(Calendar.DAY_OF_YEAR, 1);
+                    targetMillis = target.getTimeInMillis();
+                } else {
+                    targetMillis = target.getTimeInMillis();
+                }
             }
 
             AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
@@ -584,7 +583,7 @@ public class AlarmReceiver extends BroadcastReceiver {
             Intent intent = new Intent(context, AlarmReceiver.class);
             intent.putExtra("task_id", "wakeup_smart_alarm");
             intent.putExtra("task_title", "Brain Activation Smart Alarm");
-            intent.putExtra("task_time", wakeTime);
+            intent.putExtra("task_time", wakeTimeStr);
 
             PendingIntent pi = PendingIntent.getBroadcast(
                     context,
@@ -593,52 +592,21 @@ public class AlarmReceiver extends BroadcastReceiver {
                     PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.FLAG_IMMUTABLE : 0)
             );
 
-            Intent showIntent = new Intent(context, AlarmActivity.class);
-            PendingIntent showPendingIntent = PendingIntent.getActivity(
-                    context,
-                    12346,
-                    showIntent,
-                    PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.FLAG_IMMUTABLE : 0)
-            );
-
-            // Hierarchy of scheduling methods:
-            // 1. setAlarmClock (Highest priority in Android, immune to Doze & App Standby)
-            // 2. setExactAndAllowWhileIdle (Android 6.0+)
-            // 3. setExact
-            // 4. set
-            boolean scheduled = false;
-            try {
-                AlarmManager.AlarmClockInfo clockInfo = new AlarmManager.AlarmClockInfo(target.getTimeInMillis(), showPendingIntent);
-                alarmManager.setAlarmClock(clockInfo, pi);
-                scheduled = true;
-            } catch (Throwable t1) {
-                // SecurityException on Android 12+ or OEM restriction
+            // Exact and allow while idle wakes CPU from Doze mode across all Android versions
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, targetMillis, pi);
+            } else {
+                alarmManager.setExact(AlarmManager.RTC_WAKEUP, targetMillis, pi);
             }
 
-            if (!scheduled) {
-                try {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                        alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, target.getTimeInMillis(), pi);
-                    } else {
-                        alarmManager.setExact(AlarmManager.RTC_WAKEUP, target.getTimeInMillis(), pi);
-                    }
-                    scheduled = true;
-                } catch (Throwable t2) {
-                    try {
-                        alarmManager.set(AlarmManager.RTC_WAKEUP, target.getTimeInMillis(), pi);
-                        scheduled = true;
-                    } catch (Throwable t3) {
-                        t3.printStackTrace();
-                    }
-                }
-            }
-
-            if (scheduled) {
-                prefs.edit().putLong("productometer_next_alarm_epoch", target.getTimeInMillis()).apply();
-            }
+            prefs.edit().putLong("productometer_next_alarm_epoch", targetMillis).apply();
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public static void scheduleNextMorningWakeupAlarm(Context context) {
+        scheduleSmartWakeupAlarm(context, null, 0L);
     }
 
     /**

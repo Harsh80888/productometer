@@ -949,7 +949,7 @@ public class WebAppInterface {
     }
 
     @JavascriptInterface
-    public void scheduleSmartWakeupAlarm(String wakeTimeStr) {
+    public void scheduleSmartWakeupAlarm(String wakeTimeStr, long triggerEpochMillis) {
         try {
             SharedPreferences prefs = context.getSharedPreferences(ShortsReelsBlockerService.PREFS_NAME, Context.MODE_PRIVATE);
             prefs.edit()
@@ -958,8 +958,15 @@ public class WebAppInterface {
                     .remove("wakeup_alarm_skipped_date")
                     .remove("wakeup_mission_completed_date")
                     .apply();
-            AlarmReceiver.scheduleNextMorningWakeupAlarm(context);
-        } catch (Exception e) {}
+            AlarmReceiver.scheduleSmartWakeupAlarm(context, wakeTimeStr, triggerEpochMillis);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @JavascriptInterface
+    public void scheduleSmartWakeupAlarm(String wakeTimeStr) {
+        scheduleSmartWakeupAlarm(wakeTimeStr, 0L);
     }
 
     @JavascriptInterface

@@ -328,25 +328,22 @@
         </div>
     </dialog>
 
-    <!-- 🌙 MODAL: BEDTIME WIND-DOWN NOTIFICATION OVERLAY -->
+    <!-- 🌙 MODAL: BEDTIME WIND-DOWN NOTIFICATION OVERLAY (NO BACKGROUND ACTIVITY) -->
     <dialog id="bedtimeOverlayModal" style="border: 2px solid #7c3aed; border-radius: 24px; background: #0B1226; color: #fff; width: 92%; max-width: 400px; padding: 24px; box-shadow: 0 0 40px rgba(124, 58, 237, 0.4);">
         <div style="text-align: center;">
             <div style="font-size: 3rem; margin-bottom: 6px;">🌙</div>
-            <h3 style="font-size: 1.3rem; font-weight: 800; color: #E0E7FF; margin: 0 0 8px 0;">Bedtime Wind-Down Alert</h3>
+            <h3 style="font-size: 1.3rem; font-weight: 800; color: #E0E7FF; margin: 0 0 8px 0;">Bedtime Guardian: App Restricted</h3>
             <p style="font-size: 0.8rem; color: #94A3B8; line-height: 1.5; margin-bottom: 18px;">
                 You have reached your 15-minute cap on distractive apps tonight.<br><br>
-                ✨ You can freely use your phone for reading or productive apps as long as the <strong>Distraction Blocker is ON</strong>.
+                🔒 Put away distractions to get restful sleep. This app is locked with no background activity allowed.
             </p>
 
             <div style="display: flex; flex-direction: column; gap: 10px;">
-                <button type="button" id="btnOverlayTurnOnBlocker" style="background: #00E676; border: none; color: #000; font-weight: 800; font-size: 0.82rem; padding: 12px; border-radius: 12px; cursor: pointer;">
-                    🛡️ Turn ON Distraction Blocker & Continue
+                <button type="button" onclick="document.getElementById('bedtimeOverlayModal').close()" style="background: #00E5FF; border: none; color: #000; font-weight: 800; font-size: 0.85rem; padding: 12px; border-radius: 12px; cursor: pointer;">
+                    ⬅️ Return to Home
                 </button>
-                <button type="button" id="btnOverlayEmergencyPass" style="background: rgba(255, 214, 0, 0.15); border: 1px solid rgba(255, 214, 0, 0.4); color: #FFD600; font-weight: 800; font-size: 0.8rem; padding: 10px; border-radius: 12px; cursor: pointer;">
-                    ⏱️ 2-Minute Emergency Pass
-                </button>
-                <button type="button" onclick="document.getElementById('bedtimeOverlayModal').close()" style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #94A3B8; font-weight: 700; font-size: 0.76rem; padding: 8px; border-radius: 10px; cursor: pointer;">
-                    🌙 Go to Sleep (Close)
+                <button type="button" onclick="document.getElementById('bedtimeOverlayModal').close()" style="background: #151D2A; border: 1px solid #334155; color: #FFF; font-weight: 700; font-size: 0.82rem; padding: 10px; border-radius: 12px; cursor: pointer;">
+                    📱 Open Productometer
                 </button>
             </div>
         </div>

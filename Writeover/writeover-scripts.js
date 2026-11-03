@@ -5,13 +5,13 @@
 
 document.addEventListener('DOMContentLoaded', () => {
 
-    const totalPages = 8;
+    const sheets = document.querySelectorAll('.a4-sheet');
+    const totalPages = sheets.length;
     let currentPage = 1;
     let isPagedMode = true;
 
     // Core Navigation Elements
     const a4Container = document.getElementById('a4Container');
-    const sheets = document.querySelectorAll('.a4-sheet');
     const a4PageIndicator = document.getElementById('a4PageIndicator');
     const btnA4Prev = document.getElementById('btnA4Prev');
     const btnA4Next = document.getElementById('btnA4Next');
@@ -37,6 +37,17 @@ document.addEventListener('DOMContentLoaded', () => {
     // ========================================================
     // 1. PAGE NAVIGATION CONTROLLER
     // ========================================================
+    function updatePageIndicator() {
+        if (!a4PageIndicator) return;
+        const currentSheet = sheets[currentPage - 1];
+        if (currentSheet && currentSheet.classList.contains('cover-page')) {
+            a4PageIndicator.textContent = `Cover Page • 1 of ${totalPages}`;
+        } else {
+            const sheetNum = currentPage - 1;
+            a4PageIndicator.textContent = `Page ${currentPage} of ${totalPages} (Sheet ${sheetNum} of 8)`;
+        }
+    }
+
     function showPage(pageNumber) {
         if (pageNumber < 1 || pageNumber > totalPages) return;
         currentPage = pageNumber;
@@ -45,10 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
             sheet.classList.toggle('active', idx + 1 === currentPage);
         });
 
-        if (a4PageIndicator) {
-            a4PageIndicator.textContent = `Page ${currentPage} of ${totalPages}`;
-        }
-
+        updatePageIndicator();
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
@@ -93,7 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
             a4Container.classList.remove('mode-paged');
             a4Container.classList.add('mode-all');
             if (a4PageIndicator) {
-                a4PageIndicator.textContent = 'All 8 Pages';
+                a4PageIndicator.textContent = `All ${totalPages} Pages (Cover + 8 Sheets)`;
             }
         });
     }
@@ -111,16 +119,19 @@ document.addEventListener('DOMContentLoaded', () => {
     // ========================================================
     // 2. IN-PLACE TEXT EDITING & PERSISTENCE ENGINE
     // ========================================================
-    const editableSelectors = 'h1, h2, h3, h4, p, span, li, strong, .hero-tagline, .callout-text, .perm-body, .formula-highlight, .tier-label, .tier-score';
+    const editableSelectors = 'h1, h2, h3, h4, p, span, li, strong, .hero-tagline, .callout-text, .perm-body, .formula-highlight, .tier-label, .tier-score, .cover-main-title, .cover-main-subtitle, .cover-lead-summary, .cmt-value';
     const textElements = [];
 
-    sheets.forEach((sheet, sheetIdx) => {
+    sheets.forEach((sheet) => {
+        const isCover = sheet.classList.contains('cover-page');
+        const sheetPrefix = isCover ? 'cover' : `s${parseInt(sheet.dataset.page || '1') - 1}`;
+
         const els = sheet.querySelectorAll(editableSelectors);
         els.forEach((el, elIdx) => {
             if (el.querySelector('i') && el.children.length === 1 && !el.textContent.trim()) return;
             if (el.classList.contains('sheet-page-num')) return;
 
-            const uid = `s${sheetIdx}_el${elIdx}`;
+            const uid = `${sheetPrefix}_el${elIdx}`;
             el.dataset.editUid = uid;
             textElements.push(el);
         });

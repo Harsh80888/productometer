@@ -81,10 +81,14 @@ document.addEventListener('DOMContentLoaded', () => {
         target.setHours(wh, wm, 0, 0);
 
         let isTomorrow = false;
-        if (now >= target) {
-            // Alarm time today has already passed! The next upcoming alarm is tomorrow.
+        // If target time today is already passed by more than 2 minutes, schedule tomorrow
+        if (now.getTime() - target.getTime() > 120000) {
             target.setDate(target.getDate() + 1);
             isTomorrow = true;
+        } else if (now.getTime() >= target.getTime()) {
+            // User set wake-up time to current minute for testing! Fire in 3 seconds
+            target = new Date(now.getTime() + 3000);
+            isTomorrow = false;
         }
 
         const targetDateStr = `${target.getFullYear()}-${(target.getMonth() + 1).toString().padStart(2, '0')}-${target.getDate().toString().padStart(2, '0')}`;
@@ -94,6 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return {
             wakeTime,
             target,
+            epochMillis: target.getTime(),
             isTomorrow,
             dayLabel,
             targetDateStr,
@@ -332,8 +337,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const isAlarmOn = localStorage.getItem('productometer_smart_alarm_enabled') !== 'false';
+        const upcoming = getUpcomingAlarmDetails();
         if (isAlarmOn && window.NativeBridge && window.NativeBridge.scheduleSmartWakeupAlarm) {
-            window.NativeBridge.scheduleSmartWakeupAlarm(endVal);
+            window.NativeBridge.scheduleSmartWakeupAlarm(upcoming.wakeTime, upcoming.epochMillis);
         }
 
         updateTargetSleepUI();
@@ -367,8 +373,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (window.NativeBridge && window.NativeBridge.setBedtimeSchedule) {
                     window.NativeBridge.setBedtimeSchedule(true, startVal, newEndVal);
                 }
+                const upcomingMinus = getUpcomingAlarmDetails();
                 if (window.NativeBridge && window.NativeBridge.scheduleSmartWakeupAlarm) {
-                    window.NativeBridge.scheduleSmartWakeupAlarm(newEndVal);
+                    window.NativeBridge.scheduleSmartWakeupAlarm(upcomingMinus.wakeTime, upcomingMinus.epochMillis);
                 }
 
                 updateTargetSleepUI();
@@ -393,8 +400,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (window.NativeBridge && window.NativeBridge.setBedtimeSchedule) {
                     window.NativeBridge.setBedtimeSchedule(true, startVal, newEndVal);
                 }
+                const upcomingPlus = getUpcomingAlarmDetails();
                 if (window.NativeBridge && window.NativeBridge.scheduleSmartWakeupAlarm) {
-                    window.NativeBridge.scheduleSmartWakeupAlarm(newEndVal);
+                    window.NativeBridge.scheduleSmartWakeupAlarm(upcomingPlus.wakeTime, upcomingPlus.epochMillis);
                 }
 
                 updateTargetSleepUI();
@@ -440,11 +448,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const wakeTime = (inputBedtimeEnd ? inputBedtimeEnd.value : null) || localStorage.getItem('productometer_bedtime_end') || '06:30';
 
             if (isEnabled) {
+                const upcomingToggle = getUpcomingAlarmDetails();
                 if (window.NativeBridge && window.NativeBridge.scheduleSmartWakeupAlarm) {
-                    window.NativeBridge.scheduleSmartWakeupAlarm(wakeTime);
+                    window.NativeBridge.scheduleSmartWakeupAlarm(upcomingToggle.wakeTime, upcomingToggle.epochMillis);
                 }
                 if (window.NativeBridge && window.NativeBridge.showToast) {
-                    window.NativeBridge.showToast('⏰ Wakeup Smart Alarm Scheduled for ' + formatTime12h(wakeTime));
+                    window.NativeBridge.showToast('⏰ Wakeup Smart Alarm Scheduled for ' + formatTime12h(upcomingToggle.wakeTime));
                 }
             } else {
                 if (window.NativeBridge && window.NativeBridge.cancelSmartWakeupAlarm) {
@@ -481,7 +490,7 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.removeItem('wakeup_alarm_skipped_date');
 
             if (window.NativeBridge && window.NativeBridge.scheduleSmartWakeupAlarm) {
-                window.NativeBridge.scheduleSmartWakeupAlarm(upcoming.wakeTime);
+                window.NativeBridge.scheduleSmartWakeupAlarm(upcoming.wakeTime, upcoming.epochMillis);
             }
             if (window.NativeBridge && window.NativeBridge.showToast) {
                 window.NativeBridge.showToast(`⏰ ${upcoming.dayLabel}'s alarm resumed (${formatTime12h(upcoming.wakeTime)})`);
@@ -696,9 +705,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Ensure Alarm Clock is registered in Android AlarmManager on load
     const isAlarmEnabledInit = localStorage.getItem('productometer_smart_alarm_enabled') !== 'false';
-    const initWakeTime = (inputBedtimeEnd ? inputBedtimeEnd.value : null) || localStorage.getItem('productometer_bedtime_end') || '06:30';
+    const upcomingInit = getUpcomingAlarmDetails();
     if (isAlarmEnabledInit && window.NativeBridge && window.NativeBridge.scheduleSmartWakeupAlarm) {
-        window.NativeBridge.scheduleSmartWakeupAlarm(initWakeTime);
+        window.NativeBridge.scheduleSmartWakeupAlarm(upcomingInit.wakeTime, upcomingInit.epochMillis);
     }
 });
 

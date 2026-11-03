@@ -32,13 +32,13 @@
             <button class="nav-btn-icon" id="btnA4Prev" title="Previous Page">
                 <i class="fa-solid fa-chevron-left"></i>
             </button>
-            <span class="page-indicator" id="a4PageIndicator">Page 1 of 8</span>
+            <span class="page-indicator" id="a4PageIndicator">Cover Page &bull; 1 of 9</span>
             <button class="nav-btn-icon" id="btnA4Next" title="Next Page">
                 <i class="fa-solid fa-chevron-right"></i>
             </button>
             <div class="view-mode-toggle">
                 <button class="view-btn active" id="btnViewPaged" title="View Page by Page">Single Page</button>
-                <button class="view-btn" id="btnViewAll" title="View All 8 Pages as Continuous Booklet">Continuous Booklet</button>
+                <button class="view-btn" id="btnViewAll" title="View All Pages as Continuous Booklet">Continuous Booklet</button>
             </div>
         </div>
 
@@ -75,9 +75,136 @@
     <main class="a4-document-container" id="a4Container">
 
         <!-- ========================================================
+             A4 COVER PAGE: OFFICIAL SPECIFICATION BOOKLET
+             ======================================================== -->
+        <section class="a4-sheet cover-page active" data-page="0" data-page-title="Cover Page">
+            <div class="sheet-content cover-content">
+
+                <!-- Official Header Strip -->
+                <div class="sheet-header-strip">
+                    <div class="header-left">
+                        <span class="institution-tag">STUDENT DISCIPLINE &amp; PRODUCTIVITY SYSTEM</span>
+                        <span class="sub-header-tag">OFFICIAL PROJECT WRITEOUT &bull; SPECIFICATION</span>
+                    </div>
+                    <div class="header-right">
+                        <span class="version-pill">VERSION 2.0</span>
+                    </div>
+                </div>
+
+                <!-- Cover Hero Branding Section -->
+                <div class="cover-hero-section">
+                    <div class="cover-category-badge">
+                        <i class="fa-solid fa-graduation-cap text-cobalt"></i>
+                        <span>ALL-IN-ONE STUDENT OPERATING ENVIRONMENT</span>
+                    </div>
+
+                    <h1 class="cover-main-title">Productometer</h1>
+                    <h2 class="cover-main-subtitle">Your All in one Time Manager and Productivity Tracker</h2>
+
+                    <div class="cover-jewel-stripe"></div>
+
+                    <p class="cover-lead-summary">
+                        An autonomous, completely offline discipline and productivity system engineered for modern student life. Unifies your daily academic targets, physical health, healthy phone screen limits, and circadian sleep into one cohesive 24-hour operating environment.
+                    </p>
+                </div>
+
+                <!-- Cover Feature Showcase Card -->
+                <div class="cover-center-card">
+                    <div class="cover-emblem-box">
+                        <i class="fa-solid fa-microchip"></i>
+                    </div>
+                    <div class="cover-center-content">
+                        <h3>Autonomous Student Discipline Architecture</h3>
+                        <p>
+                            Replaces willpower with smart, friendly software mechanics&mdash;featuring the <strong>1-Reel Grace Rule</strong>, <strong>Continuous Swipe-Paint Day Planning</strong>, <strong>Lecture-Safe Whitelisting</strong>, and <strong>Automated Midnight-to-Now Screen Tracking</strong> with 100% private, zero-cloud storage.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- 4 Core Domains Grid (2x2) -->
+                <div class="cover-pillars-grid">
+                    <div class="cover-pillar-card">
+                        <div class="cpc-icon cpc-blue"><i class="fa-solid fa-book-open"></i></div>
+                        <div class="cpc-body">
+                            <h4>1. Academics &amp; Focus</h4>
+                            <p>Lecture-safe study sessions that let you watch tutorials freely while preventing algorithmic entertainment traps.</p>
+                        </div>
+                    </div>
+
+                    <div class="cover-pillar-card">
+                        <div class="cpc-icon cpc-green"><i class="fa-solid fa-heart-pulse"></i></div>
+                        <div class="cpc-body">
+                            <h4>2. PulseFit Health</h4>
+                            <p>Built-in step pedometer (&lt;0.02% battery/hr), active calorie targets, and 40+ exercise form guides.</p>
+                        </div>
+                    </div>
+
+                    <div class="cover-pillar-card">
+                        <div class="cpc-icon cpc-amber"><i class="fa-solid fa-mobile-screen"></i></div>
+                        <div class="cpc-body">
+                            <h4>3. Screen Management</h4>
+                            <p>Automated midnight-to-now usage tracking with the 1-Reel Grace Rule and smart color psychology.</p>
+                        </div>
+                    </div>
+
+                    <div class="cover-pillar-card">
+                        <div class="cpc-icon cpc-purple"><i class="fa-solid fa-moon"></i></div>
+                        <div class="cpc-body">
+                            <h4>4. Sleep &amp; Recovery</h4>
+                            <p>15-minute blue light bedtime shield and reboot-proof wake-up alarms to guarantee 7&ndash;8h restorative rest.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Technical Highlights Badges Strip -->
+                <div class="cover-highlights-strip">
+                    <div class="cover-highlight-chip">
+                        <i class="fa-solid fa-shield-halved text-emerald"></i>
+                        <span><strong>100% Offline:</strong> Zero cloud servers or accounts</span>
+                    </div>
+                    <div class="cover-highlight-chip">
+                        <i class="fa-solid fa-bolt text-cobalt"></i>
+                        <span><strong>&lt; 1.8% Battery:</strong> Event-driven sensors</span>
+                    </div>
+                    <div class="cover-highlight-chip">
+                        <i class="fa-solid fa-hand-holding-heart text-amber"></i>
+                        <span><strong>Human-First:</strong> No toxic locking or guilt</span>
+                    </div>
+                </div>
+
+                <!-- Formal Document Metadata Table -->
+                <div class="cover-meta-table">
+                    <div class="cmt-item">
+                        <span class="cmt-label">Document Specification</span>
+                        <span class="cmt-value">Official Academic &amp; Technical Project Writeout</span>
+                    </div>
+                    <div class="cmt-item">
+                        <span class="cmt-label">Target Environment</span>
+                        <span class="cmt-value">Modern Android Mobile Operating System</span>
+                    </div>
+                    <div class="cmt-item">
+                        <span class="cmt-label">Project Edition</span>
+                        <span class="cmt-value">Version 2.0 &bull; Complete Defense Release</span>
+                    </div>
+                    <div class="cmt-item">
+                        <span class="cmt-label">Privacy Standard</span>
+                        <span class="cmt-value">100% Local Encrypted Memory &bull; Safe &amp; Offline</span>
+                    </div>
+                </div>
+
+                <!-- Sheet Footer Strip -->
+                <div class="sheet-footer-strip">
+                    <span class="sheet-footer-left">Productometer &bull; Project Writeout &bull; Specification Document</span>
+                    <span class="sheet-page-num">Cover Page</span>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ========================================================
              A4 SHEET 1: TITLE & EXECUTIVE PROJECT OVERVIEW
              ======================================================== -->
-        <section class="a4-sheet active" data-page="1">
+        <section class="a4-sheet" data-page="1">
             <div class="sheet-content">
                 
                 <!-- Official Header Strip -->
