@@ -245,6 +245,31 @@ public class AlarmActivity extends AppCompatActivity implements SensorEventListe
         p2Text.setPadding(dpToPx(10), 0, 0, 0);
         phase2Card.addView(p2Text);
 
+        // Emergency Silence & Dismiss Fail-safe Button
+        Button btnDismiss = new Button(this);
+        btnDismiss.setText("🔇 SILENCE & DISMISS ALARM");
+        btnDismiss.setTextColor(Color.WHITE);
+        btnDismiss.setTextSize(14);
+        btnDismiss.setTypeface(Typeface.DEFAULT_BOLD);
+        GradientDrawable dismissBg = new GradientDrawable();
+        dismissBg.setColor(Color.parseColor("#33101C"));
+        dismissBg.setCornerRadius(dpToPx(12));
+        dismissBg.setStroke(dpToPx(1), Color.parseColor("#FF3D71"));
+        btnDismiss.setBackground(dismissBg);
+        btnDismiss.setPadding(dpToPx(16), dpToPx(12), dpToPx(16), dpToPx(12));
+        btnDismiss.setOnClickListener(v -> {
+            stopAlarmAlerts();
+            Toast.makeText(AlarmActivity.this, "Alarm Silenced.", Toast.LENGTH_SHORT).show();
+            finish();
+        });
+
+        LinearLayout.LayoutParams btnParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        btnParams.topMargin = dpToPx(20);
+        root.addView(btnDismiss, btnParams);
+
         return root;
     }
 

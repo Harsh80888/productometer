@@ -66,11 +66,11 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cat << 'EOF' > release_notes.md
-          ### 📱 Productometer Android Release v1.2.6
+          ### 📱 Productometer Android Release v1.2.7
 
           Major release delivering 100% reliable long video filtering in YouTube & mobile browsers, loud multi-stream bedtime alarm ringing with ToneGenerator emergency fallback, centralized sleep monitoring, and an A4-printable project writeout.
 
-          #### 🚀 Highlights in v1.2.6:
+          #### 🚀 Highlights in v1.2.7:
           - **🎯 100% Reliable Long Video Filtering (YouTube App & Mobile Browsers):**
             - Universal accessibility detection identifies active watch pages using standard media controls (TalkBack "Pause video", "Play video", "Fullscreen", "Like this video") without depending on fragile view IDs.
             - Recommendation leak-proof title extractor strictly limits traversal to Child 0 & Child 1 of watch list containers, isolating the active video title and channel while ignoring recommended videos.
@@ -89,7 +89,7 @@ jobs:
           #### 📦 Direct Download:
           - Click **Productometer.apk** under Assets below to download and install.
           EOF
-          gh release create v1.2.6 dist/Productometer.apk \
-            --title "Productometer v1.2.6 - Android Release APK" \
+          gh release create v1.2.7 dist/Productometer.apk \
+            --title "Productometer v1.2.7 - Android Release APK" \
             --notes-file release_notes.md || \
-          gh release upload v1.2.6 dist/Productometer.apk --clobber
+          gh release upload v1.2.7 dist/Productometer.apk --clobber

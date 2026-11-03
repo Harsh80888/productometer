@@ -18,6 +18,8 @@ import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.PowerManager;
 import android.os.Vibrator;
 import android.os.VibrationEffect;
@@ -229,6 +231,32 @@ public class AlarmReceiver extends BroadcastReceiver {
     /**
      * Silences any active alarm ringtone and cancels vibration immediately.
      */
+    /**
+     * Plays a brief, gentle 3-second bedtime reminder notification chime.
+     * Automatically stops itself after 3.5 seconds so it NEVER loops!
+     */
+    public static void playBedtimeReminderSound(Context context) {
+        try {
+            Uri soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+            if (soundUri == null) soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE);
+            final Ringtone r = RingtoneManager.getRingtone(context, soundUri);
+            if (r != null) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    r.setAudioAttributes(new AudioAttributes.Builder()
+                            .setUsage(AudioAttributes.USAGE_NOTIFICATION)
+                            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                            .build());
+                }
+                r.play();
+                new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                    try {
+                        if (r.isPlaying()) r.stop();
+                    } catch (Exception ignored) {}
+                }, 3500L);
+            }
+        } catch (Exception ignored) {}
+    }
+
     public static synchronized void stopAlarm() {
         isSirenRunning = false;
         if (audioTrackSirenThread != null) {
@@ -285,6 +313,14 @@ public class AlarmReceiver extends BroadcastReceiver {
         // Case 1: Step Verification Check (15-min or 5-min post-shake deadline)
         if (isStepCheck) {
             handleStepVerificationCheck(context, nextGraceMins);
+            return;
+        }
+
+        if ("dismiss_bedtime_notification".equals(taskId)) {
+            NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+            if (manager != null) {
+                manager.cancel(7777);
+            }
             return;
         }
 
@@ -533,13 +569,13 @@ public class AlarmReceiver extends BroadcastReceiver {
             target.set(Calendar.SECOND, 0);
             target.set(Calendar.MILLISECOND, 0);
 
-            // If time today already passed by more than 60 seconds, target tomorrow
+            // If time today already passed by more than 5 minutes, target tomorrow
             long diff = now.getTimeInMillis() - target.getTimeInMillis();
-            if (diff > 60000L) {
-                target.add(Calendar.DAY_OF_YEAR, 1);
+            if (diff > 0 && diff <= 300000L) {
+                // User just set alarm to current/recent minute for testing, fire in 3 seconds!
+                target.setTimeInMillis(now.getTimeInMillis() + 3000L);
             } else if (target.getTimeInMillis() <= now.getTimeInMillis()) {
-                // If set to the current minute (or within past 60s), fire in 2 seconds for immediate response
-                target.setTimeInMillis(now.getTimeInMillis() + 2000L);
+                target.add(Calendar.DAY_OF_YEAR, 1);
             }
 
             AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
@@ -628,10 +664,11 @@ public class AlarmReceiver extends BroadcastReceiver {
             target.set(Calendar.MILLISECOND, 0);
 
             long diff = now.getTimeInMillis() - target.getTimeInMillis();
-            if (diff > 60000L) {
-                target.add(Calendar.DAY_OF_YEAR, 1);
+            if (diff > 0 && diff <= 300000L) {
+                // User set bedtime to current/recent minute for testing, fire in 3 seconds!
+                target.setTimeInMillis(now.getTimeInMillis() + 3000L);
             } else if (target.getTimeInMillis() <= now.getTimeInMillis()) {
-                target.setTimeInMillis(now.getTimeInMillis() + 2000L);
+                target.add(Calendar.DAY_OF_YEAR, 1);
             }
 
             AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
@@ -692,8 +729,24 @@ public class AlarmReceiver extends BroadcastReceiver {
             return;
         }
 
-        wakeScreen(context, 15000L);
-        playAlarmSiren(context);
+        // 1. Brief screen wake (5 seconds)
+        wakeScreen(context, 5000L);
+
+        // 2. Play gentle 3-second notification chime (NEVER looping siren!)
+        playBedtimeReminderSound(context);
+
+        // 3. Single gentle vibration pulse (500ms once)
+        try {
+            Vibrator v = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
+            if (v != null) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    v.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE));
+                } else {
+                    v.vibrate(500);
+                }
+            }
+        } catch (Exception ignored) {}
+
         ensureAlarmChannel(context);
 
         Intent openAppIntent = new Intent(context, MainActivity.class);
@@ -705,15 +758,23 @@ public class AlarmReceiver extends BroadcastReceiver {
                 PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.FLAG_IMMUTABLE : 0)
         );
 
+        Intent dismissIntent = new Intent(context, AlarmReceiver.class);
+        dismissIntent.putExtra("task_id", "dismiss_bedtime_notification");
+        PendingIntent dismissPi = PendingIntent.getBroadcast(
+                context,
+                7778,
+                dismissIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.FLAG_IMMUTABLE : 0)
+        );
+
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, MainActivity.CHANNEL_ID_ALARMS)
                 .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
                 .setContentTitle("🌙 Bedtime Wind-Down Active")
                 .setContentText("It's bedtime! Put away distractions. Social media & doomscroll apps capped at 15m.")
-                .setPriority(NotificationCompat.PRIORITY_MAX)
-                .setCategory(NotificationCompat.CATEGORY_ALARM)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setAutoCancel(true)
                 .setContentIntent(contentPendingIntent)
-                .setVibrate(new long[]{0, 600, 300, 600, 300, 600});
+                .addAction(android.R.drawable.ic_menu_close_clear_cancel, "DISMISS", dismissPi);
 
         NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         if (manager != null) {
