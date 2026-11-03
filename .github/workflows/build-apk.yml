@@ -66,7 +66,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cat << 'EOF' > release_notes.md
-### 📱 Productometer Android Release v1.2.4
+          ### 📱 Productometer Android Release v1.2.4
 
           Major release featuring an expanded 160+ Academic Keyword Library, Jetpack Compose-safe active title extraction, intelligent educational creator whitelisting, bedtime smart alarms, and complete distraction blocker coverage.
 
