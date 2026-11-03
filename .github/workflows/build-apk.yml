@@ -65,9 +65,8 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create v1.1.9 dist/Productometer.apk \
-            --title "Productometer v1.1.9 - Android Release APK" \
-            --notes "### 📱 Productometer Android Release v1.1.9
+          cat << 'EOF' > release_notes.md
+          ### 📱 Productometer Android Release v1.1.9
 
           Major release featuring the new Sleep & Bedtime Monitoring system, interactive Showcase portal, Voice-first AI Coach with 5-turn memory & offline scheduling, and bedtime guardian protection.
 
@@ -85,5 +84,9 @@ jobs:
             - Auto-refresh on `onResume`, `focus`, and `visibilitychange` across all modules.
 
           #### 📦 Direct Download:
-          - Click **\`Productometer.apk\`** under Assets below to download and install." || \
+          - Click **`Productometer.apk`** under Assets below to download and install.
+          EOF
+          gh release create v1.1.9 dist/Productometer.apk \
+            --title "Productometer v1.1.9 - Android Release APK" \
+            --notes-file release_notes.md || \
           gh release upload v1.1.9 dist/Productometer.apk --clobber
