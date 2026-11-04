@@ -404,6 +404,9 @@ public class AlarmActivity extends AppCompatActivity implements SensorEventListe
                 sensorManager.unregisterListener(AlarmActivity.this);
             }
 
+            // Stop background step tracker service
+            WakeupStepTrackerService.stopService(AlarmActivity.this);
+
             SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
             Calendar c = Calendar.getInstance();
             String todayDateStr = String.format("%04d-%02d-%02d", c.get(Calendar.YEAR), c.get(Calendar.MONTH) + 1, c.get(Calendar.DAY_OF_MONTH));
@@ -516,17 +519,20 @@ public class AlarmActivity extends AppCompatActivity implements SensorEventListe
         SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         long now = System.currentTimeMillis();
         long deadline = now + (graceMinutes * 60 * 1000L);
-        int currentSteps = MainActivity.liveStepCount;
 
         prefs.edit()
                 .putBoolean("wakeup_step_mission_active", true)
                 .putLong("wakeup_step_mission_deadline", deadline)
-                .putInt("wakeup_start_step_count", currentSteps)
+                .putInt("wakeup_current_steps", 0)
+                .putInt("wakeup_start_step_count", 0)
                 .putInt("wakeup_target_steps", REQUIRED_STEPS)
                 .putInt("wakeup_grace_minutes", graceMinutes)
                 .apply();
 
-        // 3. SCHEDULE RE-RING VERIFICATION ALARM IF 50 STEPS NOT MET
+        // 3. START BACKGROUND FOREGROUND STEP TRACKER SERVICE (ACCELEROMETER + HARDWARE STEP DETECTOR)!
+        WakeupStepTrackerService.startService(this, graceMinutes);
+
+        // 4. SCHEDULE RE-RING VERIFICATION ALARM IF 50 STEPS NOT MET
         scheduleReRingStepVerificationAlarm(deadline);
 
         // 4. AUTO-ACTIVATE RUNNING SECTION IN HEALTH TRACKER

@@ -88,6 +88,14 @@
             android:foregroundServiceType="dataSync">
         </service>
 
+        <!-- Dedicated Foreground Service for Wakeup Mission 50-Step Walk Tracking -->
+        <service
+            android:name=".WakeupStepTrackerService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="dataSync">
+        </service>
+
         <!-- Accessibility Service for Doomscroll Protection (Shorts & Reels) -->
         <service
             android:name=".ShortsReelsBlockerService"

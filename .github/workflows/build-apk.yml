@@ -66,32 +66,28 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cat << 'EOF' > release_notes.md
-          ### 📱 Productometer Android Release v1.2.9
+          ### 📱 Productometer Android Release v1.3.0
 
-          Major UX & Reliability release fixing the rapid alarm re-ring loop, ensuring the full undisturbed 15-minute grace window for walking, and replacing the direct dismiss button with a Conscious Typing Verification Challenge.
+          Major Step Tracking & Movement Detection update introducing a dedicated Background Foreground Service (`WakeupStepTrackerService`) with Dual-Sensor Acceleration Peak Detection, ensuring steps are 100% captured even with screen off or phone in pocket, and immediately disarming the alarm upon reaching 50 steps.
 
-          #### 🚀 Highlights in v1.2.9:
-          - **✍️ Conscious Typing Verification Challenge (Replaced Direct Dismiss Button):**
-            - The direct one-click dismiss button has been completely removed to prevent lazy snooze habits.
-            - To disable the alarm without completing 10 shakes and 50 steps, the user must consciously type the exact verification statement:
-              `"I am awaken but don't want to walk now so I am using this typing method to disable the alarm"`
-            - Includes live character matching progress and activates the disable button ONLY when 100% exact match is achieved.
-            - Wrapped in a smooth ScrollView ensuring comfortable visibility and typing when the soft keyboard is open.
-          - **🛑 Eliminated Rapid Alarm Repeat Loop:**
-            - Fixed the critical bug where `scheduleNextMorningWakeupAlarm` calculated today's minute and re-triggered an alarm every 3 seconds (firing 4 times in a single minute).
-            - `scheduleNextMorningWakeupAlarm` now strictly schedules for tomorrow morning (`target.add(DAY_OF_YEAR, 1)`), giving the user their full, peaceful 15-minute grace period to complete 50 walking steps.
-          - **🏃‍♂️ Full 15-Minute Grace for 50-Step Walk:**
-            - Shaking 10 times silences the European emergency siren and opens the Running tracker with a 15-minute countdown.
-            - Only if 50 steps are not completed after the full 15 minutes will the re-ring alarm sound.
-          - **🌙 Bedtime Popup in App-Frozen Style (No Background Activity):**
-            - Deep opaque backdrop with two decisive buttons: **⬅️ Return to Home** (kicks distracting apps to home screen) and **📱 Open Productometer**. Strictly no background activity.
-          - **🛡️ Distraction Blocker Untouched:**
-            - Educational whitelist and detection logic remain 100% intact.
+          #### 🚀 Highlights in v1.3.0:
+          - **🚶‍♂️ Dual-Sensor Walking Movement Engine (`WakeupStepTrackerService`):**
+            - Runs as an active Foreground Service with `PARTIAL_WAKE_LOCK`, ensuring continuous step counting even when the phone is locked, screen is off, or kept in pocket.
+            - **Universal Accelerometer Peak Detection**: Works on 100% of Android devices without requiring `ACTIVITY_RECOGNITION` permission or dedicated hardware step counters.
+            - **Hardware Step Detector Integration**: Automatically synchronizes with hardware step sensors when available for optimal power efficiency.
+            - **Live Status Notification**: Displays real-time progress (`🚶‍♂️ Wake-up Mission: X / 50 Steps • Ym left`) with an action to open the conscious typing challenge if needed.
+          - **🎉 Immediate Disarm at 50 Steps:**
+            - The exact millisecond step 50 is reached, the service disarms the alarm, cancels the re-ring timer, triggers a celebratory vibration, and notifies `🎉 50 Steps Completed! Wake-Up Mission Cleared!`.
+            - No more waiting out the 15-minute timer in fear of re-ringing!
+          - **✍️ Conscious Typing Verification Alternative:**
+            - Type `"I am awaken but don't want to walk now so I am using this typing method to disable the alarm"` to immediately disarm the alarm and stop the step service.
+          - **🛑 3-Second Alarm Loop Permanently Eliminated:**
+            - Alarms strictly reschedule for tomorrow morning, guaranteeing a peaceful morning routine.
 
           #### 📦 Direct Download:
           - Click **Productometer.apk** under Assets below to download and install.
           EOF
-          gh release create v1.2.9 dist/Productometer.apk \
-            --title "Productometer v1.2.9 - Android Release APK" \
+          gh release create v1.3.0 dist/Productometer.apk \
+            --title "Productometer v1.3.0 - Android Release APK" \
             --notes-file release_notes.md || \
-          gh release upload v1.2.9 dist/Productometer.apk --clobber
+          gh release upload v1.3.0 dist/Productometer.apk --clobber

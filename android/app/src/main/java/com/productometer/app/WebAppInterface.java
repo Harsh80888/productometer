@@ -1009,6 +1009,7 @@ public class WebAppInterface {
                     .apply();
 
             AlarmReceiver.stopAlarm();
+            WakeupStepTrackerService.stopService(context);
 
             android.app.AlarmManager alarmManager = (android.app.AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
             if (alarmManager != null) {
@@ -1042,10 +1043,8 @@ public class WebAppInterface {
             SharedPreferences prefs = context.getSharedPreferences(ShortsReelsBlockerService.PREFS_NAME, Context.MODE_PRIVATE);
             boolean active = prefs.getBoolean("wakeup_step_mission_active", false);
             long deadline = prefs.getLong("wakeup_step_mission_deadline", 0L);
-            int startSteps = prefs.getInt("wakeup_start_step_count", 0);
             int targetSteps = prefs.getInt("wakeup_target_steps", 50);
-            int currentSteps = MainActivity.liveStepCount;
-            int stepsCovered = Math.max(0, currentSteps - startSteps);
+            int stepsCovered = Math.max(prefs.getInt("wakeup_current_steps", 0), MainActivity.liveStepCount);
             long remainingMs = Math.max(0L, deadline - System.currentTimeMillis());
 
             JSONObject obj = new JSONObject();

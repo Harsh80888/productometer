@@ -409,28 +409,34 @@ public class AlarmReceiver extends BroadcastReceiver {
     private void handleStepVerificationCheck(Context context, int nextGraceMins) {
         SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         boolean missionActive = prefs.getBoolean("wakeup_step_mission_active", false);
-        if (!missionActive) return;
+        if (!missionActive) {
+            WakeupStepTrackerService.stopService(context);
+            return;
+        }
 
         Calendar c = Calendar.getInstance();
         String todayDateStr = String.format("%04d-%02d-%02d", c.get(Calendar.YEAR), c.get(Calendar.MONTH) + 1, c.get(Calendar.DAY_OF_MONTH));
         String completedDate = prefs.getString("wakeup_mission_completed_date", "");
         if (todayDateStr.equals(completedDate)) {
             // Mission already cleared!
+            WakeupStepTrackerService.stopService(context);
             return;
         }
 
-        int startSteps = prefs.getInt("wakeup_start_step_count", 0);
-        int currentSteps = MainActivity.liveStepCount;
-        int diff = currentSteps - startSteps;
+        int stepsCovered = Math.max(prefs.getInt("wakeup_current_steps", 0), MainActivity.liveStepCount);
 
-        if (diff >= 50) {
+        if (stepsCovered >= 50) {
             // User covered 50 steps! Mark completed!
             prefs.edit()
                     .putBoolean("wakeup_step_mission_active", false)
                     .putString("wakeup_mission_completed_date", todayDateStr)
                     .apply();
+            WakeupStepTrackerService.stopService(context);
             return;
         }
+
+        // Restart step tracker service for the next 5-minute loop
+        WakeupStepTrackerService.startService(context, nextGraceMins);
 
         // User DID NOT cover 50 steps within the grace period!
         // Ring again with 5-minute loop until completed
