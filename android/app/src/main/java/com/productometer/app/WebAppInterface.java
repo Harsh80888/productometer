@@ -1111,30 +1111,45 @@ public class WebAppInterface {
     @JavascriptInterface
     public int getBedtimeDistractionMinutes() {
         try {
-            SharedPreferences prefs = context.getSharedPreferences(ShortsReelsBlockerService.PREFS_NAME, Context.MODE_PRIVATE);
-            long ms = prefs.getLong("night_distraction_total_ms", 0L);
-
-            long usmDistractionMs = 0L;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                android.app.usage.UsageStatsManager usm = (android.app.usage.UsageStatsManager) context.getSystemService(Context.USAGE_STATS_SERVICE);
-                if (usm != null) {
-                    long bStart = ShortsReelsBlockerService.getBedtimeWindowStartMillis(context);
-                    long now = System.currentTimeMillis();
-                    java.util.List<android.app.usage.UsageStats> stats = usm.queryUsageStats(android.app.usage.UsageStatsManager.INTERVAL_BEST, bStart, now);
-                    if (stats != null) {
-                        for (android.app.usage.UsageStats u : stats) {
-                            if (ShortsReelsBlockerService.isDistractingPackage(context, u.getPackageName())) {
-                                usmDistractionMs += u.getTotalTimeInForeground();
-                            }
-                        }
-                    }
-                }
-            }
-
-            long totalMs = Math.max(ms, usmDistractionMs);
-            return (int) (totalMs / 60000L);
+            long ms = ShortsReelsBlockerService.getBedtimeDistractionTimeMs(context);
+            return (int) (ms / 60000L);
         } catch (Exception e) {
             return 0;
+        }
+    }
+
+    @JavascriptInterface
+    public int getBedtimeDistractionSeconds() {
+        try {
+            long ms = ShortsReelsBlockerService.getBedtimeDistractionTimeMs(context);
+            return (int) (ms / 1000L);
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
+    @JavascriptInterface
+    public String getBedtimeDistractionStatus() {
+        try {
+            long ms = ShortsReelsBlockerService.getBedtimeDistractionTimeMs(context);
+            int totalSecs = (int) (ms / 1000L);
+            int totalMins = (int) (ms / 60000L);
+            boolean isBedtime = ShortsReelsBlockerService.isBedtimeActiveNow(context);
+            long passUntil = ShortsReelsBlockerService.bedtimeEmergencyPassUntilTimestamp;
+            int passRemainingSecs = (int) Math.max(0, (passUntil - System.currentTimeMillis()) / 1000L);
+
+            JSONObject obj = new JSONObject();
+            obj.put("isBedtimeActive", isBedtime);
+            obj.put("distractionSeconds", totalSecs);
+            obj.put("distractionMinutes", totalMins);
+            obj.put("capMinutes", 15);
+            obj.put("capSeconds", 900);
+            obj.put("isCapExceeded", totalSecs >= 900);
+            obj.put("emergencyPassActive", passRemainingSecs > 0);
+            obj.put("emergencyPassRemainingSeconds", passRemainingSecs);
+            return obj.toString();
+        } catch (Exception e) {
+            return "{\"isBedtimeActive\":false,\"distractionSeconds\":0,\"distractionMinutes\":0,\"capMinutes\":15,\"capSeconds\":900,\"isCapExceeded\":false,\"emergencyPassActive\":false,\"emergencyPassRemainingSeconds\":0}";
         }
     }
 

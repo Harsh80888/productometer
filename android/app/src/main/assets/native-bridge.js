@@ -252,6 +252,34 @@ const NativeBridge = {
         return parseInt(localStorage.getItem('bedtime_distraction_mins_mock') || '0', 10);
     },
 
+    getBedtimeDistractionSeconds: () => {
+        try {
+            if (typeof window.AndroidBridge !== 'undefined' && window.AndroidBridge.getBedtimeDistractionSeconds) {
+                return window.AndroidBridge.getBedtimeDistractionSeconds();
+            }
+        } catch (e) {}
+        return parseInt(localStorage.getItem('bedtime_distraction_secs_mock') || '0', 10);
+    },
+
+    getBedtimeDistractionStatus: () => {
+        try {
+            if (typeof window.AndroidBridge !== 'undefined' && window.AndroidBridge.getBedtimeDistractionStatus) {
+                const raw = window.AndroidBridge.getBedtimeDistractionStatus();
+                return JSON.parse(raw);
+            }
+        } catch (e) {}
+        return {
+            isBedtimeActive: true,
+            distractionSeconds: 0,
+            distractionMinutes: 0,
+            capMinutes: 15,
+            capSeconds: 900,
+            isCapExceeded: false,
+            emergencyPassActive: false,
+            emergencyPassRemainingSeconds: 0
+        };
+    },
+
     grantBedtimeEmergencyPass: (minutes) => {
         try {
             const until = Date.now() + (minutes * 60000);

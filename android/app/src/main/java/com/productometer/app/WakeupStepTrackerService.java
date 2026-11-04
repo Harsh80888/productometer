@@ -340,9 +340,10 @@ public class WakeupStepTrackerService extends Service implements SensorEventList
             }
         } catch (Exception ignored) {}
 
-        // 5. POST TRIUMPH NOTIFICATION
+        // 5. POST GENTLE TRIUMPH NOTIFICATION (NOTIFICATION ONLY - NO ALARM TONE!)
         NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         if (nm != null) {
+            AlarmReceiver.ensureGeneralChannel(this);
             Intent openIntent = new Intent(this, MainActivity.class);
             PendingIntent openPi = PendingIntent.getActivity(
                     this,
@@ -351,11 +352,11 @@ public class WakeupStepTrackerService extends Service implements SensorEventList
                     PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.FLAG_IMMUTABLE : 0)
             );
 
-            Notification victoryNotif = new NotificationCompat.Builder(this, MainActivity.CHANNEL_ID_ALARMS)
+            Notification victoryNotif = new NotificationCompat.Builder(this, MainActivity.CHANNEL_ID_GENERAL)
                     .setSmallIcon(android.R.drawable.ic_dialog_info)
-                    .setContentTitle("🎉 50 Steps Completed! Mission Cleared!")
-                    .setContentText("Wake-up Alarm is disarmed! You're awake and ready for your day.")
-                    .setPriority(NotificationCompat.PRIORITY_HIGH)
+                    .setContentTitle("🎉 50 Steps Completed! Mission Cleared")
+                    .setContentText("Wake-up Alarm is disarmed. Have a productive day!")
+                    .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                     .setAutoCancel(true)
                     .setContentIntent(openPi)
                     .build();

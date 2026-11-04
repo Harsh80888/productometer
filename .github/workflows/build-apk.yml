@@ -66,28 +66,31 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cat << 'EOF' > release_notes.md
-          ### 📱 Productometer Android Release v1.3.0
+          ### 📱 Productometer Android Release v1.3.1 - Ultimate Final Edition
 
-          Major Step Tracking & Movement Detection update introducing a dedicated Background Foreground Service (`WakeupStepTrackerService`) with Dual-Sensor Acceleration Peak Detection, ensuring steps are 100% captured even with screen off or phone in pocket, and immediately disarming the alarm upon reaching 50 steps.
+          Refined Alarm Disarm Experience and Real-Time Night Distraction Cap Engine.
 
-          #### 🚀 Highlights in v1.3.0:
-          - **🚶‍♂️ Dual-Sensor Walking Movement Engine (`WakeupStepTrackerService`):**
-            - Runs as an active Foreground Service with `PARTIAL_WAKE_LOCK`, ensuring continuous step counting even when the phone is locked, screen is off, or kept in pocket.
-            - **Universal Accelerometer Peak Detection**: Works on 100% of Android devices without requiring `ACTIVITY_RECOGNITION` permission or dedicated hardware step counters.
-            - **Hardware Step Detector Integration**: Automatically synchronizes with hardware step sensors when available for optimal power efficiency.
-            - **Live Status Notification**: Displays real-time progress (`🚶‍♂️ Wake-up Mission: X / 50 Steps • Ym left`) with an action to open the conscious typing challenge if needed.
-          - **🎉 Immediate Disarm at 50 Steps:**
-            - The exact millisecond step 50 is reached, the service disarms the alarm, cancels the re-ring timer, triggers a celebratory vibration, and notifies `🎉 50 Steps Completed! Wake-Up Mission Cleared!`.
-            - No more waiting out the 15-minute timer in fear of re-ringing!
-          - **✍️ Conscious Typing Verification Alternative:**
-            - Type `"I am awaken but don't want to walk now so I am using this typing method to disable the alarm"` to immediately disarm the alarm and stop the step service.
-          - **🛑 3-Second Alarm Loop Permanently Eliminated:**
-            - Alarms strictly reschedule for tomorrow morning, guaranteeing a peaceful morning routine.
+          #### 🚀 Highlights in v1.3.1:
+          - **🔔 Gentle Notification on Alarm Disarm (No Alarm Ringtones):**
+            - Fixed the channel routing bug where disarming the alarm (completing 50 steps or typing verification) fired a secondary alarm ringtone.
+            - Alarm victory and mission completion notifications are now routed to a dedicated gentle notification channel (`CHANNEL_ID_GENERAL`) with standard notification chimes and gentle haptic feedback.
+            - Bedtime Wind-Down reminders also now strictly use gentle notification chimes rather than full alarm tones.
+          - **🌙 Real-Time Night Distraction Cap Engine (15-Minute Cap):**
+            - **Sub-Second Accuracy**: Migrated night distraction tracking to Android OS `UsageEvents` bounded between the current bedtime session start and `now`.
+            - **Instant Feedback from Second 1**: Displays live seconds (`25s used tonight • 25s / 15m Used`) during early app usage rather than being stuck at `0m`.
+            - **Session Isolation**: Automatically resets to `0m` at the beginning of each new bedtime session, preventing stale usage from previous days or daytime app usage from polluting the cap.
+            - **Reactive App Resumption**: Added immediate `visibilitychange` and window `focus` listeners so the Sleep Monitoring UI refreshes instantly when returning from other apps.
+          - **🚶‍♂️ Dual-Sensor Walking Movement & 50-Step Wakeup Engine Preserved:**
+            - `WakeupStepTrackerService` continues to track walking with screen off or phone in pocket and immediately disarms upon reaching 50 steps.
+          - **✍️ Conscious Typing Verification Challenge Preserved:**
+            - Type `"I am awaken but don't want to walk now so I am using this typing method to disable the alarm"` to disable the alarm immediately.
+          - **🛡️ Distraction Blocker & Educational Whitelist Untouched:**
+            - 160+ educational keywords and blocker heuristics remain 100% intact.
 
           #### 📦 Direct Download:
           - Click **Productometer.apk** under Assets below to download and install.
           EOF
-          gh release create v1.3.0 dist/Productometer.apk \
-            --title "Productometer v1.3.0 - Android Release APK" \
+          gh release create v1.3.1 dist/Productometer.apk \
+            --title "Productometer v1.3.1 - Android Release APK" \
             --notes-file release_notes.md || \
-          gh release upload v1.3.0 dist/Productometer.apk --clobber
+          gh release upload v1.3.1 dist/Productometer.apk --clobber

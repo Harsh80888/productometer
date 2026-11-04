@@ -249,21 +249,46 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateDistractionCapUI() {
+        let totalSecs = 0;
         let distMins = 0;
-        if (window.NativeBridge && window.NativeBridge.getBedtimeDistractionMinutes) {
+
+        if (window.NativeBridge && window.NativeBridge.getBedtimeDistractionStatus) {
+            const status = window.NativeBridge.getBedtimeDistractionStatus();
+            totalSecs = status.distractionSeconds || 0;
+            distMins = status.distractionMinutes !== undefined ? status.distractionMinutes : Math.floor(totalSecs / 60);
+        } else if (window.NativeBridge && window.NativeBridge.getBedtimeDistractionSeconds) {
+            totalSecs = window.NativeBridge.getBedtimeDistractionSeconds();
+            distMins = Math.floor(totalSecs / 60);
+        } else if (window.NativeBridge && window.NativeBridge.getBedtimeDistractionMinutes) {
             distMins = window.NativeBridge.getBedtimeDistractionMinutes();
+            totalSecs = distMins * 60;
         } else {
             distMins = parseInt(localStorage.getItem('bedtime_distraction_mins_mock') || '0', 10);
+            totalSecs = distMins * 60;
         }
 
-        const cap = 15;
-        const pct = Math.min(100, Math.round((distMins / cap) * 100));
+        const capSecs = 900; // 15 mins
+        const capMins = 15;
+        const pct = Math.min(100, Math.round((totalSecs / capSecs) * 100));
+        const remSecs = totalSecs % 60;
+
+        let formattedUsage = '';
+        if (totalSecs === 0) {
+            formattedUsage = '0m used tonight';
+        } else if (totalSecs < 60) {
+            formattedUsage = `${totalSecs}s used tonight`;
+        } else if (remSecs > 0) {
+            formattedUsage = `${distMins}m ${remSecs}s used tonight`;
+        } else {
+            formattedUsage = `${distMins}m used tonight`;
+        }
 
         if (sleepDistractionProgressFill) {
-            sleepDistractionProgressFill.style.width = `${pct}%`;
-            if (distMins >= cap) {
+            const visualPct = (totalSecs > 0 && pct < 2) ? 2 : pct;
+            sleepDistractionProgressFill.style.width = `${visualPct}%`;
+            if (totalSecs >= capSecs) {
                 sleepDistractionProgressFill.style.background = '#ff3d71';
-            } else if (distMins >= 10) {
+            } else if (totalSecs >= 600) { // 10 mins
                 sleepDistractionProgressFill.style.background = '#ffd600';
             } else {
                 sleepDistractionProgressFill.style.background = '#00e676';
@@ -271,16 +296,19 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (sleepDistractionUsedLabel) {
-            sleepDistractionUsedLabel.textContent = `${distMins}m used tonight`;
+            sleepDistractionUsedLabel.textContent = formattedUsage;
         }
 
         if (sleepDistractionStatusBadge) {
-            if (distMins >= cap) {
+            if (totalSecs >= capSecs) {
                 sleepDistractionStatusBadge.className = 'sleep-status-badge badge-danger';
                 sleepDistractionStatusBadge.textContent = '15m Cap Exceeded';
-            } else if (distMins >= 10) {
+            } else if (totalSecs >= 600) {
                 sleepDistractionStatusBadge.className = 'sleep-status-badge badge-warn';
                 sleepDistractionStatusBadge.textContent = `${distMins}m / 15m Used`;
+            } else if (totalSecs > 0 && totalSecs < 60) {
+                sleepDistractionStatusBadge.className = 'sleep-status-badge badge-green';
+                sleepDistractionStatusBadge.textContent = `${totalSecs}s / 15m Used`;
             } else {
                 sleepDistractionStatusBadge.className = 'sleep-status-badge badge-green';
                 sleepDistractionStatusBadge.textContent = `${distMins}m / 15m Used`;
@@ -535,12 +563,29 @@ document.addEventListener('DOMContentLoaded', () => {
     updateDistractionCapUI();
     updateBlockerSwitchUI();
 
-    // Live ticker every 30 seconds to keep countdown and bedtime window fresh
+    // Live ticker every 5 seconds to keep countdown, bedtime window, and distraction cap real-time
     setInterval(() => {
         updateBedtimeRemainingHUD();
         updateSmartAlarmUI();
         updateDistractionCapUI();
-    }, 30000);
+    }, 5000);
+
+    // Instant refresh when returning from background or switching apps
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) {
+            updateBedtimeRemainingHUD();
+            updateSmartAlarmUI();
+            updateDistractionCapUI();
+            updateBlockerSwitchUI();
+        }
+    });
+
+    window.addEventListener('focus', () => {
+        updateBedtimeRemainingHUD();
+        updateSmartAlarmUI();
+        updateDistractionCapUI();
+        updateBlockerSwitchUI();
+    });
 
     // --- 8. SIMULATOR & TESTER CONTROLLERS ---
     const btnTestSmartAlarm = document.getElementById('btnTestSmartAlarm');

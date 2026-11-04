@@ -1,6 +1,10 @@
 package com.productometer.app;
 
 import android.accessibilityservice.AccessibilityService;
+import android.app.usage.UsageEvents;
+import android.app.usage.UsageStatsManager;
+import java.util.HashMap;
+import java.util.Map;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
@@ -330,6 +334,75 @@ public class ShortsReelsBlockerService extends AccessibilityService {
     private CountDownTimer countdownTimer;
     private Handler mainHandler;
 
+    /**
+     * Calculates the exact distractive app usage in milliseconds during the current bedtime window.
+     * Uses sub-second accurate UsageEvents stream bounded between bedtime start and now.
+     */
+    public static long getBedtimeDistractionTimeMs(Context context) {
+        if (!isBedtimeActiveNow(context)) {
+            return 0L;
+        }
+
+        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        long bStart = getBedtimeWindowStartMillis(context);
+        long storedSession = prefs.getLong("night_distraction_session_start_ms", 0L);
+        if (storedSession != bStart) {
+            prefs.edit()
+                    .putLong("night_distraction_session_start_ms", bStart)
+                    .putLong("night_distraction_total_ms", 0L)
+                    .apply();
+        }
+
+        long now = System.currentTimeMillis();
+        long eventDistractionMs = 0L;
+
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                UsageStatsManager usm = (UsageStatsManager) context.getSystemService(Context.USAGE_STATS_SERVICE);
+                if (usm != null) {
+                    long queryStart = Math.max(0L, bStart - 5000L);
+                    UsageEvents events = usm.queryEvents(queryStart, now);
+                    if (events != null) {
+                        UsageEvents.Event event = new UsageEvents.Event();
+                        Map<String, Long> activeSessions = new HashMap<>();
+
+                        while (events.hasNextEvent()) {
+                            events.getNextEvent(event);
+                            String pkg = event.getPackageName();
+                            if (!isDistractingPackage(context, pkg)) continue;
+
+                            int type = event.getEventType();
+                            long time = event.getTimeStamp();
+
+                            if (type == UsageEvents.Event.ACTIVITY_RESUMED || type == UsageEvents.Event.MOVE_TO_FOREGROUND) {
+                                activeSessions.put(pkg, Math.max(time, bStart));
+                            } else if (type == UsageEvents.Event.ACTIVITY_PAUSED || type == UsageEvents.Event.MOVE_TO_BACKGROUND) {
+                                Long startTime = activeSessions.remove(pkg);
+                                if (startTime != null && time > startTime) {
+                                    eventDistractionMs += (time - startTime);
+                                }
+                            }
+                        }
+
+                        for (Map.Entry<String, Long> entry : activeSessions.entrySet()) {
+                            long startTime = entry.getValue();
+                            if (now > startTime) {
+                                eventDistractionMs += (now - startTime);
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        long serviceTrackedMs = prefs.getLong("night_distraction_total_ms", 0L);
+        long effectiveMs = Math.max(serviceTrackedMs, eventDistractionMs);
+        long maxPossibleMs = Math.max(0L, now - bStart);
+        return Math.min(effectiveMs, maxPossibleMs);
+    }
+
     public static long getBedtimeWindowStartMillis(Context context) {
         try {
             SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
@@ -477,37 +550,28 @@ public class ShortsReelsBlockerService extends AccessibilityService {
 
                 if (isDistracting) {
                     long now = System.currentTimeMillis();
-                    long currentNightDistractionMs = prefs.getLong("night_distraction_total_ms", 0L);
+                    long bStart = getBedtimeWindowStartMillis(this);
+                    long storedSession = prefs.getLong("night_distraction_session_start_ms", 0L);
+                    long currentNightDistractionMs = 0L;
+                    if (storedSession != bStart) {
+                        prefs.edit()
+                                .putLong("night_distraction_session_start_ms", bStart)
+                                .putLong("night_distraction_total_ms", 0L)
+                                .apply();
+                    } else {
+                        currentNightDistractionMs = prefs.getLong("night_distraction_total_ms", 0L);
+                    }
 
                     if (lastBedtimeTrackTimestamp > 0) {
                         long delta = now - lastBedtimeTrackTimestamp;
-                        if (delta > 0 && delta <= 60000L) { // Accumulate up to 60s per gap
+                        if (delta > 0 && delta <= 300000L) { // Accumulate up to 5 mins per gap
                             currentNightDistractionMs += delta;
                             prefs.edit().putLong("night_distraction_total_ms", currentNightDistractionMs).apply();
                         }
                     }
                     lastBedtimeTrackTimestamp = now;
 
-                    // Query UsageStatsManager for accurate foreground usage since bedtime window began
-                    long usmDistractionMs = 0L;
-                    try {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                            android.app.usage.UsageStatsManager usm = (android.app.usage.UsageStatsManager) getSystemService(Context.USAGE_STATS_SERVICE);
-                            if (usm != null) {
-                                long bStart = getBedtimeWindowStartMillis(this);
-                                java.util.List<android.app.usage.UsageStats> stats = usm.queryUsageStats(android.app.usage.UsageStatsManager.INTERVAL_BEST, bStart, now);
-                                if (stats != null) {
-                                    for (android.app.usage.UsageStats u : stats) {
-                                        if (isDistractingPackage(this, u.getPackageName())) {
-                                            usmDistractionMs += u.getTotalTimeInForeground();
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    } catch (Exception ignored) {}
-
-                    long effectiveDistractionMs = Math.max(currentNightDistractionMs, usmDistractionMs);
+                    long effectiveDistractionMs = getBedtimeDistractionTimeMs(this);
 
                     // User requirement: "Also if the user uses the phone while keeping the distraction blocker on, then allow him"
                     // If Master Blocker is ON: Allowed to use phone, blocker will handle shorts/reels below!

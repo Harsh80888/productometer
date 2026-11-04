@@ -40,6 +40,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     public static final String CHANNEL_ID_ALARMS = "productometer_study_alarms_v3";
     public static final String CHANNEL_ID_FOCUS = "productometer_focus";
+    public static final String CHANNEL_ID_GENERAL = "productometer_general_v1";
     private static final int PERMISSION_REQUEST_CODE = 200;
 
     public static int liveStepCount = 0;
@@ -223,6 +224,27 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             );
             focusChannel.setDescription("Ongoing status bar countdown while study timer is active");
             manager.createNotificationChannel(focusChannel);
+
+            NotificationChannel generalChannel = new NotificationChannel(
+                    CHANNEL_ID_GENERAL,
+                    "Productometer Notifications",
+                    NotificationManager.IMPORTANCE_DEFAULT
+            );
+            generalChannel.setDescription("Gentle alerts, mission completions, and bedtime notifications");
+            generalChannel.enableLights(true);
+            generalChannel.setLightColor(Color.CYAN);
+            generalChannel.enableVibration(true);
+            generalChannel.setVibrationPattern(new long[]{0, 200, 100, 200});
+
+            Uri notifSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+            if (notifSoundUri != null) {
+                AudioAttributes notifAttrs = new AudioAttributes.Builder()
+                        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                        .setUsage(AudioAttributes.USAGE_NOTIFICATION)
+                        .build();
+                generalChannel.setSound(notifSoundUri, notifAttrs);
+            }
+            manager.createNotificationChannel(generalChannel);
         }
     }
 

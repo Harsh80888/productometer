@@ -143,6 +143,36 @@ public class AlarmReceiver extends BroadcastReceiver {
         }
     }
 
+    public static void ensureGeneralChannel(Context context) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+            if (manager == null) return;
+            NotificationChannel channel = manager.getNotificationChannel(MainActivity.CHANNEL_ID_GENERAL);
+            if (channel == null) {
+                channel = new NotificationChannel(
+                        MainActivity.CHANNEL_ID_GENERAL,
+                        "Productometer Notifications",
+                        NotificationManager.IMPORTANCE_DEFAULT
+                );
+                channel.setDescription("Gentle alerts, mission completions, and bedtime notifications");
+                channel.enableLights(true);
+                channel.setLightColor(Color.CYAN);
+                channel.enableVibration(true);
+                channel.setVibrationPattern(new long[]{0, 200, 100, 200});
+
+                Uri notifSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+                if (notifSoundUri != null) {
+                    AudioAttributes notifAttrs = new AudioAttributes.Builder()
+                            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                            .setUsage(AudioAttributes.USAGE_NOTIFICATION)
+                            .build();
+                    channel.setSound(notifSoundUri, notifAttrs);
+                }
+                manager.createNotificationChannel(channel);
+            }
+        }
+    }
+
     /**
      * Plays the loud wakeup alarm siren continuously and vibrates device until dismissed.
      */
@@ -784,11 +814,12 @@ public class AlarmReceiver extends BroadcastReceiver {
                 PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.FLAG_IMMUTABLE : 0)
         );
 
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, MainActivity.CHANNEL_ID_ALARMS)
-                .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
+        ensureGeneralChannel(context);
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, MainActivity.CHANNEL_ID_GENERAL)
+                .setSmallIcon(android.R.drawable.ic_dialog_info)
                 .setContentTitle("🌙 Bedtime Wind-Down Active")
                 .setContentText("It's bedtime! Put away distractions. Social media & doomscroll apps capped at 15m.")
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 .setAutoCancel(true)
                 .setContentIntent(contentPendingIntent)
                 .addAction(android.R.drawable.ic_menu_close_clear_cancel, "DISMISS", dismissPi);

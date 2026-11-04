@@ -432,6 +432,29 @@ public class AlarmActivity extends AppCompatActivity implements SensorEventListe
                 }
             } catch (Exception ignored) {}
 
+            try {
+                AlarmReceiver.ensureGeneralChannel(AlarmActivity.this);
+                NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                if (nm != null) {
+                    Intent openIntent = new Intent(AlarmActivity.this, MainActivity.class);
+                    PendingIntent openPi = PendingIntent.getActivity(
+                            AlarmActivity.this,
+                            4004,
+                            openIntent,
+                            PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.FLAG_IMMUTABLE : 0)
+                    );
+                    Notification disarmedNotif = new NotificationCompat.Builder(AlarmActivity.this, MainActivity.CHANNEL_ID_GENERAL)
+                            .setSmallIcon(android.R.drawable.ic_dialog_info)
+                            .setContentTitle("✅ Alarm Disabled (Typing Verified)")
+                            .setContentText("Wake-up mission cleared. Have a productive day!")
+                            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                            .setAutoCancel(true)
+                            .setContentIntent(openPi)
+                            .build();
+                    nm.notify(3004, disarmedNotif);
+                }
+            } catch (Exception ignored) {}
+
             Toast.makeText(AlarmActivity.this, "✅ Alarm disabled via conscious typing verification.", Toast.LENGTH_LONG).show();
             finish();
         });
