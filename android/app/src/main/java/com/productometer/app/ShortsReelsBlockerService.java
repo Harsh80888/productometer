@@ -635,8 +635,8 @@ public class ShortsReelsBlockerService extends AccessibilityService {
 
         boolean isFocusActivePref = prefs.getBoolean(KEY_FOCUS_ACTIVE, false);
         long focusEndTime = prefs.getLong("focus_session_end_time", 0L);
-        long now = System.currentTimeMillis();
-        boolean isFocusValid = isFocusActivePref && (focusEndTime > now);
+        long curMillis = System.currentTimeMillis();
+        boolean isFocusValid = isFocusActivePref && (focusEndTime > curMillis);
         if (isFocusActivePref && !isFocusValid) {
             prefs.edit().putBoolean(KEY_FOCUS_ACTIVE, false).remove("focus_session_end_time").apply();
             isFocusSessionOngoing = false;
