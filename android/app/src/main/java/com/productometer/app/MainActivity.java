@@ -310,6 +310,21 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     protected void onResume() {
         super.onResume();
         AlarmReceiver.stopAlarm();
+
+        try {
+            SharedPreferences prefs = getSharedPreferences(ShortsReelsBlockerService.PREFS_NAME, Context.MODE_PRIVATE);
+            boolean focusActive = prefs.getBoolean(ShortsReelsBlockerService.KEY_FOCUS_ACTIVE, false);
+            long focusEndTime = prefs.getLong("focus_session_end_time", 0L);
+            if (!focusActive || System.currentTimeMillis() >= focusEndTime) {
+                prefs.edit().putBoolean(ShortsReelsBlockerService.KEY_FOCUS_ACTIVE, false).remove("focus_session_end_time").apply();
+                ShortsReelsBlockerService.isFocusSessionOngoing = false;
+                NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                if (nm != null) {
+                    nm.cancel(2001);
+                }
+            }
+        } catch (Throwable ignored) {}
+
         if (webView != null) {
             webView.onResume();
             webView.post(() -> {

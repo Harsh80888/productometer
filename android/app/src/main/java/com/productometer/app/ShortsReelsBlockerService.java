@@ -1,6 +1,7 @@
 package com.productometer.app;
 
 import android.accessibilityservice.AccessibilityService;
+import android.app.NotificationManager;
 import android.app.usage.UsageEvents;
 import android.app.usage.UsageStatsManager;
 import java.util.HashMap;
@@ -630,16 +631,32 @@ public class ShortsReelsBlockerService extends AccessibilityService {
         }
 
         SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        boolean masterEnabled = isMasterBlockerEnabled || prefs.getBoolean(KEY_MASTER_ENABLED, true);
-        boolean sessionOngoing = isFocusSessionOngoing || prefs.getBoolean(KEY_FOCUS_ACTIVE, false);
+        boolean masterEnabled = prefs.getBoolean(KEY_MASTER_ENABLED, false);
+
+        boolean isFocusActivePref = prefs.getBoolean(KEY_FOCUS_ACTIVE, false);
+        long focusEndTime = prefs.getLong("focus_session_end_time", 0L);
+        long now = System.currentTimeMillis();
+        boolean isFocusValid = isFocusActivePref && (focusEndTime > now);
+        if (isFocusActivePref && !isFocusValid) {
+            prefs.edit().putBoolean(KEY_FOCUS_ACTIVE, false).remove("focus_session_end_time").apply();
+            isFocusSessionOngoing = false;
+            NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            if (nm != null) {
+                nm.cancel(2001);
+            }
+        }
+        boolean sessionOngoing = isFocusSessionOngoing && isFocusValid;
 
         String ytMode = prefs.getString(KEY_YOUTUBE_MODE, MODE_BLOCK_SHORTS);
         boolean isLectureMode = MODE_LECTURE_ONLY.equals(ytMode);
 
-        // In lecture only mode: lecture filtering is ALWAYS active for YouTube and Browsers!
-        // Otherwise, master blocker switch or focus session must be ON.
-        if (!masterEnabled && !sessionOngoing && !isLectureMode) {
-            return;
+        // When Distraction Blocker is OFF and no Academics Focus Session is ongoing:
+        // Do NOT block social media / general apps!
+        // Strictly preserve Lectures Only Mode for YouTube & Browsers without interruption.
+        if (!masterEnabled && !sessionOngoing) {
+            if (!isLectureMode || (!isYouTube && !isBrowser)) {
+                return;
+            }
         }
 
         boolean isShortsBlocked = prefs.getBoolean(KEY_SHORTS_ENABLED, true);

@@ -866,10 +866,16 @@ public class WebAppInterface {
             SharedPreferences prefs = context.getSharedPreferences(ShortsReelsBlockerService.PREFS_NAME, Context.MODE_PRIVATE);
             prefs.edit()
                     .putBoolean(ShortsReelsBlockerService.KEY_FOCUS_ACTIVE, false)
+                    .remove("focus_session_end_time")
                     .apply();
 
             Intent serviceIntent = new Intent(context, FocusService.class);
             context.stopService(serviceIntent);
+
+            android.app.NotificationManager nm = (android.app.NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+            if (nm != null) {
+                nm.cancel(2001);
+            }
         } catch (Exception ignored) {}
     }
 
@@ -1309,6 +1315,14 @@ public class WebAppInterface {
             prefs.edit()
                     .putBoolean(ShortsReelsBlockerService.KEY_MASTER_ENABLED, enabled)
                     .apply();
+
+            if (!enabled) {
+                boolean focusActive = prefs.getBoolean(ShortsReelsBlockerService.KEY_FOCUS_ACTIVE, false);
+                long focusEndTime = prefs.getLong("focus_session_end_time", 0L);
+                if (!focusActive || System.currentTimeMillis() >= focusEndTime) {
+                    stopFocusSession();
+                }
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -6,6 +6,7 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.CountDownTimer;
 import android.os.IBinder;
@@ -93,6 +94,18 @@ public class FocusService extends Service {
     private void handleStop() {
         cancelAllTimers();
         stopForeground(true);
+        NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        if (manager != null) {
+            manager.cancel(NOTIFICATION_ID);
+        }
+        ShortsReelsBlockerService.isFocusSessionOngoing = false;
+        try {
+            SharedPreferences prefs = getSharedPreferences(ShortsReelsBlockerService.PREFS_NAME, Context.MODE_PRIVATE);
+            prefs.edit()
+                    .putBoolean(ShortsReelsBlockerService.KEY_FOCUS_ACTIVE, false)
+                    .remove("focus_session_end_time")
+                    .apply();
+        } catch (Exception ignored) {}
         stopSelf();
     }
 
@@ -119,8 +132,20 @@ public class FocusService extends Service {
 
             @Override
             public void onFinish() {
-                updateNotification("🎯 " + currentTaskTitle + " Complete!", "Great job! Take a well-earned break.");
-                stopForeground(false);
+                cancelAllTimers();
+                stopForeground(true);
+                NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                if (manager != null) {
+                    manager.cancel(NOTIFICATION_ID);
+                }
+                ShortsReelsBlockerService.isFocusSessionOngoing = false;
+                try {
+                    SharedPreferences prefs = getSharedPreferences(ShortsReelsBlockerService.PREFS_NAME, Context.MODE_PRIVATE);
+                    prefs.edit()
+                            .putBoolean(ShortsReelsBlockerService.KEY_FOCUS_ACTIVE, false)
+                            .remove("focus_session_end_time")
+                            .apply();
+                } catch (Exception ignored) {}
                 stopSelf();
             }
         }.start();
@@ -174,6 +199,19 @@ public class FocusService extends Service {
     @Override
     public void onDestroy() {
         cancelAllTimers();
+        stopForeground(true);
+        NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        if (manager != null) {
+            manager.cancel(NOTIFICATION_ID);
+        }
+        ShortsReelsBlockerService.isFocusSessionOngoing = false;
+        try {
+            SharedPreferences prefs = getSharedPreferences(ShortsReelsBlockerService.PREFS_NAME, Context.MODE_PRIVATE);
+            prefs.edit()
+                    .putBoolean(ShortsReelsBlockerService.KEY_FOCUS_ACTIVE, false)
+                    .remove("focus_session_end_time")
+                    .apply();
+        } catch (Exception ignored) {}
         super.onDestroy();
     }
 
