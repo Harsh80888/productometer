@@ -40,6 +40,9 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import android.app.Notification;
+import android.app.NotificationManager;
+import androidx.core.app.NotificationCompat;
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.util.Calendar;
