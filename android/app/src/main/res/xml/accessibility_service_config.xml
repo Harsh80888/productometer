@@ -5,5 +5,5 @@
     android:accessibilityFeedbackType="feedbackGeneric"
     android:notificationTimeout="100"
     android:canRetrieveWindowContent="true"
-    android:canPerformGestures="true"
-    android:accessibilityFlags="flagDefault|flagIncludeNotImportantViews|flagRetrieveInteractiveWindows" />
+    android:packageNames="com.google.android.youtube,com.google.android.apps.youtube.music,com.instagram.android,com.facebook.katana,com.facebook.lite,com.facebook.orca,com.twitter.android,com.snapchat.android,com.zhiliaoapp.musically,com.ss.android.ugc.trill,com.reddit.frontpage,com.netflix.mediaclient,com.amazon.avod.thirdpartyclient,com.whatsapp,com.whatsapp.w4b,com.android.chrome,com.brave.browser,com.sec.android.app.sbrowser,com.microsoft.emmx,org.mozilla.firefox,com.opera.browser,com.opera.mini.native,com.duckduckgo.mobile.android,com.android.browser,com.mi.globalbrowser,com.vivo.browser,com.heytap.browser"
+    android:accessibilityFlags="flagDefault" />

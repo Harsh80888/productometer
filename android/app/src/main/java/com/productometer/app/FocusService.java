@@ -146,9 +146,44 @@ public class FocusService extends Service {
                             .remove("focus_session_end_time")
                             .apply();
                 } catch (Exception ignored) {}
+
+                postSessionCompleteNotification(currentTaskTitle);
                 stopSelf();
             }
         }.start();
+    }
+
+    private void postSessionCompleteNotification(String title) {
+        try {
+            AlarmReceiver.ensureGeneralChannel(this);
+            AlarmReceiver.wakeScreen(this, 10000L);
+            AlarmReceiver.playBedtimeReminderSound(this);
+
+            Intent openAppIntent = new Intent(this, MainActivity.class);
+            openAppIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            openAppIntent.putExtra("from_session_alarm", true);
+            PendingIntent pi = PendingIntent.getActivity(
+                    this,
+                    9999,
+                    openAppIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.FLAG_IMMUTABLE : 0)
+            );
+
+            NotificationCompat.Builder builder = new NotificationCompat.Builder(this, MainActivity.CHANNEL_ID_GENERAL)
+                    .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
+                    .setContentTitle("🎉 Session Completed: " + (title != null ? title : "Study Session"))
+                    .setContentText("Outstanding focus! Marked complete in Day Planner. Tap to review.")
+                    .setPriority(NotificationCompat.PRIORITY_HIGH)
+                    .setAutoCancel(true)
+                    .setContentIntent(pi)
+                    .setDefaults(NotificationCompat.DEFAULT_ALL)
+                    .setVibrate(new long[]{0, 500, 200, 500});
+
+            NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            if (manager != null) {
+                manager.notify(9999, builder.build());
+            }
+        } catch (Exception ignored) {}
     }
 
     private void startBreakCountdown(long seconds) {

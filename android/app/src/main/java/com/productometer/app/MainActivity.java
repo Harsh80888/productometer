@@ -91,11 +91,15 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         setIntent(intent);
+        AlarmReceiver.stopAlarm();
         handleIntentTarget(intent);
     }
 
     private void handleIntentTarget(Intent intent) {
-        if (intent != null && "run".equals(intent.getStringExtra("openSection"))) {
+        if (intent != null && intent.getBooleanExtra("from_session_alarm", false)) {
+            AlarmReceiver.stopAlarm();
+            webView.loadUrl("file:///android_asset/Features/Academics_Monitoring/index.html");
+        } else if (intent != null && "run".equals(intent.getStringExtra("openSection"))) {
             webView.loadUrl("file:///android_asset/Features/Health_Tracker/index.html?section=run");
         } else if (webView.getUrl() == null) {
             webView.loadUrl("file:///android_asset/index.html");

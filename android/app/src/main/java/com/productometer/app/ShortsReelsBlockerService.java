@@ -476,10 +476,78 @@ public class ShortsReelsBlockerService extends AccessibilityService {
         windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
     }
 
+    public static boolean isPaymentOrBankingApp(String pkg) {
+        if (pkg == null || pkg.isEmpty()) return false;
+        String p = pkg.toLowerCase();
+        return p.contains("paytm") || p.contains("phonepe") || p.contains("paisa") ||
+               p.contains("bhim") || p.contains("upi") || p.contains("sbi") || p.contains("hdfc") ||
+               p.contains("icici") || p.contains("axis") || p.contains("kotak") || p.contains("pnb") ||
+               p.contains("bank") || p.contains("cred") || p.contains("groww") || p.contains("zerodha") ||
+               p.contains("upstox") || p.contains("angelone") || p.contains("paypal") ||
+               p.contains("mobikwik") || p.contains("freecharge") || p.contains("jupiter") ||
+               p.contains("slice") || p.contains("navi");
+    }
+
+    private void updateServicePackageFilter(android.accessibilityservice.AccessibilityServiceInfo info) {
+        try {
+            Set<String> safePackages = new HashSet<>(Arrays.asList(
+                    PKG_YOUTUBE,
+                    "com.google.android.apps.youtube.music",
+                    PKG_INSTAGRAM,
+                    "com.facebook.katana",
+                    "com.facebook.lite",
+                    "com.facebook.orca",
+                    "com.twitter.android",
+                    "com.snapchat.android",
+                    "com.zhiliaoapp.musically",
+                    "com.ss.android.ugc.trill",
+                    "com.reddit.frontpage",
+                    "com.netflix.mediaclient",
+                    "com.amazon.avod.thirdpartyclient",
+                    "com.whatsapp",
+                    "com.whatsapp.w4b"
+            ));
+            safePackages.addAll(BROWSER_PACKAGES);
+
+            SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+            Set<String> customBlocked = prefs.getStringSet("blocked_packages_set", null);
+            if (customBlocked != null) {
+                for (String pkg : customBlocked) {
+                    if (!isPaymentOrBankingApp(pkg)) {
+                        safePackages.add(pkg);
+                    }
+                }
+            }
+            String limitsJsonStr = prefs.getString("productometer_app_limits_json", "{}");
+            JSONObject limitsObj = new JSONObject(limitsJsonStr);
+            java.util.Iterator<String> keys = limitsObj.keys();
+            while (keys.hasNext()) {
+                String pkg = keys.next();
+                if (!isPaymentOrBankingApp(pkg)) {
+                    safePackages.add(pkg);
+                }
+            }
+
+            info.packageNames = safePackages.toArray(new String[0]);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     @Override
     protected void onServiceConnected() {
         super.onServiceConnected();
         isServiceRunning = true;
+        try {
+            android.accessibilityservice.AccessibilityServiceInfo info = getServiceInfo();
+            if (info != null) {
+                info.flags = android.accessibilityservice.AccessibilityServiceInfo.FLAG_DEFAULT;
+                updateServicePackageFilter(info);
+                setServiceInfo(info);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -497,7 +565,7 @@ public class ShortsReelsBlockerService extends AccessibilityService {
         if (packageNameChar == null) return;
         String packageName = packageNameChar.toString();
 
-        if (packageName.equals(getPackageName())) return;
+        if (packageName.equals(getPackageName()) || isPaymentOrBankingApp(packageName)) return;
 
         // --- 1. DAILY APP LIMITS & 10-MINUTE GRACE / FREEZING ENGINE ---
         // Operates independently of focus session to enforce mandatory daily limits (FB, IG, Games)

@@ -391,6 +391,17 @@ function renderAcademicTasks() {
 
         if (isAvailable) availableTasks.push(taskObj);
         else lockedTasks.push(taskObj);
+
+        // Ensure Android hardware alarm is registered for upcoming academic session
+        if (!task.completed && task.reminder !== false && window.NativeBridge && window.NativeBridge.isAvailable()) {
+            const schedDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), startH, startM, 0);
+            if (schedDate.getTime() > now.getTime()) {
+                const scheduleFn = window.NativeBridge.scheduleAlarm || window.NativeBridge.scheduleTaskAlarm;
+                if (scheduleFn) {
+                    scheduleFn.call(window.NativeBridge, task.id, taskTitle, `${startH}:${startM < 10 ? '0' : ''}${startM}`, schedDate.getTime());
+                }
+            }
+        }
     });
 
     const todayStr = new Date().toDateString();
@@ -415,6 +426,12 @@ function renderAcademicTasks() {
         if (window.NativeBridge && window.NativeBridge.vibrate) {
             window.NativeBridge.vibrate(250);
         }
+        try {
+            if (breakAlarm) {
+                breakAlarm.currentTime = 0;
+                breakAlarm.play().catch(() => {});
+            }
+        } catch (e) {}
         
         const readyTitle = readyTaskToPrompt.title || 'Study Session';
         const readyDur = readyTaskToPrompt.duration || 60;

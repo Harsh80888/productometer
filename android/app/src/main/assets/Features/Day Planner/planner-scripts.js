@@ -57,7 +57,32 @@ function savePlannerTasksForDate(dateKey, tasks) {
     }
 }
 
+function syncUpcomingPlannerAlarms() {
+    try {
+        if (!window.NativeBridge || !window.NativeBridge.isAvailable()) return;
+        const scheduleFn = window.NativeBridge.scheduleAlarm || window.NativeBridge.scheduleTaskAlarm;
+        if (!scheduleFn) return;
+
+        const dateParts = currentSelectedDateKey.split('-').map(Number);
+        const nowMs = Date.now();
+
+        (plannerListData || []).forEach(task => {
+            if (task && task.reminder !== false && !task.completed) {
+                const schedH = Math.floor(task.startMin / 60);
+                const schedM = task.startMin % 60;
+                const schedDate = new Date(dateParts[0], dateParts[1] - 1, dateParts[2], schedH, schedM, 0);
+                if (schedDate.getTime() > nowMs) {
+                    scheduleFn.call(window.NativeBridge, task.id, task.title, task.timeDisplayStr || `${schedH}:${schedM < 10 ? '0' : ''}${schedM}`, schedDate.getTime());
+                }
+            }
+        });
+    } catch (e) {
+        console.warn("[DayPlanner] Error syncing upcoming alarms:", e);
+    }
+}
+
 let plannerListData = loadPlannerTasksForDate(currentSelectedDateKey);
+syncUpcomingPlannerAlarms();
 
 // --- 🌙 AUTOMATIC MIDNIGHT CHECK HANDLER ---
 function checkAndResetPlannerForNewDay() {
@@ -662,17 +687,23 @@ if (addToPlannerBtn) {
         try {
             if (window.NativeBridge && window.NativeBridge.isAvailable() && savedTaskObj) {
                 if (savedTaskObj.reminder) {
-                    const now = new Date();
                     const startH = parseInt(activeStartHour, 10) || 0;
                     const startM = parseInt(activeStartMinute, 10) || 0;
-                    const schedDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), startH, startM, 0);
+                    const dateParts = currentSelectedDateKey.split('-').map(Number);
+                    const schedDate = new Date(dateParts[0], dateParts[1] - 1, dateParts[2], startH, startM, 0);
                     if (schedDate.getTime() > Date.now()) {
-                        window.NativeBridge.scheduleAlarm(savedTaskObj.id, savedTaskObj.title, savedTaskObj.timeDisplayStr, schedDate.getTime());
+                        const scheduleFn = window.NativeBridge.scheduleAlarm || window.NativeBridge.scheduleTaskAlarm;
+                        if (scheduleFn) {
+                            scheduleFn.call(window.NativeBridge, savedTaskObj.id, savedTaskObj.title, savedTaskObj.timeDisplayStr, schedDate.getTime());
+                        }
                     }
                 } else {
-                    window.NativeBridge.cancelAlarm(savedTaskObj.id);
+                    const cancelFn = window.NativeBridge.cancelAlarm || window.NativeBridge.cancelTaskAlarm;
+                    if (cancelFn) {
+                        cancelFn.call(window.NativeBridge, savedTaskObj.id);
+                    }
                 }
-                window.NativeBridge.vibrate(40);
+                if (window.NativeBridge.vibrate) window.NativeBridge.vibrate(40);
             }
         } catch (alarmErr) {
             console.warn("[DayPlanner] Alarm notice:", alarmErr);
@@ -768,15 +799,21 @@ function renderChronologicalMasterTimelineGrid() {
 
                 if (window.NativeBridge && window.NativeBridge.isAvailable()) {
                     if (task.reminder) {
-                        const now = new Date();
                         const schedH = Math.floor(task.startMin / 60);
                         const schedM = task.startMin % 60;
-                        const schedDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), schedH, schedM, 0);
+                        const dateParts = currentSelectedDateKey.split('-').map(Number);
+                        const schedDate = new Date(dateParts[0], dateParts[1] - 1, dateParts[2], schedH, schedM, 0);
                         if (schedDate.getTime() > Date.now()) {
-                            window.NativeBridge.scheduleAlarm(task.id, task.title, task.timeDisplayStr, schedDate.getTime());
+                            const scheduleFn = window.NativeBridge.scheduleAlarm || window.NativeBridge.scheduleTaskAlarm;
+                            if (scheduleFn) {
+                                scheduleFn.call(window.NativeBridge, task.id, task.title, task.timeDisplayStr, schedDate.getTime());
+                            }
                         }
                     } else {
-                        window.NativeBridge.cancelAlarm(task.id);
+                        const cancelFn = window.NativeBridge.cancelAlarm || window.NativeBridge.cancelTaskAlarm;
+                        if (cancelFn) {
+                            cancelFn.call(window.NativeBridge, task.id);
+                        }
                     }
                     if (window.NativeBridge.vibrate) window.NativeBridge.vibrate(30);
                 }
@@ -848,8 +885,11 @@ function renderChronologicalMasterTimelineGrid() {
             if (selectedTaskIdForEdit === task.id) resetEditButtonState();
             plannerListData = plannerListData.filter(t => t.id !== task.id);
             if (window.NativeBridge && window.NativeBridge.isAvailable()) {
-                window.NativeBridge.cancelAlarm(task.id);
-                window.NativeBridge.vibrate(25);
+                const cancelFn = window.NativeBridge.cancelAlarm || window.NativeBridge.cancelTaskAlarm;
+                if (cancelFn) {
+                    cancelFn.call(window.NativeBridge, task.id);
+                }
+                if (window.NativeBridge.vibrate) window.NativeBridge.vibrate(25);
             }
             savePlannerTasksForDate(currentSelectedDateKey, plannerListData);
             try { window.dispatchEvent(new Event('storage')); } catch (e) {}
@@ -1022,6 +1062,7 @@ function selectPlannerDate(dateKey) {
     resetEditButtonState();
     currentSelectedDateKey = dateKey;
     plannerListData = loadPlannerTasksForDate(currentSelectedDateKey);
+    syncUpcomingPlannerAlarms();
     synchronizeLegacyTimelineArray();
     renderChronologicalMasterTimelineGrid();
     updateDateRibbonUI();

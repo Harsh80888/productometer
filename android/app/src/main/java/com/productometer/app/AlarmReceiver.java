@@ -31,6 +31,7 @@ import java.util.Calendar;
 public class AlarmReceiver extends BroadcastReceiver {
 
     public static final String PREFS_NAME = "ShortsReelsBlockerPrefs";
+    public static final int NOTIFICATION_ID_SESSION = 8888;
     private static MediaPlayer activeMediaPlayer = null;
     private static Ringtone activeRingtone = null;
     private static Vibrator activeVibrator = null;
@@ -354,6 +355,15 @@ public class AlarmReceiver extends BroadcastReceiver {
             return;
         }
 
+        if ("dismiss_planner_alarm".equals(taskId)) {
+            stopAlarm();
+            NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+            if (manager != null) {
+                manager.cancel(NOTIFICATION_ID_SESSION);
+            }
+            return;
+        }
+
         // Case 2: Bedtime Start Reminder Alarm
         if (taskId.startsWith("bedtime_start_alarm")) {
             handleBedtimeStartAlarm(context, intent);
@@ -521,7 +531,7 @@ public class AlarmReceiver extends BroadcastReceiver {
         }
         String taskTime = intent != null ? intent.getStringExtra("task_time") : null;
 
-        wakeScreen(context, 15000L);
+        wakeScreen(context, 30000L);
         playAlarmSiren(context);
         ensureAlarmChannel(context);
 
@@ -529,11 +539,22 @@ public class AlarmReceiver extends BroadcastReceiver {
         if (alarmUri == null) alarmUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
 
         Intent openAppIntent = new Intent(context, MainActivity.class);
-        openAppIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        openAppIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+        openAppIntent.putExtra("from_session_alarm", true);
+        openAppIntent.putExtra("task_title", taskTitle);
         PendingIntent contentPendingIntent = PendingIntent.getActivity(
                 context,
-                0,
+                (int) System.currentTimeMillis(),
                 openAppIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.FLAG_IMMUTABLE : 0)
+        );
+
+        Intent dismissIntent = new Intent(context, AlarmReceiver.class);
+        dismissIntent.putExtra("task_id", "dismiss_planner_alarm");
+        PendingIntent dismissPendingIntent = PendingIntent.getBroadcast(
+                context,
+                (int) System.currentTimeMillis() + 1,
+                dismissIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.FLAG_IMMUTABLE : 0)
         );
 
@@ -547,14 +568,17 @@ public class AlarmReceiver extends BroadcastReceiver {
                 .setCategory(NotificationCompat.CATEGORY_ALARM)
                 .setAutoCancel(true)
                 .setContentIntent(contentPendingIntent)
-                .addAction(android.R.drawable.ic_media_play, "✅ I AM READY", contentPendingIntent)
+                .setFullScreenIntent(contentPendingIntent, true)
+                .setDeleteIntent(dismissPendingIntent)
+                .addAction(android.R.drawable.ic_media_play, "✅ START SESSION", contentPendingIntent)
+                .addAction(android.R.drawable.ic_menu_close_clear_cancel, "DISMISS", dismissPendingIntent)
                 .setSound(alarmUri)
                 .setDefaults(NotificationCompat.DEFAULT_ALL)
                 .setVibrate(new long[]{0, 500, 200, 500, 200, 500});
 
         NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         if (manager != null) {
-            manager.notify((int) System.currentTimeMillis(), builder.build());
+            manager.notify(NOTIFICATION_ID_SESSION, builder.build());
         }
     }
 

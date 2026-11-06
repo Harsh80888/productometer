@@ -118,18 +118,30 @@ const NativeBridge = {
     // --- ⏰ HARDWARE ALARMS & FOCUS SERVICE ---
     scheduleAlarm: (taskId, title, timeStr, epochMillis) => {
         try {
-            if (typeof window.AndroidBridge !== 'undefined' && window.AndroidBridge.scheduleTaskAlarm) {
-                window.AndroidBridge.scheduleTaskAlarm(taskId, title, timeStr, epochMillis);
+            if (typeof window.AndroidBridge !== 'undefined') {
+                if (window.AndroidBridge.scheduleAlarm) {
+                    window.AndroidBridge.scheduleAlarm(taskId, title, timeStr, epochMillis);
+                } else if (window.AndroidBridge.scheduleTaskAlarm) {
+                    window.AndroidBridge.scheduleTaskAlarm(taskId, title, timeStr, epochMillis);
+                }
             }
-        } catch (e) {}
+        } catch (e) {
+            console.error('[NativeBridge] scheduleAlarm error:', e);
+        }
     },
 
     cancelAlarm: (taskId) => {
         try {
-            if (typeof window.AndroidBridge !== 'undefined' && window.AndroidBridge.cancelTaskAlarm) {
-                window.AndroidBridge.cancelTaskAlarm(taskId);
+            if (typeof window.AndroidBridge !== 'undefined') {
+                if (window.AndroidBridge.cancelAlarm) {
+                    window.AndroidBridge.cancelAlarm(taskId);
+                } else if (window.AndroidBridge.cancelTaskAlarm) {
+                    window.AndroidBridge.cancelTaskAlarm(taskId);
+                }
             }
-        } catch (e) {}
+        } catch (e) {
+            console.error('[NativeBridge] cancelAlarm error:', e);
+        }
     },
 
     stopAlarm: () => {

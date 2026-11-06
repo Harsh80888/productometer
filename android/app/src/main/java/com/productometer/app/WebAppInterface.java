@@ -782,8 +782,8 @@ public class WebAppInterface {
             if (alarmManager == null) return;
 
             Intent intent = new Intent(context, AlarmReceiver.class);
-            intent.putExtra("task_id", taskId);
-            intent.putExtra("task_title", title);
+            intent.putExtra("task_id", taskId != null ? taskId : ("task_" + System.currentTimeMillis()));
+            intent.putExtra("task_title", title != null ? title : "Scheduled Objective");
             intent.putExtra("task_time", timeStr);
 
             int requestCode = taskId != null ? taskId.hashCode() : (int) System.currentTimeMillis();
@@ -795,13 +795,33 @@ public class WebAppInterface {
             );
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerEpochMillis, pendingIntent);
+                try {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                        if (alarmManager.canScheduleExactAlarms()) {
+                            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerEpochMillis, pendingIntent);
+                        } else {
+                            alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerEpochMillis, pendingIntent);
+                        }
+                    } else {
+                        alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerEpochMillis, pendingIntent);
+                    }
+                } catch (SecurityException se) {
+                    alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerEpochMillis, pendingIntent);
+                }
             } else {
                 alarmManager.setExact(AlarmManager.RTC_WAKEUP, triggerEpochMillis, pendingIntent);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    /**
+     * Alias for scheduleTaskAlarm to match native-bridge API.
+     */
+    @JavascriptInterface
+    public void scheduleAlarm(String taskId, String title, String timeStr, long triggerEpochMillis) {
+        scheduleTaskAlarm(taskId, title, timeStr, triggerEpochMillis);
     }
 
     /**
@@ -827,6 +847,14 @@ public class WebAppInterface {
                 pendingIntent.cancel();
             }
         } catch (Exception ignored) {}
+    }
+
+    /**
+     * Alias for cancelTaskAlarm to match native-bridge API.
+     */
+    @JavascriptInterface
+    public void cancelAlarm(String taskId) {
+        cancelTaskAlarm(taskId);
     }
 
     /**

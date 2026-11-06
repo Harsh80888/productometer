@@ -66,31 +66,30 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cat << 'EOF' > release_notes.md
-          ### 📱 Productometer Android Release v1.3.1 - Ultimate Final Edition
+          ### 📱 Productometer Android Release v1.3.2 - Hardened Banking Isolation & Session Alarms
 
-          Refined Alarm Disarm Experience and Real-Time Night Distraction Cap Engine.
+          Hardened Accessibility Architecture for Banking / UPI App Security and Fixed Day Planner / Academics Session Alarms.
 
-          #### 🚀 Highlights in v1.3.1:
-          - **🔔 Gentle Notification on Alarm Disarm (No Alarm Ringtones):**
-            - Fixed the channel routing bug where disarming the alarm (completing 50 steps or typing verification) fired a secondary alarm ringtone.
-            - Alarm victory and mission completion notifications are now routed to a dedicated gentle notification channel (`CHANNEL_ID_GENERAL`) with standard notification chimes and gentle haptic feedback.
-            - Bedtime Wind-Down reminders also now strictly use gentle notification chimes rather than full alarm tones.
-          - **🌙 Real-Time Night Distraction Cap Engine (15-Minute Cap):**
-            - **Sub-Second Accuracy**: Migrated night distraction tracking to Android OS `UsageEvents` bounded between the current bedtime session start and `now`.
-            - **Instant Feedback from Second 1**: Displays live seconds (`25s used tonight • 25s / 15m Used`) during early app usage rather than being stuck at `0m`.
-            - **Session Isolation**: Automatically resets to `0m` at the beginning of each new bedtime session, preventing stale usage from previous days or daytime app usage from polluting the cap.
-            - **Reactive App Resumption**: Added immediate `visibilitychange` and window `focus` listeners so the Sleep Monitoring UI refreshes instantly when returning from other apps.
-          - **🚶‍♂️ Dual-Sensor Walking Movement & 50-Step Wakeup Engine Preserved:**
-            - `WakeupStepTrackerService` continues to track walking with screen off or phone in pocket and immediately disarms upon reaching 50 steps.
-          - **✍️ Conscious Typing Verification Challenge Preserved:**
-            - Type `"I am awaken but don't want to walk now so I am using this typing method to disable the alarm"` to disable the alarm immediately.
-          - **🛡️ Distraction Blocker & Educational Whitelist Untouched:**
-            - 160+ educational keywords and blocker heuristics remain 100% intact.
+          #### 🚀 Highlights in v1.3.2:
+          - **🛡️ Banking & Payment App Safety (Hardened Accessibility Config):**
+            - **Removed Gesture Injection Capability**: Completely eliminated `canPerformGestures="true"` from the accessibility service configuration. Banking security engines (Google Pay, PhonePe, Paytm, BHIM, etc.) no longer flag Productometer as an ATS / Auto-Clicker trojan.
+            - **Strict Package Isolation**: Defined explicit `android:packageNames` in the accessibility configuration XML targeting only YouTube, social media, video streaming, and web browsers.
+            - **Dynamic Banking App Shield**: At runtime, `ShortsReelsBlockerService` immediately ignores and filters out any package matching banking, UPI, or financial keywords (`paytm`, `phonepe`, `paisa`, `bhim`, `upi`, `sbi`, `hdfc`, etc.).
+            - **Interactive Windows Flag Removed**: Removed `flagRetrieveInteractiveWindows` and `flagIncludeNotImportantViews` to prevent banking apps from detecting window surveillance.
+          - **⏰ Study & Planner Session Alarms Fixed:**
+            - **Bridge Parity**: Resolved method naming mismatch by exposing both `scheduleAlarm`/`scheduleTaskAlarm` and `cancelAlarm`/`cancelTaskAlarm` in `WebAppInterface.java` and `native-bridge.js`.
+            - **Correct Date Key Calculation**: Fixed Day Planner's date parsing to schedule alarms against the selected planning date (`currentSelectedDateKey`) instead of strictly assuming today.
+            - **Android 12+ (API 31+) Compatibility**: Added graceful fallback to `setAndAllowWhileIdle` when exact alarm permissions are restricted, preventing silent `SecurityException` drops.
+            - **Full-Screen Alarm Notification**: Configured session alarms with `setFullScreenIntent(true)`, heads-up alert, loud alarm siren, and a dedicated "✅ START SESSION" / "DISMISS" action buttons.
+            - **Automatic Startup Alarm Sync**: Day Planner and Academics Monitoring automatically sync all upcoming sessions to Android OS `AlarmManager` upon page load.
+            - **Session Completion Chime**: `FocusService` now plays an audible chime and posts a celebratory heads-up notification upon focus timer completion.
+          - **🚶‍♂️ Dual-Sensor Walking & Conscious Typing Verification Preserved:**
+            - 50-step wakeup tracker and conscious typing challenges remain fully operational.
 
           #### 📦 Direct Download:
           - Click **Productometer.apk** under Assets below to download and install.
           EOF
-          gh release create v1.3.1 dist/Productometer.apk \
-            --title "Productometer v1.3.1 - Android Release APK" \
+          gh release create v1.3.2 dist/Productometer.apk \
+            --title "Productometer v1.3.2 - Android Release APK" \
             --notes-file release_notes.md || \
-          gh release upload v1.3.1 dist/Productometer.apk --clobber
+          gh release upload v1.3.2 dist/Productometer.apk --clobber
