@@ -541,7 +541,6 @@ public class ShortsReelsBlockerService extends AccessibilityService {
         try {
             android.accessibilityservice.AccessibilityServiceInfo info = getServiceInfo();
             if (info != null) {
-                info.flags = android.accessibilityservice.AccessibilityServiceInfo.FLAG_DEFAULT;
                 updateServicePackageFilter(info);
                 setServiceInfo(info);
             }
